@@ -8,15 +8,16 @@ hipótesis.
 
 Objetivo: demostrar que el port funciona en un PaperDIY real y recoger datos.
 
-- [ ] Flashear `firmware.factory.bin` con backup previo.
-- [ ] Confirmar que el panel enciende y muestra el splash/UI.
-- [ ] Ajustar rotación (0/2) y orientación de la UI.
+- [x] Flashear `firmware.factory.bin` (28/10/2026; sin backup, a petición).
+- [x] Confirmar que el panel enciende y muestra el splash/UI.
+- [x] Rotación/orientación: UI correcta en vertical, sin cambios.
 - [ ] Medir tiempos de refresco: `epd_quality`, `epd_text`, `epd_fast`,
       `epd_fastest`; página completa vs área.
 - [ ] Evaluar ghosting y si hace falta `cleanBankNeedsFreshBackground` o LUTs
       propias (comparar con PaperS3/LilyGo).
-- [ ] Probar A/B: navegación, página, back, confirm, A+B.
-- [ ] Probar batería: porcentaje, carga, VBAT, USB presente.
+- [ ] Probar A/B: navegación, página, back, confirm, A+B. Cortos ya funcionan;
+      largos y A+B pendientes.
+- [x] Batería: lectura al 100 %. Pendiente carga, VBAT y USB presente.
 - [ ] Probar SD: montaje, biblioteca, caché, libros grandes.
 - [ ] Probar Wi-Fi: web UI, OPDS, Calibre, OTA.
 - [ ] Medir consumo: activo, idle, deep sleep; autonomía estimada.

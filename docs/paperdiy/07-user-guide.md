@@ -34,6 +34,11 @@ firmware. Si prefieres el comportamiento original, compila con
 En el lector, A/B pasan página. En listas, mueven la selección; B largo abre el
 elemento; A largo vuelve.
 
+Los clics cortos se registran **al soltar**, no al pulsar: es lo que permite
+distinguir un clic de una pulsación larga con solo dos botones. Si se cambia a
+“page on press”, la pulsación larga puede disparar antes una página/movimiento
+antes de abrir el menú; es un compromiso de UX pendiente de decidir.
+
 ## Biblioteca
 
 - La home muestra recientes/portadas; el navegador de archivos permite entrar

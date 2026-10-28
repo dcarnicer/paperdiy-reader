@@ -153,6 +153,20 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 
 o `make flash PORT=/dev/cu.usbmodemXXXX`.
 
+## Primera validación en hardware (28/10/2026)
+
+- Flash de `firmware.factory.bin` en `0x0` por USB; hash verificado.
+- Arranque correcto: logs con ~129 KB de heap libre y ~6,3 MB de PSRAM libre.
+- La UI se ve **correcta en vertical**; home con “No open book”, Browse Files,
+  Library, File Transfer y Settings. Batería al 100 %.
+- A/B responden. Los clics cortos se registran **al soltar** (comportamiento
+  de `DigitalTwoButton`, necesario para distinguir el clic de la pulsación
+  larga). Pendiente decidir si se cambia a “page on press”.
+- Pendiente: SD/Wi-Fi/OPDS, ghosting, consumo en sleep, botón power/shutdown,
+  wake y OTA.
+
+![Primer arranque](images/first-boot.png)
+
 ## Checklist de validación en hardware
 
 Marca cada punto y anota el resultado; es la información que falta para

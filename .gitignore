@@ -1,6 +1,8 @@
 .pio
 # Isolated PlatformIO core used by `make build` / scripts (local only).
 /.platformio-core
+# Local flash backups / screenshots (do not commit user data).
+/backups/
 /src/idf_component.yml
 /src/idf_component.yml.orig
 .idea
