@@ -165,8 +165,10 @@ o `make flash PORT=/dev/cu.usbmodemXXXX`.
 - SD de 8 GB FAT32 monta tras reiniciar; `Books/Amar-o-depender.epub` y
   `Books/Reconciliacion.epub` aparecen en Browse Files. El EPUB abre, pagina y
   se lee correctamente.
-- Pendiente: Wi-Fi/OPDS/Calibre, ghosting, consumo en sleep, botón
-  power/shutdown, wake y OTA.
+- Wi-Fi y web UI funcionan; se han subido libros por la interfaz web y se han
+  abierto desde el lector.
+- Pendiente: OPDS, Calibre/KOReader Sync, ghosting general, consumo en sleep,
+  botón power/shutdown, wake y OTA.
 
 ![Primer arranque](images/first-boot.png)
 
