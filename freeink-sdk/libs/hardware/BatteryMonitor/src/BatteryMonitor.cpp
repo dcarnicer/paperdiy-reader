@@ -685,7 +685,7 @@ bool BatteryMonitor::hasGaugeBackend() const {
 }
 
 bool BatteryMonitor::hasM5Pm1Backend() const {
-  return BoardConfig::isM5StackPaperColor() || BoardConfig::isPaperMono();
+  return BoardConfig::isM5StackPaperColor() || BoardConfig::isPaperMono() || BoardConfig::isPaperDiy();
 }
 
 uint16_t BatteryMonitor::readPercentage() const {

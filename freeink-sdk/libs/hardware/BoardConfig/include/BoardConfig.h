@@ -66,6 +66,9 @@
 #ifndef FREEINK_DEVICE_PAPERS3
 #define FREEINK_DEVICE_PAPERS3 0
 #endif
+#ifndef FREEINK_DEVICE_PAPERDIY
+#define FREEINK_DEVICE_PAPERDIY 0
+#endif
 #ifndef FREEINK_DEVICE_MURPHY_M4
 #define FREEINK_DEVICE_MURPHY_M4 0
 #endif
@@ -94,9 +97,9 @@
       FREEINK_DEVICE_MURPHY || FREEINK_DEVICE_DELINK || FREEINK_DEVICE_LILYGO || FREEINK_DEVICE_M5PAPER ||               \
       FREEINK_DEVICE_STICKY || FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERS3 || FREEINK_DEVICE_MURPHY_M4 ||         \
       FREEINK_DEVICE_EEGO_A4 || FREEINK_DEVICE_ONEPAGE || FREEINK_DEVICE_WS397 || FREEINK_DEVICE_METALIO_EINK4 || \
-      FREEINK_DEVICE_PICCO)
+      FREEINK_DEVICE_PAPERDIY || FREEINK_DEVICE_PICCO)
 #error \
-    "FreeInk: no device selected. Pass at least one -DFREEINK_DEVICE_<NAME> (X4, X3, X4PRO, X4CLASSIC, M5, MURPHY, DELINK, LILYGO, M5PAPER, STICKY, PAPERMONO, PAPERS3, MURPHY_M4, EEGO_A4, ONEPAGE, WS397, METALIO_EINK4, PICCO) in your build env — see platformio.sample.ini."
+    "FreeInk: no device selected. Pass at least one -DFREEINK_DEVICE_<NAME> (X4, X3, X4PRO, X4CLASSIC, M5, MURPHY, DELINK, LILYGO, M5PAPER, STICKY, PAPERMONO, PAPERS3, PAPERDIY, MURPHY_M4, EEGO_A4, ONEPAGE, WS397, METALIO_EINK4, PICCO) in your build env — see platformio.sample.ini."
 #endif
 // Each device belongs to one MCU family; a binary targets exactly one. X3/X4 are
 // ESP32-C3; M5 PaperColor/Murphy/de-link/LilyGo are ESP32-S3; M5Paper v1.1 is the
@@ -107,7 +110,7 @@
 #define FREEINK_MCU_S3                                                                                    \
   (FREEINK_DEVICE_M5 || FREEINK_DEVICE_MURPHY || FREEINK_DEVICE_DELINK || FREEINK_DEVICE_LILYGO ||        \
    FREEINK_DEVICE_STICKY || FREEINK_DEVICE_X4PRO || FREEINK_DEVICE_X4CLASSIC || FREEINK_DEVICE_PAPERMONO ||  \
-   FREEINK_DEVICE_PAPERS3 || FREEINK_DEVICE_MURPHY_M4 || FREEINK_DEVICE_EEGO_A4 || FREEINK_DEVICE_WS397 || FREEINK_DEVICE_METALIO_EINK4 || \
+   FREEINK_DEVICE_PAPERS3 || FREEINK_DEVICE_PAPERDIY || FREEINK_DEVICE_MURPHY_M4 || FREEINK_DEVICE_EEGO_A4 || FREEINK_DEVICE_WS397 || FREEINK_DEVICE_METALIO_EINK4 || \
    FREEINK_DEVICE_PICCO)
 #define FREEINK_MCU_ESP32 (FREEINK_DEVICE_M5PAPER)
 #if (FREEINK_MCU_C3 + FREEINK_MCU_C61 + FREEINK_MCU_S3 + FREEINK_MCU_ESP32) != 1
@@ -180,7 +183,7 @@
 // LilyGo T5 S3 and M5Stack PaperS3: raw-parallel ED047TC1 via LovyanGFX (M5GFX).
 // External-bus driver; each board injects its own bus pins/power in an
 // LgfxEpdConfig (PaperS3's rails are plain GPIOs, LilyGo's ride a PMIC+expander).
-#if FREEINK_DEVICE_LILYGO || FREEINK_DEVICE_PAPERS3
+#if FREEINK_DEVICE_LILYGO || FREEINK_DEVICE_PAPERS3 || FREEINK_DEVICE_PAPERDIY
 #define FREEINK_DRIVER_LGFX_EPD 1
 #else
 #define FREEINK_DRIVER_LGFX_EPD 0
@@ -456,6 +459,7 @@ enum class Board : uint8_t {
   Sticky,
   PaperMono,
   M5PaperS3,  // ESP32-S3 sibling of M5Paper v1.1: same ED047TC1 glass, no IT8951 — raw parallel via LovyanGFX
+  M5PaperDiy,  // PaperS3 sibling without touch/RTC, 2 buttons, M5PM1 PMIC — same ED047TC1 raw parallel panel
   EegoA4,     // EEGO Reader A4: ESP32-S3, UC8279C 768x552 SPI panel, GSLX680 touch, PCF8563 RTC
   OnePage,    // OnePage: ESP32-C61, SSD1677 800x480 SPI panel, 4-key ADC ladder + 3 side keys
   WsEpaper397,  // Waveshare ESP32-S3-ePaper-3.97: SSD1677 800x480, 3 keys + BOOT, AXP2101 PMIC
@@ -1512,6 +1516,60 @@ constexpr BoardProfile M5PAPER_S3 = {
     0,      // wifiMaxTxPower: radio default
     false};  // usbDetectActiveHigh: GPIO5 is driven LOW while a cable is attached
 
+// --- M5Stack PaperDIY 4.7" (ED047TC1 raw-parallel EPD) — ESP32-S3 ------------
+// PaperS3's cost-reduced sibling: same 960x540 ED047TC1 glass and *identical*
+// 8-bit parallel pin map (M5GFX board_M5PaperDIY), but no IT8951, no touch, no
+// RTC/IMU, and an M5PM1 PMIC for battery/charge/EPD power. Two user buttons on
+// GPIO4 (A) / GPIO3 (B), active-low; there is no firmware-readable power button
+// because the PM1 owns it (single click on/reset, double click off, long press
+// download). InputStyle::DigitalTwoButton gives short A/B = up/down, long A =
+// back, long B = confirm, A+B = power. Display power needs PM1 GPIO2 in addition
+// to the panel's own GPIO46 rail: the LgfxEpdConfig raises PM1 GPIO2 in
+// prepare() and lets Bus_EPD sequence OE/PWR/SPV.
+constexpr BoardProfile M5PAPER_DIY = {
+    Board::M5PaperDiy,
+    "paperdiy",
+    InputStyle::DigitalTwoButton,
+    DisplayController::LgfxEpd,
+    960,
+    540,
+    {PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED,
+     PIN_UNASSIGNED},                            // no SPI display pins: parallel bus lives in LgfxEpdConfig
+    0,                                           // displaySpiHz n/a (external bus)
+    {39, 40, 38, 47, PIN_UNASSIGNED, false, 0},  // SD over SPI: SCLK39 MISO40 MOSI38 CS47
+    // up=GPIO4 (BtnA), down=GPIO3 (BtnB), active-low; no GPIO power button.
+    {PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, 4, 3, PIN_UNASSIGNED, false},
+    PIN_UNASSIGNED,  // batteryAdc: none — M5PM1 reports VBAT
+    PIN_UNASSIGNED,  // batteryChargeStatus: PM1-owned; BatteryMonitor's PM1 backend reads it
+    2.0f,
+    PIN_UNASSIGNED,  // usbDetect: PM1 PWR_SRC reports external power
+    NO_TOUCH,
+    NO_FRONTLIGHT,
+    NO_AUDIO,
+    NO_LEDS,
+    NO_FLIP,
+    NO_SDMMC,
+    NO_GAUGE,  // no I2C fuel gauge; BatteryMonitor uses the PM1 backend
+    NO_MIC,
+    NO_SENSORS,  // no RTC/IMU
+    1.0f,        // uiScale: button device, no finger targets
+    {},          // power: no ESP32-held latch; the PM1 owns system power
+    0,           // displayControllerVariant
+    {},          // viewableInsets: defaults
+    false,       // batteryChargeStatusActiveHigh (unused)
+    NO_I2C_FRONTLIGHT,
+    {},  // haptic
+    0,   // headerOffsetY
+    0,   // cornerRadius
+    0,   // tabBarOffsetY
+    100, // tabBarHeightPct
+    100, // tabBarWidthPct
+    0,   // wifiMaxTxPower
+    true,  // usbDetectActiveHigh (unused)
+    0,     // statusBarOffsetY
+    0      // bottomCornerRadius
+};
+
 // --- EEGO Reader A4 — ESP32-S3 N16R8, UC8279C (768x552) + GSLX680 touch -------
 // CrossPoint fork device; pins/resolution/calibration from stock-firmware RE,
 // none hardware-confirmed. See docs/eego-a4-support.md.
@@ -2090,7 +2148,7 @@ constexpr uint32_t cmax(uint32_t a, uint32_t b) { return a > b ? a : b; }
 constexpr uint32_t panelBytes(const BoardProfile& p) {
   return static_cast<uint32_t>(p.displayWidth / 8) * p.displayHeight;
 }
-constexpr uint32_t MAX_FRAMEBUFFER_BYTES = cmax(
+constexpr uint32_t MAX_FRAMEBUFFER_BYTES_BASE = cmax(
     cmax(cmax(FREEINK_DEVICE_X4 ? panelBytes(XTEINK_X4) : 0u, FREEINK_DEVICE_X3 ? panelBytes(XTEINK_X3) : 0u),
          cmax(FREEINK_DEVICE_M5 ? panelBytes(M5STACK_PAPER_COLOR) : 0u,
               FREEINK_DEVICE_MURPHY ? panelBytes(MURPHY_M3) : 0u)),
@@ -2108,6 +2166,8 @@ constexpr uint32_t MAX_FRAMEBUFFER_BYTES = cmax(
                         cmax(FREEINK_DEVICE_WS397 ? panelBytes(WS_EPAPER_397) : 0u,
                              cmax(FREEINK_DEVICE_METALIO_EINK4 ? panelBytes(METALIO_EINK4) : 0u,
                                   FREEINK_DEVICE_PICCO ? panelBytes(PICCO) : 0u)))))));
+constexpr uint32_t MAX_FRAMEBUFFER_BYTES =
+    cmax(MAX_FRAMEBUFFER_BYTES_BASE, FREEINK_DEVICE_PAPERDIY ? panelBytes(M5PAPER_DIY) : 0u);
 
 // Compile-time default device — the profile ACTIVE starts as. With a single
 // device in the build this is the only device; with several same-MCU devices it
@@ -2138,6 +2198,8 @@ constexpr BoardProfile DEFAULT_DEVICE = LILYGO_T5S3;
 constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_V11;
 #elif FREEINK_DEVICE_PAPERS3
 constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_S3;
+#elif FREEINK_DEVICE_PAPERDIY
+constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_DIY;
 #elif FREEINK_DEVICE_STICKY
 constexpr BoardProfile DEFAULT_DEVICE = STICKY;
 #elif FREEINK_DEVICE_X4PRO
@@ -2286,6 +2348,11 @@ inline bool selectDevice(Board which) {
       ACTIVE = M5PAPER_S3;
       break;
 #endif
+#if FREEINK_DEVICE_PAPERDIY
+    case Board::M5PaperDiy:
+      ACTIVE = M5PAPER_DIY;
+      break;
+#endif
 #if FREEINK_DEVICE_EEGO_A4
     case Board::EegoA4:
       ACTIVE = EEGO_A4;
@@ -2327,6 +2394,7 @@ inline bool isMurphyM3() { return ACTIVE.board == Board::MurphyM3; }
 inline bool isDeLink() { return ACTIVE.board == Board::DeLink; }
 inline bool isM5PaperV11() { return ACTIVE.board == Board::M5PaperV11; }
 inline bool isM5PaperS3() { return ACTIVE.board == Board::M5PaperS3; }
+inline bool isPaperDiy() { return ACTIVE.board == Board::M5PaperDiy; }
 inline bool isSticky() { return ACTIVE.board == Board::Sticky; }
 inline bool isX4Pro() { return ACTIVE.board == Board::XteinkX4Pro; }
 inline bool isX4Classic() { return ACTIVE.board == Board::XteinkX4Classic; }
