@@ -1,4 +1,5 @@
 #include <BoardPaperDiy.h>
+
 #include <M5Pm1.h>
 
 namespace {
@@ -7,7 +8,7 @@ namespace {
 // GPIO46 pin. M5GFX's autodetect does the same four GPIO register writes; the
 // PM1's PWR_CFG auto-clears on reset, so the charge/DCDC policy must be
 // re-applied on every boot.
-bool raisePm1EpdRail() {
+bool ensurePm1Ready() {
   using namespace freeink::m5pm1;
 
   beginBus();
@@ -27,6 +28,12 @@ bool raisePm1EpdRail() {
   ok = updateReg(REG_GPIO_MODE, GPIO3, 0) && ok;               // input
   ok = updateReg(REG_GPIO_PULL0, 0x03 << 6, 0x01 << 6) && ok;  // pull-up
 
+#if PAPERDIY_PM1_APP_POWER_BUTTON
+  // Take over the PM1 single-click reset so clicks reach CrossPoint. The PM1's
+  // long-hold download escape is left enabled by configureAppPowerButton().
+  ok = configureAppPowerButton() && ok;
+#endif
+
   if (ok) delay(10);
   return ok;
 }
@@ -35,12 +42,35 @@ bool raisePm1EpdRail() {
 
 namespace BoardPaperDiy {
 
-bool prepareEpdPower() { return raisePm1EpdRail(); }
+bool ensureBooted() {
+  static bool ready = false;
+  static bool ok = false;
+  if (ready) return ok;
+  ok = ensurePm1Ready();
+  ready = ok;
+  return ok;
+}
 
-void powerDownEpdPower() {
+bool setEpdPower(bool enabled) {
+  if (!ensureBooted()) return false;
   using namespace freeink::m5pm1;
-  beginBus();
-  updateReg(REG_GPIO_OUT, GPIO2, 0);
+  const bool ok = updateReg(REG_GPIO_OUT, GPIO2, enabled ? GPIO2 : 0);
+  if (ok && enabled) delay(10);
+  return ok;
+}
+
+bool prepareEpdPower() { return setEpdPower(true); }
+
+void powerDownEpdPower() { setEpdPower(false); }
+
+bool pollPowerButtonClicked(unsigned long nowMs) {
+  static unsigned long lastPollMs = 0;
+  constexpr unsigned long POLL_INTERVAL_MS = 250;
+  if (nowMs - lastPollMs < POLL_INTERVAL_MS) return false;
+  lastPollMs = nowMs;
+  if (!ensureBooted()) return false;
+  uint8_t status = 0;
+  return freeink::m5pm1::readButtonStatus(&status) && (status & freeink::m5pm1::BTN_EVENT) != 0;
 }
 
 void powerOff() {
