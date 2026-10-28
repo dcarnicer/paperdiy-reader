@@ -311,30 +311,33 @@ index 0000000..864dabc
 +}
 diff --git a/freeink-sdk/libs/hardware/BoardPaperDiy/src/BoardPaperDiy.cpp b/freeink-sdk/libs/hardware/BoardPaperDiy/src/BoardPaperDiy.cpp
 new file mode 100644
-index 0000000..053b67c
+index 0000000..9b3ca7c
 --- /dev/null
 +++ b/freeink-sdk/libs/hardware/BoardPaperDiy/src/BoardPaperDiy.cpp
-@@ -0,0 +1,42 @@
+@@ -0,0 +1,45 @@
 +#include <BoardPaperDiy.h>
-+
 +#include <M5Pm1.h>
 +
 +namespace {
 +
 +// PM1 GPIO2 is the PaperDIY EPD rail enable, in addition to the panel's own
-+// GPIO46 pin. M5GFX's autodetect does the same four register writes; the
-+// PM1's PWR_CFG auto-clears on reset, so the DCDC/charge/boost policy must be
++// GPIO46 pin. M5GFX's autodetect does the same four GPIO register writes; the
++// PM1's PWR_CFG auto-clears on reset, so the charge/DCDC policy must be
 +// re-applied on every boot.
 +bool raisePm1EpdRail() {
 +  using namespace freeink::m5pm1;
 +
 +  beginBus();
-+  applyBootPowerPolicy();
++  // PaperDIY needs the charger and the 5 V DCDC (panel boost) on. Unlike
++  // PaperColor it has no Grove/5VINOUT boost and no RGB rail, so keep BOOST_EN,
++  // LDO_EN and LED_R_EN off. PWR_CFG auto-clears on reset: re-apply each boot.
++  updateReg(REG_PWR_CFG, BOOST_EN | LDO_EN | LED_R_EN, CHG_EN | DCDC_EN);
++  writeReg(REG_NEO_CFG, 0x00);
 +
 +  bool ok = updateReg(REG_GPIO_FUNC0, 0x03 << 4, 0);  // GPIO2 = plain GPIO
-+  ok = updateReg(REG_GPIO_MODE, 0, GPIO2) && ok;       // output
-+  ok = updateReg(REG_GPIO_DRV, GPIO2, 0) && ok;        // push-pull
-+  ok = updateReg(REG_GPIO_OUT, 0, GPIO2) && ok;        // high
++  ok = updateReg(REG_GPIO_MODE, 0, GPIO2) && ok;      // output
++  ok = updateReg(REG_GPIO_DRV, GPIO2, 0) && ok;       // push-pull
++  ok = updateReg(REG_GPIO_OUT, 0, GPIO2) && ok;       // high
 +  if (ok) delay(10);
 +  return ok;
 +}
@@ -359,7 +362,7 @@ index 0000000..053b67c
 +}  // namespace BoardPaperDiy
 diff --git a/freeink-sdk/libs/hardware/BoardPaperDiy/src/PaperDiyLgfxConfig.cpp b/freeink-sdk/libs/hardware/BoardPaperDiy/src/PaperDiyLgfxConfig.cpp
 new file mode 100644
-index 0000000..3b4d374
+index 0000000..784f900
 --- /dev/null
 +++ b/freeink-sdk/libs/hardware/BoardPaperDiy/src/PaperDiyLgfxConfig.cpp
 @@ -0,0 +1,28 @@
@@ -373,8 +376,8 @@ index 0000000..3b4d374
 +// hardware is the M5PM1 EPD rail, raised in prepare() before Bus_EPD init.
 +const LgfxEpdConfig& paperdiyLgfxConfig() {
 +  static const LgfxEpdConfig cfg = {
-+      {PAPERDIY_EP_D0, PAPERDIY_EP_D1, PAPERDIY_EP_D2, PAPERDIY_EP_D3, PAPERDIY_EP_D4, PAPERDIY_EP_D5,
-+       PAPERDIY_EP_D6, PAPERDIY_EP_D7},
++      {PAPERDIY_EP_D0, PAPERDIY_EP_D1, PAPERDIY_EP_D2, PAPERDIY_EP_D3, PAPERDIY_EP_D4, PAPERDIY_EP_D5, PAPERDIY_EP_D6,
++       PAPERDIY_EP_D7},
 +      PAPERDIY_EP_SPH,
 +      PAPERDIY_EP_SPV,
 +      PAPERDIY_EP_OE,
@@ -382,9 +385,9 @@ index 0000000..3b4d374
 +      PAPERDIY_EP_CL,
 +      PAPERDIY_EP_CKV,
 +      PAPERDIY_EP_PWR,
-+      16000000,  // busHz — M5GFX's bus_speed for this board
-+      8,         // linePadding — M5GFX's line_padding for this board
-+      0,         // rotation: native-landscape 960x540 framebuffer
++      16000000,                                             // busHz — M5GFX's bus_speed for this board
++      8,                                                    // linePadding — M5GFX's line_padding for this board
++      0,                                                    // rotation: native-landscape 960x540 framebuffer
 +      {&BoardPaperDiy::prepareEpdPower, nullptr, nullptr},  // stock Bus_EPD power sequence
 +  };
 +  return cfg;
