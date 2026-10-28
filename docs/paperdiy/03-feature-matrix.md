@@ -40,7 +40,7 @@ aplica al hardware.
 | BMP | ❌ | ✅ | ✅ | 🟡 | 🧪 |
 | CBZ/CBR (cómics) | ❌ | ❌ | ❌ | 🟡 | ❌ (roadmap) |
 | PDF nativo | ❌ | ❌ | ❌ | ✅ | ❌ (no prioritario) |
-| PDF por conversión externa | ❌ | 🟡 (optimizador) | ❌ | ❌ | 🟡 (roadmap) |
+| PDF por conversión externa | ❌ | ❌ | ❌ | ❌ | 🟡 (roadmap) |
 | OPDS | ❌ | ✅ | 🟡 | ✅ | 🧪 |
 | Calibre wireless | ❌ | ✅ | 🟡 | ✅ | 🧪 |
 | KOReader Sync | ❌ | ✅ | ❌ | ✅ | 🧪 |

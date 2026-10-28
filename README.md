@@ -107,7 +107,8 @@ El binario queda en:
 
 Si tu `~/.platformio` global ya está sano, `pio run -e paperdiy` también
 funciona. El `Makefile` usa un core aislado para que el build sea reproducible
-aunque haya paquetes viejos.
+aunque haya paquetes viejos. `.platformio-core/` y `.pio/` son cachés locales
+(git-ignored); se pueden borrar y `make build` las reconstruye.
 
 ## Flashear
 
