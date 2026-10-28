@@ -14,9 +14,10 @@
 - Primera validación en hardware:
   - pantalla/UI correctas en vertical;
   - A/B, batería, SD FAT32 y lectura EPUB;
-  - lectura de `Amar-o-depender.epub` y `Reconciliacion.epub`.
+  - lectura de `Amar-o-depender.epub` y `Reconciliacion.epub`;
+  - Wi-Fi, web UI y subida de libros verificadas.
 - Fix de ghosting al abrir el menú del lector: la primera pintada usa
   `HALF_REFRESH` y limpia la página anterior; el resto de la navegación del
   menú sigue en `FAST_REFRESH`.
-- Pendiente: Wi-Fi/OPDS/Calibre, consumo/autonomía, power/shutdown, wake, OTA y
-  ghosting general tras muchas páginas.
+- Pendiente: OPDS, Calibre/KOReader Sync, consumo/autonomía, power/shutdown,
+  wake, OTA y ghosting general tras muchas páginas.

@@ -74,7 +74,7 @@ mergeados y **no han sido probados en un PaperDIY físico**.
 | Tests host/simulador | Sí | No (solo build) |
 | Documentación | `docs/paperdiy.md` corto | Investigación, hardware, matriz, roadmap, port, guía, fork |
 | Tamaño build | ~6,2 MB / 94,7 %; ~80.676 B RAM | 5,35 MB / 81,6 %; 111.076 B RAM |
-| Validación hardware | Pendiente | Parcial: pantalla/UI, A/B, batería, SD y lectura EPUB |
+| Validación hardware | Pendiente | Parcial: pantalla/UI, A/B, batería, SD, lectura EPUB y Wi-Fi/web UI |
 
 En resumen: **son dos implementaciones muy parecidas y ya convergen**. Hemos
 integrado el botón power del PM1, el shutdown en batería, el fallback USB y el
