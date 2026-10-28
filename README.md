@@ -7,11 +7,11 @@ panel E Ink ED047TC1 de 4,7", 960×540, 16 grises), construido sobre
 diccionario, sync, OPDS/Calibre y el resto de cosas que hacen usable el aparato
 a diario.
 
-> **Estado:** el firmware **compila y arranca en un PaperDIY real**. Primera
-> validación (28/10/2026): pantalla/UI, botones A/B y batería OK; la UI se ve
-> correcta en vertical. Pendiente: SD/Wi-Fi/OPDS, ghosting, consumo en sleep,
-> botón power/shutdown, wake y OTA. Ver
-> [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md).
+> **Estado:** el firmware **compila, arranca y lee EPUB en un PaperDIY real**.
+> Primera validación (28/10/2026): pantalla/UI, botones A/B, batería, SD,
+> biblioteca y lectura EPUB OK; la UI se ve correcta en vertical. Pendiente:
+> Wi-Fi/OPDS/Calibre, ghosting, consumo en sleep, botón power/shutdown, wake y
+> OTA. Ver [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md).
 >
 > **Fork downstream:** `main` es un espejo de `upstream/develop`; `paperdiy`
 > es nuestra rama de trabajo. El SDK `freeink-sdk` está vendorizado para que el

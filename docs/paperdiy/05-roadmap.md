@@ -18,7 +18,8 @@ Objetivo: demostrar que el port funciona en un PaperDIY real y recoger datos.
 - [ ] Probar A/B: navegación, página, back, confirm, A+B. Cortos ya funcionan;
       largos y A+B pendientes.
 - [x] Batería: lectura al 100 %. Pendiente carga, VBAT y USB presente.
-- [ ] Probar SD: montaje, biblioteca, caché, libros grandes.
+- [x] SD: monta tras reiniciar, aparecen `Books/*.epub`, abre y lee.
+- [ ] Libro grande / caché / cambios de fuente.
 - [ ] Probar Wi-Fi: web UI, OPDS, Calibre, OTA.
 - [ ] Medir consumo: activo, idle, deep sleep; autonomía estimada.
 - [ ] Medir tiempo de wake y comprobar que el botón que despierta no pasa
