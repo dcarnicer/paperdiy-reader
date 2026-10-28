@@ -28,6 +28,12 @@ botones**.
 **Decisión:** fork de CrossPoint 2.0 con soporte PaperDIY, no un lector nuevo
 desde cero. El repositorio conserva la licencia MIT y la atribución.
 
+> **Prior art:** existe una issue abierta en CrossPoint
+> ([#4005](https://github.com/crosspoint-reader/crosspoint-reader/issues/4005))
+> y varios PRs en borrador de `prateek` con un port muy parecido, además de
+> lectores PaperDIY independientes. Ninguno está mergeado ni validado en
+> hardware. Ver [`09-prior-art.md`](09-prior-art.md).
+
 ## Hardware, en corto
 
 | Elemento | Detalle |
