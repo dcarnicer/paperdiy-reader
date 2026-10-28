@@ -12,13 +12,19 @@ PORT      ?=
 PIO_RUN = PLATFORMIO_CORE_DIR="$(CORE_DIR)" $(PIO) run -e $(ENV)
 UPLOAD_PORT = $(if $(PORT),--upload-port "$(PORT)",)
 
-.PHONY: build flash monitor clean size menuconfig
+.PHONY: build flash flash-factory monitor clean size menuconfig
 
 build:
 	$(PIO_RUN)
 
+# App-only update (keeps the installed bootloader/partition table).
 flash:
 	$(PIO_RUN) -t upload $(UPLOAD_PORT)
+
+# First install / recovery: bootloader + partition table + app at 0x0.
+flash-factory:
+	@test -n "$(PORT)" || (echo "Usage: make flash-factory PORT=/dev/cu.usbmodemXXXX" && exit 1)
+	esptool --chip esp32s3 --port "$(PORT)" write_flash 0x0 .pio/build/$(ENV)/firmware.factory.bin
 
 monitor:
 	PLATFORMIO_CORE_DIR="$(CORE_DIR)" $(PIO) device monitor -e $(ENV) $(if $(PORT),--port "$(PORT)",)
