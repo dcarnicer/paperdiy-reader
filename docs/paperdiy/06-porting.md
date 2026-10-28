@@ -103,7 +103,7 @@ Resultado en la máquina de desarrollo (macOS, PlatformIO 6.1.19, pioarduino
 
 ```
 RAM:   33.9% (111.076 / 327.680 bytes)
-Flash: 81.6% (5.347.683 / 6.553.600 bytes)
+Flash: 81.6% (5.347.703 / 6.553.600 bytes)
 firmware.bin          5,1 MB
 firmware.factory.bin  5,2 MB
 ```

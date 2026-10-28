@@ -565,7 +565,7 @@ void InputManager::updateDigitalTwoButton(const unsigned long currentTime) {
     auxiliaryState |= static_cast<uint8_t>(1u << BTN_POWER);
   }
 #endif
-#if FREEINK_DEVICE_PAPERDIY
+#if FREEINK_DEVICE_PAPERDIY && PAPERDIY_PM1_APP_POWER_BUTTON
   if (BoardPaperDiy::pollPowerButtonClicked(currentTime)) {
     auxiliaryState |= static_cast<uint8_t>(1u << BTN_POWER);
   }
