@@ -80,8 +80,8 @@ Los campos que importan:
 
 - `BoardPaperDiyPins.h`: pines del panel, botones, PM1.
 - `BoardPaperDiy.cpp`:
-  - `prepareEpdPower()`: `m5pm1::beginBus()`, `applyBootPowerPolicy()`, configura
-    PM1 GPIO2 como salida push-pull a HIGH.
+  - `prepareEpdPower()`: `m5pm1::beginBus()`, activa `CHG_EN | DCDC_EN` (sin
+    BOOST/LDO/LED), y configura PM1 GPIO2 como salida push-pull a HIGH.
   - `powerDownEpdPower()`: baja PM1 GPIO2 antes de deep sleep.
   - `powerOff()`: `m5pm1::requestShutdown()`.
 - `PaperDiyLgfxConfig.cpp`: `LgfxEpdConfig` con los pines del PaperS3 y el hook
