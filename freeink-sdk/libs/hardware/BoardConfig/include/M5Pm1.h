@@ -58,6 +58,7 @@ constexpr uint8_t REG_WDT_CNT = 0x0A;    // seconds; 0 disables the PMIC watchdo
 constexpr uint8_t REG_SYS_CMD = 0x0C;    // KEY=0xA in high nibble; 1=off, 2=reset, 3=download
 constexpr uint8_t REG_GPIO_MODE = 0x10;  // 1 = output
 constexpr uint8_t REG_GPIO_OUT = 0x11;   // output level
+constexpr uint8_t REG_GPIO_IN = 0x12;    // input level
 constexpr uint8_t REG_GPIO_DRV = 0x13;   // 0 = push-pull
 constexpr uint8_t REG_GPIO_PULL0 = 0x14;
 constexpr uint8_t REG_GPIO_FUNC0 = 0x16;  // 0 = plain GPIO (vs alt function)
@@ -91,6 +92,7 @@ constexpr uint8_t SYS_CMD_SHUTDOWN = 0xA1;
 // its EPD rail.
 constexpr uint8_t GPIO0 = 1 << 0;
 constexpr uint8_t GPIO2 = 1 << 2;
+constexpr uint8_t GPIO3 = 1 << 3;
 constexpr uint8_t GPIO_WAKE_MASK = 0x1F;
 
 // Init the internal I2C bus and pin the PM1 to 100 kHz with idle-sleep disabled

@@ -21,6 +21,12 @@ bool raisePm1EpdRail() {
   ok = updateReg(REG_GPIO_MODE, 0, GPIO2) && ok;      // output
   ok = updateReg(REG_GPIO_DRV, GPIO2, 0) && ok;       // push-pull
   ok = updateReg(REG_GPIO_OUT, 0, GPIO2) && ok;       // high
+
+  // PM1 GPIO3 is CHG_STAT (active-low, needs a pull-up); BatteryMonitor reads it.
+  ok = updateReg(REG_GPIO_FUNC0, 0x03 << 6, 0) && ok;          // GPIO3 = plain GPIO
+  ok = updateReg(REG_GPIO_MODE, GPIO3, 0) && ok;               // input
+  ok = updateReg(REG_GPIO_PULL0, 0x03 << 6, 0x01 << 6) && ok;  // pull-up
+
   if (ok) delay(10);
   return ok;
 }

@@ -985,9 +985,22 @@ bool BatteryMonitor::readM5Pm1Status(Status& status) const {
     status.externalPower = (sources & (M5PM1_PWR_SRC_5VIN | M5PM1_PWR_SRC_5VINOUT)) != 0;
   }
 
-  // Product semantics for Paper Mono: external supply present means charging.
-  status.chargingKnown = status.externalPowerKnown;
-  status.charging = status.externalPower;
+#if FREEINK_DEVICE_PAPERDIY
+  // PaperDIY has a real CHG_STAT line on PM1 GPIO3 (active-low). Prefer it over
+  // the "external power = charging" approximation used by the other PM1 boards.
+  if (BoardConfig::isPaperDiy()) {
+    uint8_t gpio = 0;
+    if (freeink::m5pm1::readReg(freeink::m5pm1::REG_GPIO_IN, &gpio)) {
+      status.chargingKnown = true;
+      status.charging = (gpio & freeink::m5pm1::GPIO3) == 0;
+    }
+  }
+#endif
+  if (!status.chargingKnown) {
+    // Product semantics for Paper Mono: external supply present means charging.
+    status.chargingKnown = status.externalPowerKnown;
+    status.charging = status.externalPower;
+  }
   return status.percentageKnown || status.millivoltsKnown || status.externalPowerKnown;
 }
 

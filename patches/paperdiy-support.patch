@@ -16,7 +16,7 @@ index 0e2cc95..92e3415 100644
  const LgfxEpdConfig& FREEINK_LGFX_EPD_CONFIG();
  PanelDriver& lgfxEpdDriver() {
 diff --git a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
-index 883e365..660b80b 100644
+index 883e365..4028009 100644
 --- a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
 +++ b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
 @@ -685,7 +685,7 @@ bool BatteryMonitor::hasGaugeBackend() const {
@@ -28,6 +28,32 @@ index 883e365..660b80b 100644
  }
  
  uint16_t BatteryMonitor::readPercentage() const {
+@@ -985,9 +985,22 @@ bool BatteryMonitor::readM5Pm1Status(Status& status) const {
+     status.externalPower = (sources & (M5PM1_PWR_SRC_5VIN | M5PM1_PWR_SRC_5VINOUT)) != 0;
+   }
+ 
+-  // Product semantics for Paper Mono: external supply present means charging.
+-  status.chargingKnown = status.externalPowerKnown;
+-  status.charging = status.externalPower;
++#if FREEINK_DEVICE_PAPERDIY
++  // PaperDIY has a real CHG_STAT line on PM1 GPIO3 (active-low). Prefer it over
++  // the "external power = charging" approximation used by the other PM1 boards.
++  if (BoardConfig::isPaperDiy()) {
++    uint8_t gpio = 0;
++    if (freeink::m5pm1::readReg(freeink::m5pm1::REG_GPIO_IN, &gpio)) {
++      status.chargingKnown = true;
++      status.charging = (gpio & freeink::m5pm1::GPIO3) == 0;
++    }
++  }
++#endif
++  if (!status.chargingKnown) {
++    // Product semantics for Paper Mono: external supply present means charging.
++    status.chargingKnown = status.externalPowerKnown;
++    status.charging = status.externalPower;
++  }
+   return status.percentageKnown || status.millivoltsKnown || status.externalPowerKnown;
+ }
+ 
 diff --git a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
 index 39d67c8..010d6e6 100644
 --- a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
@@ -189,7 +215,7 @@ index 39d67c8..010d6e6 100644
  inline bool isX4Pro() { return ACTIVE.board == Board::XteinkX4Pro; }
  inline bool isX4Classic() { return ACTIVE.board == Board::XteinkX4Classic; }
 diff --git a/freeink-sdk/libs/hardware/BoardConfig/include/M5Pm1.h b/freeink-sdk/libs/hardware/BoardConfig/include/M5Pm1.h
-index 4c2ce96..b665391 100644
+index 4c2ce96..21b8f3f 100644
 --- a/freeink-sdk/libs/hardware/BoardConfig/include/M5Pm1.h
 +++ b/freeink-sdk/libs/hardware/BoardConfig/include/M5Pm1.h
 @@ -29,6 +29,8 @@ constexpr uint8_t ADDR = 0x6E;
@@ -210,7 +236,15 @@ index 4c2ce96..b665391 100644
  #else
  #define FREEINK_M5PM1_SCL 2
  #endif
-@@ -83,8 +87,10 @@ constexpr uint8_t BTN_DOWNLOAD_LOCK = 1 << 7;
+@@ -54,6 +58,7 @@ constexpr uint8_t REG_WDT_CNT = 0x0A;    // seconds; 0 disables the PMIC watchdo
+ constexpr uint8_t REG_SYS_CMD = 0x0C;    // KEY=0xA in high nibble; 1=off, 2=reset, 3=download
+ constexpr uint8_t REG_GPIO_MODE = 0x10;  // 1 = output
+ constexpr uint8_t REG_GPIO_OUT = 0x11;   // output level
++constexpr uint8_t REG_GPIO_IN = 0x12;    // input level
+ constexpr uint8_t REG_GPIO_DRV = 0x13;   // 0 = push-pull
+ constexpr uint8_t REG_GPIO_PULL0 = 0x14;
+ constexpr uint8_t REG_GPIO_FUNC0 = 0x16;  // 0 = plain GPIO (vs alt function)
+@@ -83,8 +88,11 @@ constexpr uint8_t BTN_DOWNLOAD_LOCK = 1 << 7;
  constexpr uint8_t BTN_SINGLE_RESET_DISABLE = 1 << 0;
  constexpr uint8_t SYS_CMD_SHUTDOWN = 0xA1;
  
@@ -219,6 +253,7 @@ index 4c2ce96..b665391 100644
 +// its EPD rail.
  constexpr uint8_t GPIO0 = 1 << 0;
 +constexpr uint8_t GPIO2 = 1 << 2;
++constexpr uint8_t GPIO3 = 1 << 3;
  constexpr uint8_t GPIO_WAKE_MASK = 0x1F;
  
  // Init the internal I2C bus and pin the PM1 to 100 kHz with idle-sleep disabled
@@ -311,10 +346,10 @@ index 0000000..864dabc
 +}
 diff --git a/freeink-sdk/libs/hardware/BoardPaperDiy/src/BoardPaperDiy.cpp b/freeink-sdk/libs/hardware/BoardPaperDiy/src/BoardPaperDiy.cpp
 new file mode 100644
-index 0000000..9b3ca7c
+index 0000000..3803423
 --- /dev/null
 +++ b/freeink-sdk/libs/hardware/BoardPaperDiy/src/BoardPaperDiy.cpp
-@@ -0,0 +1,45 @@
+@@ -0,0 +1,51 @@
 +#include <BoardPaperDiy.h>
 +#include <M5Pm1.h>
 +
@@ -338,6 +373,12 @@ index 0000000..9b3ca7c
 +  ok = updateReg(REG_GPIO_MODE, 0, GPIO2) && ok;      // output
 +  ok = updateReg(REG_GPIO_DRV, GPIO2, 0) && ok;       // push-pull
 +  ok = updateReg(REG_GPIO_OUT, 0, GPIO2) && ok;       // high
++
++  // PM1 GPIO3 is CHG_STAT (active-low, needs a pull-up); BatteryMonitor reads it.
++  ok = updateReg(REG_GPIO_FUNC0, 0x03 << 6, 0) && ok;          // GPIO3 = plain GPIO
++  ok = updateReg(REG_GPIO_MODE, GPIO3, 0) && ok;               // input
++  ok = updateReg(REG_GPIO_PULL0, 0x03 << 6, 0x01 << 6) && ok;  // pull-up
++
 +  if (ok) delay(10);
 +  return ok;
 +}
