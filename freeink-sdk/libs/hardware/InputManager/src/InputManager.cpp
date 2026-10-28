@@ -1,5 +1,9 @@
 #include "InputManager.h"
 
+#if FREEINK_DEVICE_PAPERDIY
+#include <BoardPaperDiy.h>
+#endif
+
 #include <algorithm>
 
 #include "MultiTouchGestureMath.h"
@@ -100,6 +104,9 @@ void InputManager::begin() {
   if (BoardConfig::isPicco() && BoardConfig::ACTIVE.input.power >= 0) {
     detachInterrupt(BoardConfig::ACTIVE.input.power);
   }
+#endif
+#if FREEINK_DEVICE_PAPERDIY
+  BoardPaperDiy::ensureBooted();
 #endif
 #if FREEINK_DEVICE_METALIO_EINK4
   if (BoardConfig::isMetalioEInk4()) freeink::metalio::ensureBooted();
@@ -555,6 +562,11 @@ void InputManager::updateDigitalTwoButton(const unsigned long currentTime) {
   // masks directly — applyStateChange() assigns them from the state diff,
   // clobbering direct writes the same tick.
   if (freeink::papermono::pollPowerButtonClicked(currentTime)) {
+    auxiliaryState |= static_cast<uint8_t>(1u << BTN_POWER);
+  }
+#endif
+#if FREEINK_DEVICE_PAPERDIY
+  if (BoardPaperDiy::pollPowerButtonClicked(currentTime)) {
     auxiliaryState |= static_cast<uint8_t>(1u << BTN_POWER);
   }
 #endif
