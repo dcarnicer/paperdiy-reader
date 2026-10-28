@@ -1,0 +1,173 @@
+diff --git a/lib/hal/HalGPIO.cpp b/lib/hal/HalGPIO.cpp
+index e2254133..9f7a2f64 100644
+--- a/lib/hal/HalGPIO.cpp
++++ b/lib/hal/HalGPIO.cpp
+@@ -266,7 +266,8 @@ bool HalGPIO::coldBootImpliesPowerButton() const {
+   // EEGO A4 misread them the same way once the charger terminates at 100%
+   // (STAT inactive reads as "no USB").
+   // The Metalio sleeps powered off and only its button turns it back on.
+-  return isXteinkDevice() || BoardConfig::isPaperMono() || BoardConfig::isSticky() || BoardConfig::isMetalioEInk4();
++  return isXteinkDevice() || BoardConfig::isPaperDiy() || BoardConfig::isPaperMono() || BoardConfig::isSticky() ||
++         BoardConfig::isMetalioEInk4();
+ }
+ 
+ HalGPIO::WakeupReason HalGPIO::getWakeupReason() const {
+diff --git a/lib/hal/HalPowerManager.cpp b/lib/hal/HalPowerManager.cpp
+index 2889e769..f833c494 100644
+--- a/lib/hal/HalPowerManager.cpp
++++ b/lib/hal/HalPowerManager.cpp
+@@ -19,9 +19,12 @@
+ #include <driver/gpio.h>
+ #endif
+ 
+-#if FREEINK_DEVICE_PAPERMONO
++#if FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY
+ #include <M5Pm1.h>
+ #endif
++#if FREEINK_DEVICE_PAPERDIY
++#include <BoardPaperDiy.h>
++#endif
+ 
+ HalPowerManager powerManager;  // Singleton instance
+ 
+@@ -140,7 +143,7 @@ void HalPowerManager::startDeepSleep(HalGPIO& gpio, const bool wakeOnHeldButton)
+   // guarantees that ordering).
+   freeink::PowerManager::powerDownRailsForSleep();
+ 
+-#if FREEINK_DEVICE_PAPERMONO
++#if FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY
+   // Its power button is behind the M5PM1 PMIC rather than an ESP GPIO, so
+   // normal GPIO deep sleep would have no wake source. Ask the PMIC to shut the
+   // device down; a button click then restarts it through a cold boot.
+@@ -153,6 +156,16 @@ void HalPowerManager::startDeepSleep(HalGPIO& gpio, const bool wakeOnHeldButton)
+   // power instead; the button cold-boots it. Returns only on USB power.
+   freeink::metalio::powerOff();
+ #endif
++#if FREEINK_DEVICE_PAPERDIY
++  // If USB keeps the board powered after the PMIC shutdown request, fall back
++  // to deep sleep. Either navigation key wakes it (the PM1 power button is not
++  // an ESP32 GPIO).
++  BoardPaperDiy::powerDownEpdPower();
++  const auto& keys = BoardConfig::ACTIVE.input;
++  while (digitalRead(keys.up) == LOW || digitalRead(keys.down) == LOW) delay(10);
++  freeink::PowerManager::armWakeOnPins((1ULL << keys.up) | (1ULL << keys.down));
++  freeink::PowerManager::deepSleep();
++#endif
+ 
+   if (wakeOnHeldButton) {
+     freeink::PowerManager::armPowerButtonWakeup();
+diff --git a/platformio.ini b/platformio.ini
+index f96f6634..1bf112e1 100644
+--- a/platformio.ini
++++ b/platformio.ini
+@@ -622,6 +622,35 @@ build_flags =
+   -DLOG_LEVEL=1 ; Set log level to info for release candidate builds
+   -DUSE_BLOCK_DEVICE_INTERFACE=1
+ 
++; --- M5Stack PaperDIY — ESP32-S3 N16R8, ED047TC1 raw parallel, 2 buttons ------
++; Same panel/bus as PaperS3 but no touch/RTC/IMU, two GPIO buttons and an M5PM1
++; PMIC. Board support lives in freeink-sdk/libs/hardware/BoardPaperDiy.
++;   pio run -e paperdiy -t upload
++[env:paperdiy]
++extends = base
++board = esp32-s3-devkitc1-n16r8
++board_build.mcu = esp32s3
++board_build.flash_mode = qio
++board_build.arduino.memory_type = qio_opi
++build_flags =
++  ${base.build_flags}
++  -DFREEINK_DEVICE_PAPERDIY=1
++  -DBOARD_HAS_PSRAM
++  -DFREEINK_CAP_USB_MSC=1
++  -DFREEINK_CAP_BLE_HID_HOST=1
++  -DUSB_PRODUCT=\"CrossPoint_PaperDIY\"
++  -DUSB_MANUFACTURER=\"CrossPoint\"
++  -DCROSSPOINT_VERSION=\"${crosspoint.version}-paperdiy\"
++  -DENABLE_SERIAL_LOG
++  -DLOG_LEVEL=2
++  ; Fork OTA: uncomment and point at THIS fork before publishing releases.
++  ; The default (official CrossPoint) is safe because no -paperdiy asset exists.
++  ; -DCROSSPOINT_OTA_RELEASES_URL=\"https://api.github.com/repos/YOURUSER/paperdiy-reader/releases/latest\"
++lib_deps =
++  ${base.lib_deps}
++  BoardPaperDiy=symlink://freeink-sdk/libs/hardware/BoardPaperDiy
++  m5stack/M5GFX @ 0.2.33
++
+ ; --- EEGO Reader A4 — ESP32-S3 N16R8, UC8279C 768x552 + GSLX680 touch ---------
+ ; UC8279C SPI panel, GSLX680 touch, PCF8563 RTC, dedicated HSPI MicroSD (SPI,
+ ; not SDMMC). 16MB DIO flash + 8MB OPI PSRAM. One binary serves the frontlit
+diff --git a/src/main.cpp b/src/main.cpp
+index 61d35b30..e0d05361 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -708,8 +708,8 @@ void setup() {
+     case HalGPIO::WakeupReason::AfterUSBPower:
+       // Most devices return to sleep after a USB-powered cold boot.
+       LOG_DBG("MAIN", "Wakeup reason: After USB Power");
+-#if FREEINK_DEVICE_X4PRO || FREEINK_DEVICE_X4CLASSIC || FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_EEGO_A4 || \
+-    FREEINK_DEVICE_METALIO_EINK4 || FREEINK_DEVICE_PICCO
++#if FREEINK_DEVICE_X4PRO || FREEINK_DEVICE_X4CLASSIC || FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY || \
++    FREEINK_DEVICE_EEGO_A4 || FREEINK_DEVICE_METALIO_EINK4 || FREEINK_DEVICE_PICCO
+       // X4 Pro must stay awake so USB Serial/JTAG remains available after leaving
+       // USB Drive and reconnecting the cable. Paper Mono has no armable GPIO wake
+       // (its button is behind the PMIC). Metalio also needs native USB available
+@@ -1027,10 +1027,10 @@ void loop() {
+     return;
+   }
+ 
+-#if FREEINK_DEVICE_PAPERMONO
+-  // Paper Mono reports the PMIC power button as a one-tick click, so the held
+-  // path above cannot fire. With the default Ignore action, retain the normal
+-  // power-button meaning and shut down; explicit alternate bindings still win.
++#if FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY
++  // Paper Mono/PaperDIY report the PMIC power button as a one-tick click, so
++  // the held path above cannot fire. With the default Ignore action, retain the
++  // normal power-button meaning and shut down; explicit alternate bindings win.
+   if ((SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP ||
+        SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::IGNORE) &&
+       millis() >= allowSleepAt && mappedInputManager.wasReleased(MappedInputManager::Button::Power)) {
+diff --git a/src/network/FirmwareBoardTag.cpp b/src/network/FirmwareBoardTag.cpp
+index 7109854a..7e0ddadc 100644
+--- a/src/network/FirmwareBoardTag.cpp
++++ b/src/network/FirmwareBoardTag.cpp
+@@ -17,6 +17,8 @@
+ #define CROSSPOINT_BOARD_NAME "x4"
+ #elif FREEINK_DEVICE_PAPERMONO
+ #define CROSSPOINT_BOARD_NAME "papermono"
++#elif FREEINK_DEVICE_PAPERDIY
++#define CROSSPOINT_BOARD_NAME "paperdiy"
+ #elif FREEINK_DEVICE_STICKY
+ #define CROSSPOINT_BOARD_NAME "sticky"
+ #elif FREEINK_DEVICE_M5PAPER
+diff --git a/src/network/OtaUpdater.cpp b/src/network/OtaUpdater.cpp
+index 1f64b229..03c6a6e6 100644
+--- a/src/network/OtaUpdater.cpp
++++ b/src/network/OtaUpdater.cpp
+@@ -19,7 +19,12 @@
+ #include "FirmwareFlasher.h"
+ 
+ namespace {
+-constexpr char latestReleaseUrl[] = "https://api.github.com/repos/crosspoint-reader/crosspoint-reader/releases/latest";
++// Override in the fork's release environment so OTA checks our releases, not
++// the official CrossPoint ones. The board tag still rejects a wrong asset.
++#ifndef CROSSPOINT_OTA_RELEASES_URL
++#define CROSSPOINT_OTA_RELEASES_URL "https://api.github.com/repos/crosspoint-reader/crosspoint-reader/releases/latest"
++#endif
++constexpr char latestReleaseUrl[] = CROSSPOINT_OTA_RELEASES_URL;
+ }  // namespace
+ 
+ OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
+@@ -101,8 +106,12 @@ bool OtaUpdater::isUpdateNewer() const {
+ 
+   const auto currentVersion = CROSSPOINT_VERSION;
+ 
++  // GitHub tags are commonly vX.Y.Z; the version parser only wants X.Y.Z.
++  const char* latest = latestVersion.c_str();
++  if (*latest == 'v' || *latest == 'V') ++latest;
++
+   // semantic version check (only match on 3 segments)
+-  sscanf(latestVersion.c_str(), "%d.%d.%d", &latestMajor, &latestMinor, &latestPatch);
++  sscanf(latest, "%d.%d.%d", &latestMajor, &latestMinor, &latestPatch);
+   sscanf(currentVersion, "%d.%d.%d", &currentMajor, &currentMinor, &currentPatch);
+ 
+   /*

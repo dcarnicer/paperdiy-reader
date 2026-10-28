@@ -80,23 +80,33 @@ Los campos que importan:
 
 - `BoardPaperDiyPins.h`: pines del panel, botones, PM1.
 - `BoardPaperDiy.cpp`:
-  - `prepareEpdPower()`: `m5pm1::beginBus()`, activa `CHG_EN | DCDC_EN` (sin
-    BOOST/LDO/LED), y configura PM1 GPIO2 como salida push-pull a HIGH.
-  - `powerDownEpdPower()`: baja PM1 GPIO2 antes de deep sleep.
+  - `ensureBooted()`: `m5pm1::beginBus()`, activa `CHG_EN | DCDC_EN` (sin
+    BOOST/LDO/LED), configura GPIO2 (rail EPD), GPIO3 (CHG_STAT) y el botón
+    power del PM1;
+  - `setEpdPower()` / `prepareEpdPower()` / `powerDownEpdPower()`;
+  - `pollPowerButtonClicked()`: lee el evento PM1 y lo entrega como `BTN_POWER`;
   - `powerOff()`: `m5pm1::requestShutdown()`.
 - `PaperDiyLgfxConfig.cpp`: `LgfxEpdConfig` con los pines del PaperS3 y el hook
   `prepare`.
+- `InputManager` llama a `ensureBooted()` y sondea el botón power.
 
 ## Energía y sueño
 
-- `PowerManager::armPowerButtonWakeup()`: para PaperDIY arma `ext1` en GPIO3/4
-  (activo bajo), porque no hay un power GPIO.
-- `waitForPowerButtonRelease()`: espera a que se suelten A y B para que el
-  toque de wake no se convierta en un page turn.
-- `powerDownRailsForSleep()`: corta PM1 GPIO2 después de que el panel reciba
-  el comando de sleep.
-- `BatteryMonitor`: `hasM5Pm1Backend()` incluye PaperDIY; lee VBAT/VIN/VOUT y
-  PWR_SRC del PM1.
+- **Batería:** `HalPowerManager::startDeepSleep()` pide shutdown al PM1
+  (`SYS_CMD 0xA1`). Si el USB mantiene la placa, hace deep sleep y despierta
+  con A/B.
+- **Botón power:** `configureAppPowerButton()` desactiva el single-click reset
+  del PM1 y el clic se entrega como `BTN_POWER`; la acción corta por defecto es
+  dormir/apagar. `PAPERDIY_PM1_APP_POWER_BUTTON=0` restaura el reset de fábrica.
+- **Wake:** `PowerManager::armPowerButtonWakeup()` arma `ext1` en GPIO3/4
+  (activo bajo), porque no hay un power GPIO. `waitForPowerButtonRelease()`
+  espera a que se suelten A y B para que el toque de wake no se convierta en un
+  page turn.
+- **Rails:** `powerDownRailsForSleep()` corta PM1 GPIO2 después de que el panel
+  reciba el comando de sleep.
+- **BatteryMonitor:** `hasM5Pm1Backend()` incluye PaperDIY; lee VBAT/VIN/VOUT,
+  `PWR_SRC` y CHG_STAT (GPIO3) del PM1.
+- **Framebuffer:** `FREEINK_FB_PSRAM` lo coloca en PSRAM.
 
 ## Almacenamiento
 
@@ -124,14 +134,17 @@ diccionarios viven fuera de esa carpeta (ver guía de usuario).
 - `platformio.ini`, env `paperdiy`.
 - Plataforma pioarduino 55.03.311, Arduino-ESP32 3.3.11.
 - `FREEINK_DEVICE_PAPERDIY=1`, `FREEINK_CAP_USB_MSC=1`,
-  `FREEINK_CAP_BLE_HID_HOST=1`.
+  `FREEINK_CAP_BLE_HID_HOST=1`, `FREEINK_FB_PSRAM`.
 - `BoardPaperDiy` + `M5GFX` en `lib_deps`.
 - `partitions.csv` da ~6,25 MB a la app; el build actual usa 5,35 MB (81,6%).
 - El `Makefile` usa `PLATFORMIO_CORE_DIR=.platformio-core` para reproducibilidad.
+- `CROSSPOINT_OTA_RELEASES_URL` permite apuntar la OTA al fork.
 
 ## Por qué vendorizado
 
-El repo es un snapshot completo de CrossPoint 2.0 + `freeink-sdk`, no un
-submódulo. Ventajas: se clona y se compila sin depender de commits de
-submódulos; el port es autocontenido. Desventaja: actualizar desde upstream
-requiere aplicar el patch del port. Ver `06-porting.md`.
+`main` es un espejo de `upstream/develop`; `paperdiy` es el fork con
+CrossPoint 2.0 + `freeink-sdk` vendorizado. Ventajas: se clona y se compila sin
+depender de commits de submódulos; el port es autocontenido. Desventaja:
+actualizar desde upstream requiere re-vendorizar el SDK y reaplicar
+`patches/sdk.patch` + `patches/firmware.patch`. Ver
+[`10-fork-maintenance.md`](10-fork-maintenance.md).

@@ -13,6 +13,7 @@ CrossPoint sigue en `docs/` y `docs/upstream/`).
 8. [Guía de usuario](07-user-guide.md)
 9. [Fuentes](08-sources.md)
 10. [Prior art: issue #4005 y PRs de PaperDIY](09-prior-art.md)
+11. [Mantener el fork y actualizar upstream](10-fork-maintenance.md)
 
 ## Estado en una frase
 
