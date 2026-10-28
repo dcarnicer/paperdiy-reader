@@ -162,10 +162,15 @@ o `make flash PORT=/dev/cu.usbmodemXXXX`.
 - A/B responden. Los clics cortos se registran **al soltar** (comportamiento
   de `DigitalTwoButton`, necesario para distinguir el clic de la pulsación
   larga). Pendiente decidir si se cambia a “page on press”.
-- Pendiente: SD/Wi-Fi/OPDS, ghosting, consumo en sleep, botón power/shutdown,
-  wake y OTA.
+- SD de 8 GB FAT32 monta tras reiniciar; `Books/Amar-o-depender.epub` y
+  `Books/Reconciliacion.epub` aparecen en Browse Files. El EPUB abre, pagina y
+  se lee correctamente.
+- Pendiente: Wi-Fi/OPDS/Calibre, ghosting, consumo en sleep, botón
+  power/shutdown, wake y OTA.
 
 ![Primer arranque](images/first-boot.png)
+
+![Primera lectura](images/first-read.png)
 
 ## Checklist de validación en hardware
 
