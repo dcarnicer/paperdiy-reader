@@ -1,0 +1,504 @@
+diff --git a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp
+index 0e2cc95..92e3415 100644
+--- a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp
++++ b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp
+@@ -405,6 +405,12 @@ PanelDriver& lgfxEpdDriver() {
+   static LgfxEpdDriver instance(m5PaperS3LgfxConfig());
+   return instance;
+ }
++#elif FREEINK_DEVICE_PAPERDIY && !defined(FREEINK_LGFX_EPD_CONFIG)
++const LgfxEpdConfig& paperdiyLgfxConfig();
++PanelDriver& lgfxEpdDriver() {
++  static LgfxEpdDriver instance(paperdiyLgfxConfig());
++  return instance;
++}
+ #elif defined(FREEINK_LGFX_EPD_CONFIG)
+ const LgfxEpdConfig& FREEINK_LGFX_EPD_CONFIG();
+ PanelDriver& lgfxEpdDriver() {
+diff --git a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
+index 883e365..660b80b 100644
+--- a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
++++ b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
+@@ -685,7 +685,7 @@ bool BatteryMonitor::hasGaugeBackend() const {
+ }
+ 
+ bool BatteryMonitor::hasM5Pm1Backend() const {
+-  return BoardConfig::isM5StackPaperColor() || BoardConfig::isPaperMono();
++  return BoardConfig::isM5StackPaperColor() || BoardConfig::isPaperMono() || BoardConfig::isPaperDiy();
+ }
+ 
+ uint16_t BatteryMonitor::readPercentage() const {
+diff --git a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
+index 39d67c8..010d6e6 100644
+--- a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
++++ b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
+@@ -66,6 +66,9 @@
+ #ifndef FREEINK_DEVICE_PAPERS3
+ #define FREEINK_DEVICE_PAPERS3 0
+ #endif
++#ifndef FREEINK_DEVICE_PAPERDIY
++#define FREEINK_DEVICE_PAPERDIY 0
++#endif
+ #ifndef FREEINK_DEVICE_MURPHY_M4
+ #define FREEINK_DEVICE_MURPHY_M4 0
+ #endif
+@@ -94,9 +97,9 @@
+       FREEINK_DEVICE_MURPHY || FREEINK_DEVICE_DELINK || FREEINK_DEVICE_LILYGO || FREEINK_DEVICE_M5PAPER ||               \
+       FREEINK_DEVICE_STICKY || FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERS3 || FREEINK_DEVICE_MURPHY_M4 ||         \
+       FREEINK_DEVICE_EEGO_A4 || FREEINK_DEVICE_ONEPAGE || FREEINK_DEVICE_WS397 || FREEINK_DEVICE_METALIO_EINK4 || \
+-      FREEINK_DEVICE_PICCO)
++      FREEINK_DEVICE_PAPERDIY || FREEINK_DEVICE_PICCO)
+ #error \
+-    "FreeInk: no device selected. Pass at least one -DFREEINK_DEVICE_<NAME> (X4, X3, X4PRO, X4CLASSIC, M5, MURPHY, DELINK, LILYGO, M5PAPER, STICKY, PAPERMONO, PAPERS3, MURPHY_M4, EEGO_A4, ONEPAGE, WS397, METALIO_EINK4, PICCO) in your build env — see platformio.sample.ini."
++    "FreeInk: no device selected. Pass at least one -DFREEINK_DEVICE_<NAME> (X4, X3, X4PRO, X4CLASSIC, M5, MURPHY, DELINK, LILYGO, M5PAPER, STICKY, PAPERMONO, PAPERS3, PAPERDIY, MURPHY_M4, EEGO_A4, ONEPAGE, WS397, METALIO_EINK4, PICCO) in your build env — see platformio.sample.ini."
+ #endif
+ // Each device belongs to one MCU family; a binary targets exactly one. X3/X4 are
+ // ESP32-C3; M5 PaperColor/Murphy/de-link/LilyGo are ESP32-S3; M5Paper v1.1 is the
+@@ -107,7 +110,7 @@
+ #define FREEINK_MCU_S3                                                                                    \
+   (FREEINK_DEVICE_M5 || FREEINK_DEVICE_MURPHY || FREEINK_DEVICE_DELINK || FREEINK_DEVICE_LILYGO ||        \
+    FREEINK_DEVICE_STICKY || FREEINK_DEVICE_X4PRO || FREEINK_DEVICE_X4CLASSIC || FREEINK_DEVICE_PAPERMONO ||  \
+-   FREEINK_DEVICE_PAPERS3 || FREEINK_DEVICE_MURPHY_M4 || FREEINK_DEVICE_EEGO_A4 || FREEINK_DEVICE_WS397 || FREEINK_DEVICE_METALIO_EINK4 || \
++   FREEINK_DEVICE_PAPERS3 || FREEINK_DEVICE_PAPERDIY || FREEINK_DEVICE_MURPHY_M4 || FREEINK_DEVICE_EEGO_A4 || FREEINK_DEVICE_WS397 || FREEINK_DEVICE_METALIO_EINK4 || \
+    FREEINK_DEVICE_PICCO)
+ #define FREEINK_MCU_ESP32 (FREEINK_DEVICE_M5PAPER)
+ #if (FREEINK_MCU_C3 + FREEINK_MCU_C61 + FREEINK_MCU_S3 + FREEINK_MCU_ESP32) != 1
+@@ -180,7 +183,7 @@
+ // LilyGo T5 S3 and M5Stack PaperS3: raw-parallel ED047TC1 via LovyanGFX (M5GFX).
+ // External-bus driver; each board injects its own bus pins/power in an
+ // LgfxEpdConfig (PaperS3's rails are plain GPIOs, LilyGo's ride a PMIC+expander).
+-#if FREEINK_DEVICE_LILYGO || FREEINK_DEVICE_PAPERS3
++#if FREEINK_DEVICE_LILYGO || FREEINK_DEVICE_PAPERS3 || FREEINK_DEVICE_PAPERDIY
+ #define FREEINK_DRIVER_LGFX_EPD 1
+ #else
+ #define FREEINK_DRIVER_LGFX_EPD 0
+@@ -456,6 +459,7 @@ enum class Board : uint8_t {
+   Sticky,
+   PaperMono,
+   M5PaperS3,  // ESP32-S3 sibling of M5Paper v1.1: same ED047TC1 glass, no IT8951 — raw parallel via LovyanGFX
++  M5PaperDiy,  // PaperS3 sibling without touch/RTC, 2 buttons, M5PM1 PMIC — same ED047TC1 raw parallel panel
+   EegoA4,     // EEGO Reader A4: ESP32-S3, UC8279C 768x552 SPI panel, GSLX680 touch, PCF8563 RTC
+   OnePage,    // OnePage: ESP32-C61, SSD1677 800x480 SPI panel, 4-key ADC ladder + 3 side keys
+   WsEpaper397,  // Waveshare ESP32-S3-ePaper-3.97: SSD1677 800x480, 3 keys + BOOT, AXP2101 PMIC
+@@ -1512,6 +1516,60 @@ constexpr BoardProfile M5PAPER_S3 = {
+     0,      // wifiMaxTxPower: radio default
+     false};  // usbDetectActiveHigh: GPIO5 is driven LOW while a cable is attached
+ 
++// --- M5Stack PaperDIY 4.7" (ED047TC1 raw-parallel EPD) — ESP32-S3 ------------
++// PaperS3's cost-reduced sibling: same 960x540 ED047TC1 glass and *identical*
++// 8-bit parallel pin map (M5GFX board_M5PaperDIY), but no IT8951, no touch, no
++// RTC/IMU, and an M5PM1 PMIC for battery/charge/EPD power. Two user buttons on
++// GPIO4 (A) / GPIO3 (B), active-low; there is no firmware-readable power button
++// because the PM1 owns it (single click on/reset, double click off, long press
++// download). InputStyle::DigitalTwoButton gives short A/B = up/down, long A =
++// back, long B = confirm, A+B = power. Display power needs PM1 GPIO2 in addition
++// to the panel's own GPIO46 rail: the LgfxEpdConfig raises PM1 GPIO2 in
++// prepare() and lets Bus_EPD sequence OE/PWR/SPV.
++constexpr BoardProfile M5PAPER_DIY = {
++    Board::M5PaperDiy,
++    "paperdiy",
++    InputStyle::DigitalTwoButton,
++    DisplayController::LgfxEpd,
++    960,
++    540,
++    {PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED,
++     PIN_UNASSIGNED},                            // no SPI display pins: parallel bus lives in LgfxEpdConfig
++    0,                                           // displaySpiHz n/a (external bus)
++    {39, 40, 38, 47, PIN_UNASSIGNED, false, 0},  // SD over SPI: SCLK39 MISO40 MOSI38 CS47
++    // up=GPIO4 (BtnA), down=GPIO3 (BtnB), active-low; no GPIO power button.
++    {PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, 4, 3, PIN_UNASSIGNED, false},
++    PIN_UNASSIGNED,  // batteryAdc: none — M5PM1 reports VBAT
++    PIN_UNASSIGNED,  // batteryChargeStatus: PM1-owned; BatteryMonitor's PM1 backend reads it
++    2.0f,
++    PIN_UNASSIGNED,  // usbDetect: PM1 PWR_SRC reports external power
++    NO_TOUCH,
++    NO_FRONTLIGHT,
++    NO_AUDIO,
++    NO_LEDS,
++    NO_FLIP,
++    NO_SDMMC,
++    NO_GAUGE,  // no I2C fuel gauge; BatteryMonitor uses the PM1 backend
++    NO_MIC,
++    NO_SENSORS,  // no RTC/IMU
++    1.0f,        // uiScale: button device, no finger targets
++    {},          // power: no ESP32-held latch; the PM1 owns system power
++    0,           // displayControllerVariant
++    {},          // viewableInsets: defaults
++    false,       // batteryChargeStatusActiveHigh (unused)
++    NO_I2C_FRONTLIGHT,
++    {},  // haptic
++    0,   // headerOffsetY
++    0,   // cornerRadius
++    0,   // tabBarOffsetY
++    100, // tabBarHeightPct
++    100, // tabBarWidthPct
++    0,   // wifiMaxTxPower
++    true,  // usbDetectActiveHigh (unused)
++    0,     // statusBarOffsetY
++    0      // bottomCornerRadius
++};
++
+ // --- EEGO Reader A4 — ESP32-S3 N16R8, UC8279C (768x552) + GSLX680 touch -------
+ // CrossPoint fork device; pins/resolution/calibration from stock-firmware RE,
+ // none hardware-confirmed. See docs/eego-a4-support.md.
+@@ -2090,7 +2148,7 @@ constexpr uint32_t cmax(uint32_t a, uint32_t b) { return a > b ? a : b; }
+ constexpr uint32_t panelBytes(const BoardProfile& p) {
+   return static_cast<uint32_t>(p.displayWidth / 8) * p.displayHeight;
+ }
+-constexpr uint32_t MAX_FRAMEBUFFER_BYTES = cmax(
++constexpr uint32_t MAX_FRAMEBUFFER_BYTES_BASE = cmax(
+     cmax(cmax(FREEINK_DEVICE_X4 ? panelBytes(XTEINK_X4) : 0u, FREEINK_DEVICE_X3 ? panelBytes(XTEINK_X3) : 0u),
+          cmax(FREEINK_DEVICE_M5 ? panelBytes(M5STACK_PAPER_COLOR) : 0u,
+               FREEINK_DEVICE_MURPHY ? panelBytes(MURPHY_M3) : 0u)),
+@@ -2108,6 +2166,8 @@ constexpr uint32_t MAX_FRAMEBUFFER_BYTES = cmax(
+                         cmax(FREEINK_DEVICE_WS397 ? panelBytes(WS_EPAPER_397) : 0u,
+                              cmax(FREEINK_DEVICE_METALIO_EINK4 ? panelBytes(METALIO_EINK4) : 0u,
+                                   FREEINK_DEVICE_PICCO ? panelBytes(PICCO) : 0u)))))));
++constexpr uint32_t MAX_FRAMEBUFFER_BYTES =
++    cmax(MAX_FRAMEBUFFER_BYTES_BASE, FREEINK_DEVICE_PAPERDIY ? panelBytes(M5PAPER_DIY) : 0u);
+ 
+ // Compile-time default device — the profile ACTIVE starts as. With a single
+ // device in the build this is the only device; with several same-MCU devices it
+@@ -2138,6 +2198,8 @@ constexpr BoardProfile DEFAULT_DEVICE = LILYGO_T5S3;
+ constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_V11;
+ #elif FREEINK_DEVICE_PAPERS3
+ constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_S3;
++#elif FREEINK_DEVICE_PAPERDIY
++constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_DIY;
+ #elif FREEINK_DEVICE_STICKY
+ constexpr BoardProfile DEFAULT_DEVICE = STICKY;
+ #elif FREEINK_DEVICE_X4PRO
+@@ -2286,6 +2348,11 @@ inline bool selectDevice(Board which) {
+       ACTIVE = M5PAPER_S3;
+       break;
+ #endif
++#if FREEINK_DEVICE_PAPERDIY
++    case Board::M5PaperDiy:
++      ACTIVE = M5PAPER_DIY;
++      break;
++#endif
+ #if FREEINK_DEVICE_EEGO_A4
+     case Board::EegoA4:
+       ACTIVE = EEGO_A4;
+@@ -2327,6 +2394,7 @@ inline bool isMurphyM3() { return ACTIVE.board == Board::MurphyM3; }
+ inline bool isDeLink() { return ACTIVE.board == Board::DeLink; }
+ inline bool isM5PaperV11() { return ACTIVE.board == Board::M5PaperV11; }
+ inline bool isM5PaperS3() { return ACTIVE.board == Board::M5PaperS3; }
++inline bool isPaperDiy() { return ACTIVE.board == Board::M5PaperDiy; }
+ inline bool isSticky() { return ACTIVE.board == Board::Sticky; }
+ inline bool isX4Pro() { return ACTIVE.board == Board::XteinkX4Pro; }
+ inline bool isX4Classic() { return ACTIVE.board == Board::XteinkX4Classic; }
+diff --git a/freeink-sdk/libs/hardware/BoardConfig/include/M5Pm1.h b/freeink-sdk/libs/hardware/BoardConfig/include/M5Pm1.h
+index 4c2ce96..b665391 100644
+--- a/freeink-sdk/libs/hardware/BoardConfig/include/M5Pm1.h
++++ b/freeink-sdk/libs/hardware/BoardConfig/include/M5Pm1.h
+@@ -29,6 +29,8 @@ constexpr uint8_t ADDR = 0x6E;
+ #ifndef FREEINK_M5PM1_SDA
+ #if FREEINK_DEVICE_PAPERMONO
+ #define FREEINK_M5PM1_SDA 47
++#elif FREEINK_DEVICE_PAPERDIY
++#define FREEINK_M5PM1_SDA 41
+ #else
+ #define FREEINK_M5PM1_SDA 3
+ #endif
+@@ -36,6 +38,8 @@ constexpr uint8_t ADDR = 0x6E;
+ #ifndef FREEINK_M5PM1_SCL
+ #if FREEINK_DEVICE_PAPERMONO
+ #define FREEINK_M5PM1_SCL 48
++#elif FREEINK_DEVICE_PAPERDIY
++#define FREEINK_M5PM1_SCL 42
+ #else
+ #define FREEINK_M5PM1_SCL 2
+ #endif
+@@ -83,8 +87,10 @@ constexpr uint8_t BTN_DOWNLOAD_LOCK = 1 << 7;
+ constexpr uint8_t BTN_SINGLE_RESET_DISABLE = 1 << 0;
+ constexpr uint8_t SYS_CMD_SHUTDOWN = 0xA1;
+ 
+-// EPD_EN is wired to PMIC GPIO0.
++// EPD_EN is wired to PMIC GPIO0 on PaperColor; PaperDIY uses PM1 GPIO2 for
++// its EPD rail.
+ constexpr uint8_t GPIO0 = 1 << 0;
++constexpr uint8_t GPIO2 = 1 << 2;
+ constexpr uint8_t GPIO_WAKE_MASK = 0x1F;
+ 
+ // Init the internal I2C bus and pin the PM1 to 100 kHz with idle-sleep disabled
+diff --git a/freeink-sdk/libs/hardware/BoardPaperDiy/include/BoardPaperDiy.h b/freeink-sdk/libs/hardware/BoardPaperDiy/include/BoardPaperDiy.h
+new file mode 100644
+index 0000000..20e9797
+--- /dev/null
++++ b/freeink-sdk/libs/hardware/BoardPaperDiy/include/BoardPaperDiy.h
+@@ -0,0 +1,22 @@
++#pragma once
++
++#include <Arduino.h>
++
++#include "BoardPaperDiyPins.h"
++
++namespace BoardPaperDiy {
++
++// Raise the M5PM1's EPD rail (PM1 GPIO2) and apply the PMIC boot power policy.
++// Called by the LgfxEpdConfig prepare() hook before Bus_EPD powers the panel.
++// Idempotent.
++bool prepareEpdPower();
++
++// Cut the PM1 EPD rail (used by the deep-sleep path, after the panel has been
++// put to sleep). Wake re-runs prepareEpdPower().
++void powerDownEpdPower();
++
++// Full system power-off through the M5PM1 (SYS_CMD 0xA1). The PM1 owns the
++// PaperDIY power button, so this is the firmware equivalent of a double-click.
++void powerOff();
++
++}  // namespace BoardPaperDiy
+diff --git a/freeink-sdk/libs/hardware/BoardPaperDiy/include/BoardPaperDiyPins.h b/freeink-sdk/libs/hardware/BoardPaperDiy/include/BoardPaperDiyPins.h
+new file mode 100644
+index 0000000..f0b9a5e
+--- /dev/null
++++ b/freeink-sdk/libs/hardware/BoardPaperDiy/include/BoardPaperDiyPins.h
+@@ -0,0 +1,34 @@
++#pragma once
++
++// M5Stack PaperDIY pin map. The parallel-EPD bus is *identical* to the
++// M5Stack PaperS3 (M5GFX board_M5PaperDIY / board_M5PaperS3 share the same
++// Bus_EPD wiring); the differences are the two user buttons, the M5PM1 PMIC
++// rails, and the absence of touch/RTC/IMU.
++
++// ED047TC1 8-bit parallel data bus, D0..D7.
++#define PAPERDIY_EP_D0 6
++#define PAPERDIY_EP_D1 14
++#define PAPERDIY_EP_D2 7
++#define PAPERDIY_EP_D3 12
++#define PAPERDIY_EP_D4 9
++#define PAPERDIY_EP_D5 11
++#define PAPERDIY_EP_D6 8
++#define PAPERDIY_EP_D7 10
++
++// Row/frame timing. Bus_EPD's stock power sequence drives OE/PWR/SPV itself;
++// the PM1 GPIO2 EPD rail is raised by BoardPaperDiy::prepareEpdPower().
++#define PAPERDIY_EP_SPH 13  // XSTL: start pulse, horizontal
++#define PAPERDIY_EP_CL 16   // XCL: pixel clock
++#define PAPERDIY_EP_LE 15   // XLE: latch enable
++#define PAPERDIY_EP_SPV 17  // start pulse, vertical
++#define PAPERDIY_EP_CKV 18  // vertical clock
++#define PAPERDIY_EP_OE 45   // output enable
++#define PAPERDIY_EP_PWR 46  // EPD rail enable (boost converter)
++
++// Two user buttons, active-low (M5Unified BtnA = GPIO4, BtnB = GPIO3).
++#define PAPERDIY_BTN_A 4
++#define PAPERDIY_BTN_B 3
++
++// M5PM1 PMIC on the internal I2C bus (shared with the EPD power rail).
++#define PAPERDIY_PM1_SDA 41
++#define PAPERDIY_PM1_SCL 42
+diff --git a/freeink-sdk/libs/hardware/BoardPaperDiy/library.json b/freeink-sdk/libs/hardware/BoardPaperDiy/library.json
+new file mode 100644
+index 0000000..864dabc
+--- /dev/null
++++ b/freeink-sdk/libs/hardware/BoardPaperDiy/library.json
+@@ -0,0 +1,13 @@
++{
++  "name": "BoardPaperDiy",
++  "version": "0.1.0",
++  "description": "FreeInk board support for M5Stack PaperDIY: parallel-EPD pins, M5PM1 EPD rail, PMIC power-off.",
++  "keywords": "m5stack, paperdiy, epaper, board",
++  "authors": [{"name": "PaperDIY Reader contributors"}],
++  "dependencies": {
++    "BoardConfig": "*",
++    "EInkDisplay": "*"
++  },
++  "platforms": "espressif32",
++  "frameworks": ["arduino"]
++}
+diff --git a/freeink-sdk/libs/hardware/BoardPaperDiy/src/BoardPaperDiy.cpp b/freeink-sdk/libs/hardware/BoardPaperDiy/src/BoardPaperDiy.cpp
+new file mode 100644
+index 0000000..053b67c
+--- /dev/null
++++ b/freeink-sdk/libs/hardware/BoardPaperDiy/src/BoardPaperDiy.cpp
+@@ -0,0 +1,42 @@
++#include <BoardPaperDiy.h>
++
++#include <M5Pm1.h>
++
++namespace {
++
++// PM1 GPIO2 is the PaperDIY EPD rail enable, in addition to the panel's own
++// GPIO46 pin. M5GFX's autodetect does the same four register writes; the
++// PM1's PWR_CFG auto-clears on reset, so the DCDC/charge/boost policy must be
++// re-applied on every boot.
++bool raisePm1EpdRail() {
++  using namespace freeink::m5pm1;
++
++  beginBus();
++  applyBootPowerPolicy();
++
++  bool ok = updateReg(REG_GPIO_FUNC0, 0x03 << 4, 0);  // GPIO2 = plain GPIO
++  ok = updateReg(REG_GPIO_MODE, 0, GPIO2) && ok;       // output
++  ok = updateReg(REG_GPIO_DRV, GPIO2, 0) && ok;        // push-pull
++  ok = updateReg(REG_GPIO_OUT, 0, GPIO2) && ok;        // high
++  if (ok) delay(10);
++  return ok;
++}
++
++}  // namespace
++
++namespace BoardPaperDiy {
++
++bool prepareEpdPower() { return raisePm1EpdRail(); }
++
++void powerDownEpdPower() {
++  using namespace freeink::m5pm1;
++  beginBus();
++  updateReg(REG_GPIO_OUT, GPIO2, 0);
++}
++
++void powerOff() {
++  freeink::m5pm1::beginBus();
++  freeink::m5pm1::requestShutdown();
++}
++
++}  // namespace BoardPaperDiy
+diff --git a/freeink-sdk/libs/hardware/BoardPaperDiy/src/PaperDiyLgfxConfig.cpp b/freeink-sdk/libs/hardware/BoardPaperDiy/src/PaperDiyLgfxConfig.cpp
+new file mode 100644
+index 0000000..3b4d374
+--- /dev/null
++++ b/freeink-sdk/libs/hardware/BoardPaperDiy/src/PaperDiyLgfxConfig.cpp
+@@ -0,0 +1,28 @@
++#include <BoardPaperDiy.h>
++#include <LgfxEpdConfig.h>
++
++namespace freeink {
++
++// The PaperDIY panel bus is pin-for-pin the PaperS3 bus (M5GFX uses the same
++// Bus_EPD config for board_M5PaperDIY and board_M5PaperS3). The only extra
++// hardware is the M5PM1 EPD rail, raised in prepare() before Bus_EPD init.
++const LgfxEpdConfig& paperdiyLgfxConfig() {
++  static const LgfxEpdConfig cfg = {
++      {PAPERDIY_EP_D0, PAPERDIY_EP_D1, PAPERDIY_EP_D2, PAPERDIY_EP_D3, PAPERDIY_EP_D4, PAPERDIY_EP_D5,
++       PAPERDIY_EP_D6, PAPERDIY_EP_D7},
++      PAPERDIY_EP_SPH,
++      PAPERDIY_EP_SPV,
++      PAPERDIY_EP_OE,
++      PAPERDIY_EP_LE,
++      PAPERDIY_EP_CL,
++      PAPERDIY_EP_CKV,
++      PAPERDIY_EP_PWR,
++      16000000,  // busHz — M5GFX's bus_speed for this board
++      8,         // linePadding — M5GFX's line_padding for this board
++      0,         // rotation: native-landscape 960x540 framebuffer
++      {&BoardPaperDiy::prepareEpdPower, nullptr, nullptr},  // stock Bus_EPD power sequence
++  };
++  return cfg;
++}
++
++}  // namespace freeink
+diff --git a/freeink-sdk/libs/hardware/PowerManager/src/PowerManager.cpp b/freeink-sdk/libs/hardware/PowerManager/src/PowerManager.cpp
+index 890a165..d53fa21 100644
+--- a/freeink-sdk/libs/hardware/PowerManager/src/PowerManager.cpp
++++ b/freeink-sdk/libs/hardware/PowerManager/src/PowerManager.cpp
+@@ -2,6 +2,7 @@
+ 
+ #include <Arduino.h>
+ #include <BoardConfig.h>
++#include <M5Pm1.h>
+ #include <driver/gpio.h>
+ #include <esp_sleep.h>
+ #include <esp_system.h>
+@@ -75,6 +76,14 @@ void PowerManager::armWakeOnPins(uint64_t gpioMask, bool wakeLow) {
+ }
+ 
+ bool PowerManager::armPowerButtonWakeup() {
++#if FREEINK_DEVICE_PAPERDIY
++  // PaperDIY has no ESP32-visible power button: the M5PM1 owns it. Wake on
++  // either user button instead, so a page-turn press brings the reader back.
++  if (BoardConfig::isPaperDiy()) {
++    armWakeOnPins((1ULL << 4) | (1ULL << 3), /*wakeLow=*/true);  // BtnA=GPIO4, BtnB=GPIO3
++    return true;
++  }
++#endif
+   const int8_t pin = powerPin();
+   if (pin < 0) return false;
+   const bool activeHigh = powerActiveHigh();
+@@ -86,6 +95,18 @@ bool PowerManager::armPowerButtonWakeup() {
+ }
+ 
+ void PowerManager::waitForPowerButtonRelease() {
++#if FREEINK_DEVICE_PAPERDIY
++  // No power GPIO; wait until both user buttons are released so a wake press
++  // cannot immediately turn into a page turn.
++  if (BoardConfig::isPaperDiy()) {
++    pinMode(4, INPUT_PULLUP);  // BtnA
++    pinMode(3, INPUT_PULLUP);  // BtnB
++    while (digitalRead(4) == LOW || digitalRead(3) == LOW) {
++      delay(50);
++    }
++    return;
++  }
++#endif
+   const int8_t pin = powerPin();
+   if (pin < 0) return;
+   const bool activeHigh = powerActiveHigh();
+@@ -113,6 +134,14 @@ void holdRailOff(int8_t pin, uint8_t offLevel) {
+ 
+ void PowerManager::powerDownRailsForSleep() {
+   const auto& b = BoardConfig::ACTIVE;
++#if FREEINK_DEVICE_PAPERDIY
++  // The EPD rail is behind the M5PM1, not a GPIO, so holdRailOff() below cannot
++  // reach it. The display driver's deepSleep() has already put the panel to
++  // sleep; drop the PM1 rail now and re-raise it in prepareEpdPower() on wake.
++  if (BoardConfig::isPaperDiy()) {
++    freeink::m5pm1::updateReg(freeink::m5pm1::REG_GPIO_OUT, freeink::m5pm1::GPIO2, 0);
++  }
++#endif
+ #if FREEINK_DEVICE_METALIO_EINK4
+   if (BoardConfig::isMetalioEInk4()) {
+     metalio::setAmplifier(false);
+diff --git a/platformio.ini b/platformio.ini
+index f96f663..110c06a 100644
+--- a/platformio.ini
++++ b/platformio.ini
+@@ -622,6 +622,32 @@ build_flags =
+   -DLOG_LEVEL=1 ; Set log level to info for release candidate builds
+   -DUSE_BLOCK_DEVICE_INTERFACE=1
+ 
++; --- M5Stack PaperDIY — ESP32-S3 N16R8, ED047TC1 raw parallel, 2 buttons ------
++; Same panel/bus as PaperS3 but no touch/RTC/IMU, two GPIO buttons and an M5PM1
++; PMIC. Board support lives in freeink-sdk/libs/hardware/BoardPaperDiy.
++;   pio run -e paperdiy -t upload
++[env:paperdiy]
++extends = base
++board = esp32-s3-devkitc1-n16r8
++board_build.mcu = esp32s3
++board_build.flash_mode = qio
++board_build.arduino.memory_type = qio_opi
++build_flags =
++  ${base.build_flags}
++  -DFREEINK_DEVICE_PAPERDIY=1
++  -DBOARD_HAS_PSRAM
++  -DFREEINK_CAP_USB_MSC=1
++  -DFREEINK_CAP_BLE_HID_HOST=1
++  -DUSB_PRODUCT=\"CrossPoint_PaperDIY\"
++  -DUSB_MANUFACTURER=\"CrossPoint\"
++  -DCROSSPOINT_VERSION=\"${crosspoint.version}-paperdiy\"
++  -DENABLE_SERIAL_LOG
++  -DLOG_LEVEL=2
++lib_deps =
++  ${base.lib_deps}
++  BoardPaperDiy=symlink://freeink-sdk/libs/hardware/BoardPaperDiy
++  m5stack/M5GFX @ 0.2.33
++
+ ; --- EEGO Reader A4 — ESP32-S3 N16R8, UC8279C 768x552 + GSLX680 touch ---------
+ ; UC8279C SPI panel, GSLX680 touch, PCF8563 RTC, dedicated HSPI MicroSD (SPI,
+ ; not SDMMC). 16MB DIO flash + 8MB OPI PSRAM. One binary serves the frontlit
+diff --git a/src/network/FirmwareBoardTag.cpp b/src/network/FirmwareBoardTag.cpp
+index 7109854..7e0ddad 100644
+--- a/src/network/FirmwareBoardTag.cpp
++++ b/src/network/FirmwareBoardTag.cpp
+@@ -17,6 +17,8 @@
+ #define CROSSPOINT_BOARD_NAME "x4"
+ #elif FREEINK_DEVICE_PAPERMONO
+ #define CROSSPOINT_BOARD_NAME "papermono"
++#elif FREEINK_DEVICE_PAPERDIY
++#define CROSSPOINT_BOARD_NAME "paperdiy"
+ #elif FREEINK_DEVICE_STICKY
+ #define CROSSPOINT_BOARD_NAME "sticky"
+ #elif FREEINK_DEVICE_M5PAPER

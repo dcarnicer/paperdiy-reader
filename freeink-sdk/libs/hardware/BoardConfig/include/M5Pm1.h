@@ -29,6 +29,8 @@ constexpr uint8_t ADDR = 0x6E;
 #ifndef FREEINK_M5PM1_SDA
 #if FREEINK_DEVICE_PAPERMONO
 #define FREEINK_M5PM1_SDA 47
+#elif FREEINK_DEVICE_PAPERDIY
+#define FREEINK_M5PM1_SDA 41
 #else
 #define FREEINK_M5PM1_SDA 3
 #endif
@@ -36,6 +38,8 @@ constexpr uint8_t ADDR = 0x6E;
 #ifndef FREEINK_M5PM1_SCL
 #if FREEINK_DEVICE_PAPERMONO
 #define FREEINK_M5PM1_SCL 48
+#elif FREEINK_DEVICE_PAPERDIY
+#define FREEINK_M5PM1_SCL 42
 #else
 #define FREEINK_M5PM1_SCL 2
 #endif
@@ -83,8 +87,10 @@ constexpr uint8_t BTN_DOWNLOAD_LOCK = 1 << 7;
 constexpr uint8_t BTN_SINGLE_RESET_DISABLE = 1 << 0;
 constexpr uint8_t SYS_CMD_SHUTDOWN = 0xA1;
 
-// EPD_EN is wired to PMIC GPIO0.
+// EPD_EN is wired to PMIC GPIO0 on PaperColor; PaperDIY uses PM1 GPIO2 for
+// its EPD rail.
 constexpr uint8_t GPIO0 = 1 << 0;
+constexpr uint8_t GPIO2 = 1 << 2;
 constexpr uint8_t GPIO_WAKE_MASK = 0x1F;
 
 // Init the internal I2C bus and pin the PM1 to 100 kHz with idle-sleep disabled

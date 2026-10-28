@@ -1,0 +1,32 @@
+PaperDIY Reader
+===============
+
+This project is a hardware port and downstream fork of CrossPoint Reader.
+
+Upstream:
+  CrossPoint Reader 2.0.0 (develop branch)
+  https://github.com/crosspoint-reader/crosspoint-reader
+  Commit: 31dc683f9ad54d85a35a1eeb698470bb6da69224 (2026-10-28)
+  License: MIT
+  Copyright (c) 2025 CrossPoint Reader organization
+
+Hardware abstraction:
+  FreeInk SDK
+  https://github.com/crosspoint-reader/crosspoint-reader (freeink-sdk submodule)
+  License: MIT
+  Copyright (c) 2026 FreeInk
+
+Display / board support:
+  M5GFX / LovyanGFX
+  https://github.com/m5stack/M5GFX
+  License: MIT (LovyanGFX) / M5Stack
+
+Other third-party libraries (SdFat, ArduinoJson, PNGdec, JPEGDEC,
+AnimatedGIF, WebSockets, wolfSSL, NimBLE-Arduino, QRCode, expat, FreeType,
+miniz, etc.) retain their own licenses; see the respective library
+directories / PlatformIO package metadata.
+
+The PaperDIY board profile, BoardPaperDiy support library, documentation and
+the changes in this repository are:
+  Copyright (c) 2026 PaperDIY Reader contributors
+  License: MIT (see LICENSE)

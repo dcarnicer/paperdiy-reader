@@ -405,6 +405,12 @@ PanelDriver& lgfxEpdDriver() {
   static LgfxEpdDriver instance(m5PaperS3LgfxConfig());
   return instance;
 }
+#elif FREEINK_DEVICE_PAPERDIY && !defined(FREEINK_LGFX_EPD_CONFIG)
+const LgfxEpdConfig& paperdiyLgfxConfig();
+PanelDriver& lgfxEpdDriver() {
+  static LgfxEpdDriver instance(paperdiyLgfxConfig());
+  return instance;
+}
 #elif defined(FREEINK_LGFX_EPD_CONFIG)
 const LgfxEpdConfig& FREEINK_LGFX_EPD_CONFIG();
 PanelDriver& lgfxEpdDriver() {

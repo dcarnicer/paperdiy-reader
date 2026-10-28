@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <BoardConfig.h>
+#include <M5Pm1.h>
 #include <driver/gpio.h>
 #include <esp_sleep.h>
 #include <esp_system.h>
@@ -75,6 +76,14 @@ void PowerManager::armWakeOnPins(uint64_t gpioMask, bool wakeLow) {
 }
 
 bool PowerManager::armPowerButtonWakeup() {
+#if FREEINK_DEVICE_PAPERDIY
+  // PaperDIY has no ESP32-visible power button: the M5PM1 owns it. Wake on
+  // either user button instead, so a page-turn press brings the reader back.
+  if (BoardConfig::isPaperDiy()) {
+    armWakeOnPins((1ULL << 4) | (1ULL << 3), /*wakeLow=*/true);  // BtnA=GPIO4, BtnB=GPIO3
+    return true;
+  }
+#endif
   const int8_t pin = powerPin();
   if (pin < 0) return false;
   const bool activeHigh = powerActiveHigh();
@@ -86,6 +95,18 @@ bool PowerManager::armPowerButtonWakeup() {
 }
 
 void PowerManager::waitForPowerButtonRelease() {
+#if FREEINK_DEVICE_PAPERDIY
+  // No power GPIO; wait until both user buttons are released so a wake press
+  // cannot immediately turn into a page turn.
+  if (BoardConfig::isPaperDiy()) {
+    pinMode(4, INPUT_PULLUP);  // BtnA
+    pinMode(3, INPUT_PULLUP);  // BtnB
+    while (digitalRead(4) == LOW || digitalRead(3) == LOW) {
+      delay(50);
+    }
+    return;
+  }
+#endif
   const int8_t pin = powerPin();
   if (pin < 0) return;
   const bool activeHigh = powerActiveHigh();
@@ -113,6 +134,14 @@ void holdRailOff(int8_t pin, uint8_t offLevel) {
 
 void PowerManager::powerDownRailsForSleep() {
   const auto& b = BoardConfig::ACTIVE;
+#if FREEINK_DEVICE_PAPERDIY
+  // The EPD rail is behind the M5PM1, not a GPIO, so holdRailOff() below cannot
+  // reach it. The display driver's deepSleep() has already put the panel to
+  // sleep; drop the PM1 rail now and re-raise it in prepareEpdPower() on wake.
+  if (BoardConfig::isPaperDiy()) {
+    freeink::m5pm1::updateReg(freeink::m5pm1::REG_GPIO_OUT, freeink::m5pm1::GPIO2, 0);
+  }
+#endif
 #if FREEINK_DEVICE_METALIO_EINK4
   if (BoardConfig::isMetalioEInk4()) {
     metalio::setAmplifier(false);
