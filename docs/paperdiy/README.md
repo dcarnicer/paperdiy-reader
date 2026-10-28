@@ -14,6 +14,7 @@ CrossPoint sigue en `docs/` y `docs/upstream/`).
 9. [Fuentes](08-sources.md)
 10. [Prior art: issue #4005 y PRs de PaperDIY](09-prior-art.md)
 11. [Mantener el fork y actualizar upstream](10-fork-maintenance.md)
+12. [Borrador de comentario para la issue #4005](11-upstream-note.md)
 
 ## Estado en una frase
 

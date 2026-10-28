@@ -193,6 +193,7 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 - [Fuentes](docs/paperdiy/08-sources.md)
 - [Prior art: issue #4005 y PRs de PaperDIY](docs/paperdiy/09-prior-art.md)
 - [Mantener el fork y actualizar upstream](docs/paperdiy/10-fork-maintenance.md)
+- [Borrador de comentario para la issue #4005](docs/paperdiy/11-upstream-note.md)
 
 ## Limitaciones conocidas
 
