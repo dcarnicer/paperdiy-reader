@@ -172,6 +172,21 @@ o `make flash PORT=/dev/cu.usbmodemXXXX`.
 
 ![Primera lectura](images/first-read.png)
 
+### Ghosting al abrir el menú del lector
+
+Primer hallazgo de uso real: al pasar de una página al menú del lector quedaba
+una sombra tenue del texto anterior. La causa era que `UiListActivity::render()`
+pintaba el menú completo con `FAST_REFRESH`.
+
+Solución: `EpubReaderMenuActivity` marca `cleanFirstRender`; la primera pintada
+del menú usa `HALF_REFRESH` (banco limpio) y las siguientes vuelven a
+`FAST_REFRESH`. Verificado en hardware: el menú queda limpio y la navegación
+dentro de él sigue siendo rápida. El primer pintado puede parpadear algo más,
+es esperado.
+
+Si al **cerrar** el menú aparece sombra del menú sobre la página, aplicar el
+mismo tratamiento al re-render del lector.
+
 ## Checklist de validación en hardware
 
 Marca cada punto y anota el resultado; es la información que falta para

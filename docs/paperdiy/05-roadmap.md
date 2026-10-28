@@ -13,8 +13,10 @@ Objetivo: demostrar que el port funciona en un PaperDIY real y recoger datos.
 - [x] Rotación/orientación: UI correcta en vertical, sin cambios.
 - [ ] Medir tiempos de refresco: `epd_quality`, `epd_text`, `epd_fast`,
       `epd_fastest`; página completa vs área.
-- [ ] Evaluar ghosting y si hace falta `cleanBankNeedsFreshBackground` o LUTs
-      propias (comparar con PaperS3/LilyGo).
+- [ ] Evaluar ghosting general y si hace falta `cleanBankNeedsFreshBackground`
+      o LUTs propias (comparar con PaperS3/LilyGo).
+- [x] Ghosting al abrir el menú del lector: corregido con `HALF_REFRESH` en la
+      primera pintada; verificado en hardware.
 - [ ] Probar A/B: navegación, página, back, confirm, A+B. Cortos ya funcionan;
       largos y A+B pendientes.
 - [x] Batería: lectura al 100 %. Pendiente carga, VBAT y USB presente.

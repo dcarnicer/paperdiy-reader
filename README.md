@@ -9,8 +9,9 @@ a diario.
 
 > **Estado:** el firmware **compila, arranca y lee EPUB en un PaperDIY real**.
 > Primera validación (28/10/2026): pantalla/UI, botones A/B, batería, SD,
-> biblioteca y lectura EPUB OK; la UI se ve correcta en vertical. Pendiente:
-> Wi-Fi/OPDS/Calibre, ghosting, consumo en sleep, botón power/shutdown, wake y
+> biblioteca y lectura EPUB OK; la UI se ve correcta en vertical y el ghosting
+> del menú del lector está corregido. Pendiente: Wi-Fi/OPDS/Calibre, ghosting
+> general tras muchas páginas, consumo en sleep, botón power/shutdown, wake y
 > OTA. Ver [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md).
 >
 > **Fork downstream:** `main` es un espejo de `upstream/develop`; `paperdiy`
