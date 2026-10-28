@@ -114,7 +114,14 @@ aunque haya paquetes viejos. `.platformio-core/` y `.pio/` son cachés locales
 
 1. Conecta el PaperDIY por USB-C.
 2. Mantén el botón de power ~2 s hasta que el LED rojo parpadee (modo descarga).
-3. Compila y sube:
+3. Primera instalación (imagen completa, incluye bootloader y tabla de
+   particiones):
+
+```bash
+make flash-factory PORT=/dev/cu.usbmodemXXXX
+```
+
+Para actualizar solo la app (conserva bootloader/particiones):
 
 ```bash
 make flash PORT=/dev/cu.usbmodemXXXX
