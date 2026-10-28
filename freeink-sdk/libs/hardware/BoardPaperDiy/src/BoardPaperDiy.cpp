@@ -1,5 +1,4 @@
 #include <BoardPaperDiy.h>
-
 #include <M5Pm1.h>
 
 namespace {
@@ -15,9 +14,9 @@ bool raisePm1EpdRail() {
   applyBootPowerPolicy();
 
   bool ok = updateReg(REG_GPIO_FUNC0, 0x03 << 4, 0);  // GPIO2 = plain GPIO
-  ok = updateReg(REG_GPIO_MODE, 0, GPIO2) && ok;       // output
-  ok = updateReg(REG_GPIO_DRV, GPIO2, 0) && ok;        // push-pull
-  ok = updateReg(REG_GPIO_OUT, 0, GPIO2) && ok;        // high
+  ok = updateReg(REG_GPIO_MODE, 0, GPIO2) && ok;      // output
+  ok = updateReg(REG_GPIO_DRV, GPIO2, 0) && ok;       // push-pull
+  ok = updateReg(REG_GPIO_OUT, 0, GPIO2) && ok;       // high
   if (ok) delay(10);
   return ok;
 }
