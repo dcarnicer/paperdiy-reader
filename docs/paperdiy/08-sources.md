@@ -27,6 +27,27 @@
 - M5PaperDIY UserDemo:
   <https://github.com/m5stack/M5PaperDIY-UserDemo>
 
+## Prior art CrossPoint / PaperDIY
+
+- CrossPoint issue #4005 (propuesta PaperDIY):
+  <https://github.com/crosspoint-reader/crosspoint-reader/issues/4005>
+- PR FreeInk de prateek:
+  <https://github.com/prateek/freeink-sdk/pull/1>
+- PR CrossPoint de prateek:
+  <https://github.com/prateek/crosspoint-reader/pull/1>
+- PR dual-boot Companion:
+  <https://github.com/prateek/crosspoint-reader/pull/2>
+- PR simulador:
+  <https://github.com/prateek/crosspoint-simulator/pull/1>
+- Tesserae PaperDIY (mergeado, validado en hardware):
+  <https://github.com/dmellok/tesserae-device-firmware/pull/55>
+- Lector PaperDIY independiente:
+  <https://github.com/nenipresotReta/paperdiy-reader>
+- Lector PaperDIY chino:
+  <https://github.com/RadioDisney/paperdiy-reader>
+- Mod personal PaperDIY:
+  <https://github.com/looher/paper-diy>
+
 ## Proyectos de referencia
 
 - Repo de ejemplos PaperDIY:

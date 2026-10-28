@@ -173,6 +173,7 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 - [Notas del port y validación](docs/paperdiy/06-porting.md)
 - [Guía de usuario PaperDIY](docs/paperdiy/07-user-guide.md)
 - [Fuentes](docs/paperdiy/08-sources.md)
+- [Prior art: issue #4005 y PRs de PaperDIY](docs/paperdiy/09-prior-art.md)
 
 ## Limitaciones conocidas
 

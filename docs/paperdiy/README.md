@@ -12,6 +12,7 @@ CrossPoint sigue en `docs/` y `docs/upstream/`).
 7. [Notas del port y validación](06-porting.md)
 8. [Guía de usuario](07-user-guide.md)
 9. [Fuentes](08-sources.md)
+10. [Prior art: issue #4005 y PRs de PaperDIY](09-prior-art.md)
 
 ## Estado en una frase
 
