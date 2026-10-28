@@ -67,19 +67,21 @@ mergeados y **no han sido probados en un PaperDIY físico**.
 | Bus ED047TC1 | `PaperDiyLgfxConfig` | `paperdiyLgfxConfig` |
 | Rail EPD PM1 | `setEpdPower()` en `PaperDiyBoard.h` | `BoardPaperDiy::prepareEpdPower()` |
 | CHG/DCDC del PM1 | No lo fuerza explícitamente | `CHG_EN | DCDC_EN` explícito |
-| Botón power PM1 | Lo sondea y sintetiza `BTN_POWER`; `configureAppPowerButton()` | No lo sondea; A+B sintetiza power |
-| Sueño en batería | Pide shutdown al PM1; si USB sigue, deep sleep con A/B | Deep sleep siempre con A/B |
-| USB/wake | Ajusta `HalGPIO`/`HalPowerManager`/`main` | Integración básica |
-| Framebuffer | `FREEINK_FB_PSRAM` (PSRAM) | DRAM estática (33,9 % RAM) |
+| Botón power PM1 | Lo sondea y sintetiza `BTN_POWER`; `configureAppPowerButton()` | Integrado: `BoardPaperDiy::pollPowerButtonClicked()` + `BTN_POWER` |
+| Sueño en batería | Pide shutdown al PM1; si USB sigue, deep sleep con A/B | Integrado igual |
+| USB/wake | Ajusta `HalGPIO`/`HalPowerManager`/`main` | Integrado (HalGPIO/HalPowerManager/main) |
+| Framebuffer | `FREEINK_FB_PSRAM` (PSRAM) | `FREEINK_FB_PSRAM` (PSRAM) |
 | Tests host/simulador | Sí | No (solo build) |
-| Documentación | `docs/paperdiy.md` corto | Investigación, hardware, matriz, roadmap, port, guía |
-| Tamaño build | ~6,2 MB / 94,7 % | 5,35 MB / 81,6 % |
+| Documentación | `docs/paperdiy.md` corto | Investigación, hardware, matriz, roadmap, port, guía, fork |
+| Tamaño build | ~6,2 MB / 94,7 %; ~80.676 B RAM | 5,35 MB / 81,6 %; 111.076 B RAM |
 | Validación hardware | Pendiente | Pendiente |
 
-En resumen: **son dos implementaciones muy parecidas**. La de prateek está más
-orientada a upstream (tests, simulador, integración de power/USB); la nuestra
-tiene más documentación, más margen de flash y una política PM1 explícita.
-Ninguna de las dos está validada en hardware.
+En resumen: **son dos implementaciones muy parecidas y ya convergen**. Hemos
+integrado el botón power del PM1, el shutdown en batería, el fallback USB y el
+framebuffer en PSRAM de prateek. Lo que nos falta respecto a él son los tests
+host y el perfil del simulador; lo que aportamos es más documentación, más
+margen de flash y una política PM1 explícita. Ninguna está validada en
+hardware.
 
 ## Otros esfuerzos PaperDIY (no CrossPoint)
 
@@ -113,11 +115,12 @@ referencia para el bring-up.
 1. **No abrir un PR duplicado** en CrossPoint. Lo correcto es comentar en la
    issue #4005, enlazar nuestro build y ofrecer validación en hardware.
 2. **No partir de cero otra vez.** Nuestro repo y el de prateek son compatibles;
-   lo sensato es fusionar lo mejor de ambos:
+   ya hemos integrado lo mejor de ambos:
    - de prateek: sondeo del botón power, shutdown en batería, fallback USB,
-     `HalGPIO`/`HalPowerManager`/`main`, `FREEINK_FB_PSRAM`, tests host;
+     `HalGPIO`/`HalPowerManager`/`main`, `FREEINK_FB_PSRAM`;
    - nuestro: política CHG/DCDC explícita, documentación, build con más margen,
      BLE page turner + USB MSC.
+   Queda pendiente adoptar sus tests host y el perfil del simulador.
 3. **La pieza que falta es hardware.** El mantenedor quiere una unidad y una
    carcasa para revisar; al menos hacen falta logs/fotos/medidas de una unidad
    real. Tú tienes una; ahí podemos aportar algo que ninguno de los PRs tiene.
@@ -128,9 +131,9 @@ referencia para el bring-up.
 
 - Comentar en #4005 con: build propio, diferencias, disposición a probar en
   hardware y resultados de la validación.
-- Antes de comentar, integrar en nuestro repo las partes de power/USB/wake de
-  prateek que nos faltan y probarlas.
-- Si el port funciona en hardware, proponer un PR conjunto (o dejar que
-  prateek lidere el upstream) en vez de mantener dos forks divergentes.
+- Ya está integrado el power/USB/wake de prateek; el siguiente paso es **probar
+  el build en hardware**, no seguir moviendo código.
+- Si el port funciona, proponer un PR conjunto (o dejar que prateek lidere el
+  upstream) en vez de mantener dos forks divergentes.
 - Mantener el fork downstream para las features PaperDIY-specific (UX, docs,
   BLE, mods) y seguir upstream para el motor.

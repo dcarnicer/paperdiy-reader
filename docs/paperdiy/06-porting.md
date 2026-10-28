@@ -3,7 +3,9 @@
 ## Cambios respecto a CrossPoint 2.0
 
 Commit base: `31dc683f9ad54d85a35a1eeb698470bb6da69224` (develop, 2.0.0,
-2026-10-28). El snapshot está vendorizado en este repo.
+2026-10-28). `main` es el espejo de upstream; `paperdiy` es el fork. El SDK
+`freeink-sdk` está vendorizado para que el build sea autocontenido. El port se
+mantiene en `patches/sdk.patch` + `patches/firmware.patch`.
 
 ### `freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h`
 
@@ -17,11 +19,12 @@ Commit base: `31dc683f9ad54d85a35a1eeb698470bb6da69224` (develop, 2.0.0,
 - `FREEINK_DRIVER_LGFX_EPD` incluye PaperDIY.
 - `DEFAULT_DEVICE`, `selectDevice()` y `isPaperDiy()`.
 - `MAX_FRAMEBUFFER_BYTES` incluye el panel de PaperDIY.
+- `FREEINK_FB_PSRAM` incluye PaperDIY (framebuffer en PSRAM).
 
 ### `freeink-sdk/libs/hardware/BoardConfig/include/M5Pm1.h`
 
 - SDA/SCL = 41/42 para PaperDIY.
-- `GPIO2` como constante (rail EPD).
+- `GPIO2` (rail EPD), `GPIO3` (CHG_STAT) y `REG_GPIO_IN`.
 
 ### `freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp`
 
@@ -29,7 +32,8 @@ Commit base: `31dc683f9ad54d85a35a1eeb698470bb6da69224` (develop, 2.0.0,
 
 ### `freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp`
 
-- `hasM5Pm1Backend()` incluye `isPaperDiy()`; lee VBAT/VIN/VOUT y PWR_SRC.
+- `hasM5Pm1Backend()` incluye `isPaperDiy()`; lee VBAT/VIN/VOUT, PWR_SRC y
+  CHG_STAT (PM1 GPIO3) para el estado de carga.
 
 ### `freeink-sdk/libs/hardware/PowerManager/src/PowerManager.cpp`
 
@@ -37,9 +41,35 @@ Commit base: `31dc683f9ad54d85a35a1eeb698470bb6da69224` (develop, 2.0.0,
 - `waitForPowerButtonRelease()`: espera a que A y B se suelten.
 - `powerDownRailsForSleep()`: baja PM1 GPIO2 tras el sleep del panel.
 
+### `freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp`
+
+- `BoardPaperDiy::ensureBooted()` al iniciar.
+- `pollPowerButtonClicked()` se convierte en `BTN_POWER`; el botón físico del
+  PM1 ya es usable por la UI.
+
 ### `src/network/FirmwareBoardTag.cpp`
 
 - Tag `paperdiy` para OTA/telemetría de build.
+
+### `lib/hal/HalGPIO.cpp`
+
+- `coldBootImpliesPowerButton()` incluye PaperDIY.
+
+### `lib/hal/HalPowerManager.cpp`
+
+- En batería pide shutdown al PM1 (`SYS_CMD 0xA1`); si USB mantiene la placa,
+  hace deep sleep con wake por A/B.
+
+### `src/main.cpp`
+
+- PaperDIY entra en el path `AfterUSBPower` (no dormir en bucle con USB).
+- El clic del PM1 con acción `Sleep`/`Ignore` entra en `enterDeepSleep()`.
+
+### `src/network/OtaUpdater.cpp`
+
+- `CROSSPOINT_OTA_RELEASES_URL` configurable; tags con prefijo `v` aceptados.
+- Por defecto apunta al repo oficial, pero no existe asset `-paperdiy`, así que
+  no instala firmware ajeno.
 
 ### `platformio.ini`
 
@@ -52,7 +82,11 @@ Commit base: `31dc683f9ad54d85a35a1eeb698470bb6da69224` (develop, 2.0.0,
 ### Nuevo `freeink-sdk/libs/hardware/BoardPaperDiy/`
 
 - `BoardPaperDiyPins.h`
-- `BoardPaperDiy.h/.cpp` (`prepareEpdPower`, `powerDownEpdPower`, `powerOff`)
+- `BoardPaperDiy.h/.cpp`:
+  - `ensureBooted()`: PM1, CHG/DCDC, GPIO2/3, botón power;
+  - `setEpdPower()` / `prepareEpdPower()` / `powerDownEpdPower()`;
+  - `pollPowerButtonClicked()`;
+  - `powerOff()`.
 - `PaperDiyLgfxConfig.cpp`
 - `library.json`
 
@@ -68,8 +102,8 @@ Resultado en la máquina de desarrollo (macOS, PlatformIO 6.1.19, pioarduino
 55.03.311, Arduino-ESP32 3.3.11):
 
 ```
-RAM:   33.9% (111.068 / 327.680 bytes)
-Flash: 81.6% (5.347.523 / 6.553.600 bytes)
+RAM:   33.9% (111.076 / 327.680 bytes)
+Flash: 81.6% (5.347.683 / 6.553.600 bytes)
 firmware.bin          5,1 MB
 firmware.factory.bin  5,2 MB
 ```
@@ -146,6 +180,10 @@ considerar el port "estable".
 | 18 | OTA | actualiza sin brick | |
 | 19 | Recuperación | download mode + factory bin | |
 | 20 | Autonomía | horas de lectura reales | |
+| 21 | Power PM1 corto | entrega `BTN_POWER` y duerme/apaga | |
+| 22 | Shutdown en batería | el PM1 corta y un clic enciende | |
+| 23 | Fallback USB | con USB, deep sleep y wake A/B | |
+| 24 | OTA fork | no instala firmware oficial; URL propia si se publica | |
 
 ## Riesgos y mitigaciones
 
@@ -153,13 +191,14 @@ considerar el port "estable".
 |---|---|
 | Rotación incorrecta | probar `rotation=0` y `2` en `paperdiyLgfxConfig` |
 | Ghosting | probar `cleanBankNeedsFreshBackground`, LUTs de LilyGo/PaperS3, refresco completo periódico |
-| Panel no enciende | verificar PM1 GPIO2, GPIO46, `applyBootPowerPolicy`, DCDC_EN |
+| Panel no enciende | verificar `ensureBooted()`, PM1 GPIO2, GPIO46, CHG/DCDC_EN |
 | Consumo alto en sleep | cortar PM1 GPIO2, SD power, holds; medir |
 | Batería mal leída | verificar registros PM1 0x20–0x27 y `PWR_SRC` 0x04 |
 | Wake accidental | `waitForPowerButtonRelease` + guardar el primer release |
 | UI injugable con 2 botones | remapeo, atajos, BLE page turner, revisar diálogos |
 | Flash lleno | build `slim`, optimizar fuentes/idiomas, ampliar app0 o reducir spiffs |
 | CrossPoint 2.0 cambia | fijar commit, mantener patch, tests de build |
+| El power deja de resetear | `PAPERDIY_PM1_APP_POWER_BUTTON=0` restaura el reset de fábrica |
 
 ## Upstream
 
@@ -171,28 +210,20 @@ El soporte se puede proponer a CrossPoint:
 3. El perfil PaperDIY es pequeño y encaja con la arquitectura existente; es un
    buen candidato a PR.
 
-Para generar el patch del port:
-
-```bash
-git diff a54770e -- \
-  freeink-sdk/libs/hardware/BoardConfig \
-  freeink-sdk/libs/hardware/BatteryMonitor \
-  freeink-sdk/libs/hardware/PowerManager \
-  freeink-sdk/libs/hardware/BoardPaperDiy \
-  freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp \
-  platformio.ini src/network/FirmwareBoardTag.cpp > patches/paperdiy-support.patch
-```
-
-(`a54770e` es el commit de importación de upstream en este repo; los archivos
-nuevos deben estar añadidos con `git add -N` para que aparezcan en el diff.)
+El port está separado en `patches/sdk.patch` (base SDK `44427f8`) y
+`patches/firmware.patch` (base CrossPoint `31dc683`). La generación y el
+proceso de sync están en
+[`10-fork-maintenance.md`](10-fork-maintenance.md).
 
 ## Estado
 
 - [x] Perfil de placa.
 - [x] Driver de panel.
-- [x] PM1 (rail, batería, shutdown).
-- [x] Wake por botones.
-- [x] Build reproducible.
+- [x] PM1 (rail, batería, CHG_STAT, shutdown).
+- [x] Botón power del PM1 como `BTN_POWER`.
+- [x] Wake por botones; shutdown en batería y fallback USB.
+- [x] Build reproducible y fork `main`/`paperdiy`.
+- [x] OTA configurable y tag `paperdiy`.
 - [ ] Validación en hardware.
 - [ ] Ajuste de rotación/LUT/ghosting.
 - [ ] Medición de consumo/autonomía.

@@ -13,6 +13,11 @@ a diario.
 > disponible era un ESP32-S3 de 8 MB, no el N16R8 del PaperDIY). La primera
 > validación y los ajustes de rotación/ghosting/energía están en la hoja de
 > ruta.
+>
+> **Fork downstream:** `main` es un espejo de `upstream/develop`; `paperdiy`
+> es nuestra rama de trabajo. El SDK `freeink-sdk` está vendorizado para que el
+> repo se clone y compile sin submódulos. Ver
+> [`docs/paperdiy/10-fork-maintenance.md`](docs/paperdiy/10-fork-maintenance.md).
 
 ## Por qué este repo
 
@@ -31,7 +36,11 @@ Este repo añade esa capa:
 - `BoardPaperDiy` con el bus paralelo ED047TC1 y el rail EPD del **M5PM1**;
 - `paperdiyLgfxConfig` reutilizando el bus del PaperS3 (mismos pines);
 - batería/estado de carga por M5PM1;
-- deep sleep despertando con cualquiera de los dos botones;
+- botón power del PM1 como `BTN_POWER`, apagado en batería y fallback de deep
+  sleep por USB despertando con A/B;
+- framebuffer en PSRAM (`FREEINK_FB_PSRAM`);
+- OTA configurable (`CROSSPOINT_OTA_RELEASES_URL`) para no descargar firmware
+  oficial;
 - env de PlatformIO `paperdiy`.
 
 ## Hardware
@@ -64,7 +73,16 @@ botones:
 | **A** largo | atrás / salir |
 | **B** largo | confirmar / seleccionar |
 | **A + B** | botón power (menú de energía / dormir) |
-| Power físico | encendido, apagado (doble clic) y modo descarga (mantener ~2 s) |
+| Power corto | acción configurada; por defecto dormir/apagar (el PM1 entrega el clic al firmware) |
+| Power doble clic | apagado hardware (si el PM1 lo mantiene habilitado) |
+| Power ~2 s | modo descarga (LED rojo) |
+| Power desde apagado | encender |
+
+El comportamiento del power cambia respecto a fábrica: con
+`PAPERDIY_PM1_APP_POWER_BUTTON=1` (por defecto) el single-click reset del PM1
+se desactiva para que el clic llegue a CrossPoint. Si prefieres el reset de
+fábrica, compila con `-DPAPERDIY_PM1_APP_POWER_BUTTON=0`; entonces usa A+B para
+dormir.
 
 La navegación es la principal limitación del hardware. El plan incluye
 remapeo de botones, atajos contextuales y **BLE page turner** (ya compilado)
@@ -174,14 +192,21 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 - [Guía de usuario PaperDIY](docs/paperdiy/07-user-guide.md)
 - [Fuentes](docs/paperdiy/08-sources.md)
 - [Prior art: issue #4005 y PRs de PaperDIY](docs/paperdiy/09-prior-art.md)
+- [Mantener el fork y actualizar upstream](docs/paperdiy/10-fork-maintenance.md)
 
 ## Limitaciones conocidas
 
 - Sin validación en hardware todavía: rotación, LUTs, ghosting, corriente de
   sueño y autonomía son los primeros puntos a medir.
 - Sin táctil, frontlight, RTC, IMU ni audio. La UI debe funcionar con 2 botones.
-- Batería de 140 mAh: el sueño profundo entre interacciones no es opcional.
-- El botón físico de power lo gestiona el M5PM1; el firmware no lo ve como GPIO.
+- Batería de 140 mAh: en batería el equipo pide apagado al PM1 al dormir; con
+  USB hace deep sleep y despierta con A/B. La autonomía sigue pendiente de
+  medir.
+- El botón físico de power lo gestiona el M5PM1; el firmware lo recibe como
+  evento I²C, no como GPIO.
+- La OTA apunta por defecto al repo oficial, pero no hay asset `-paperdiy`, así
+  que no instala firmware ajeno. Para OTA propia hay que configurar
+  `CROSSPOINT_OTA_RELEASES_URL`.
 - CrossPoint 2.0 es la rama de desarrollo (2.0.0), no la 1.6.x estable.
 
 ## Créditos y licencia

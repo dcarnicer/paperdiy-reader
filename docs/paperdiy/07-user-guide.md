@@ -23,9 +23,13 @@ segundos). Las siguientes son mucho más rápidas.
 | A largo | atrás / salir |
 | B largo | confirmar / seleccionar |
 | A+B | power (menú/dormir) |
-| Power clic | encender / reset |
-| Power doble clic | apagar |
+| Power clic | encender; en marcha, acción configurada (por defecto dormir/apagar) |
+| Power doble clic | apagar (hardware, si el PM1 lo mantiene) |
 | Power ~2 s | modo descarga (LED rojo) |
+
+El clic del power ya no hace reset de fábrica: el PM1 se lo entrega al
+firmware. Si prefieres el comportamiento original, compila con
+`-DPAPERDIY_PM1_APP_POWER_BUTTON=0` y usa A+B para dormir.
 
 En el lector, A/B pasan página. En listas, mueven la selección; B largo abre el
 elemento; A largo vuelve.
@@ -78,9 +82,11 @@ elemento; A largo vuelve.
 ## Energía y sueño
 
 - El lector duerme solo tras un timeout de inactividad.
-- Para dormir manualmente: mantén A+B.
-- Despierta con A o B (o el botón de power, que enciende/reset).
-- El botón de power físico apaga con doble clic; el firmware no lo ve como GPIO.
+- Para dormir manualmente: mantén A+B o pulsa el power (según la acción
+  configurada).
+- En batería, al dormir pide **apagado** al PM1: el equipo se apaga y un clic
+  lo enciende de nuevo (la página queda en el panel).
+- Con USB conectado, hace **deep sleep** y despierta con A o B.
 - Si vas a estar mucho tiempo sin usar el equipo, apágalo con doble clic.
 - La batería es de 140 mAh: la autonomía depende de dormir. Si lees con Wi-Fi
   encendida, baja mucho.
