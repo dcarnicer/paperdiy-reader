@@ -1,5 +1,6 @@
 #include "AboutActivity.h"
 
+#include <BatteryMonitor.h>
 #include <BoardConfig.h>
 #include <GfxRenderer.h>
 #include <HalClock.h>
@@ -20,6 +21,7 @@ enum MenuItem {
   ITEM_FIRMWARE,
   ITEM_CHIP,
   ITEM_FLASH,
+  ITEM_BATTERY,
   ITEM_DISPLAY,
   ITEM_RESOLUTION,
   ITEM_TOUCH,
@@ -33,8 +35,8 @@ enum MenuItem {
 // these screenshots across every device language, so the labels must be
 // identical on every unit.
 const char* const menuNames[AboutActivity::ITEM_COUNT] = {
-    "Device", "Firmware",          "Chip",        "Flash", "Display Controller", "Resolution", "Touch", "Frontlight",
-    "RTC",    "Tilt Sensor (IMU)", "MAC Address",
+    "Device",     "Firmware", "Chip",       "Flash", "Battery",           "Display Controller",
+    "Resolution", "Touch",    "Frontlight", "RTC",   "Tilt Sensor (IMU)", "MAC Address",
 };
 
 // Chip part numbers, not user prose — deliberately untranslated.
@@ -102,6 +104,21 @@ void AboutActivity::onEnter() {
   rowValues_[ITEM_CHIP] = buf;
   snprintf(buf, sizeof(buf), "%u MB", static_cast<unsigned>(ESP.getFlashChipSize() / (1024u * 1024u)));
   rowValues_[ITEM_FLASH] = buf;
+  // The PM1 has no coulomb counter, so show the raw rails next to the percentage.
+  // This is also the quickest way to tell a full pack from a charger that has
+  // already terminated. Fields are -1 when the board has no PM1 backend.
+  const BatteryMonitor battery;
+  const auto batteryStatus = battery.readStatus();
+  if (batteryStatus.millivoltsKnown) {
+    const char* state =
+        batteryStatus.chargingKnown
+            ? (batteryStatus.charging ? "charging" : "idle")
+            : (batteryStatus.externalPowerKnown ? (batteryStatus.externalPower ? "USB" : "battery") : "?");
+    snprintf(buf, sizeof(buf), "%.2fV %u%% %s", batteryStatus.millivolts / 1000.0f, batteryStatus.percentage, state);
+    rowValues_[ITEM_BATTERY] = buf;
+  } else {
+    rowValues_[ITEM_BATTERY] = "n/a";
+  }
   rowValues_[ITEM_DISPLAY] = displayControllerName(BoardConfig::ACTIVE.displayController);
   snprintf(buf, sizeof(buf), "%ux%u", static_cast<unsigned>(BoardConfig::ACTIVE.displayWidth),
            static_cast<unsigned>(BoardConfig::ACTIVE.displayHeight));

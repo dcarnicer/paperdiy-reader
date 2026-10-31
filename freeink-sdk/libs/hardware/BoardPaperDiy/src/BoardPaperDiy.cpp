@@ -1,5 +1,4 @@
 #include <BoardPaperDiy.h>
-
 #include <M5Pm1.h>
 
 namespace {
@@ -17,11 +16,15 @@ bool ensurePm1Ready() {
   // LDO_EN and LED_R_EN off. PWR_CFG auto-clears on reset: re-apply each boot.
   updateReg(REG_PWR_CFG, BOOST_EN | LDO_EN | LED_R_EN, CHG_EN | DCDC_EN);
   writeReg(REG_NEO_CFG, 0x00);
+  // The LGS4056H has a 4.2 V target, but the PM1 protects the cell from deep
+  // discharge. 3.4 V leaves the tail of the Li-ion curve and e-ink sag margin.
+  // Best-effort: a rejected LVP write must not stop the EPD rail from coming up.
+  setBatteryLowVoltageProtection(3400);
 
   bool ok = updateReg(REG_GPIO_FUNC0, 0x03 << 4, 0);  // GPIO2 = plain GPIO
-  ok = updateReg(REG_GPIO_MODE, 0, GPIO2) && ok;      // output
-  ok = updateReg(REG_GPIO_DRV, GPIO2, 0) && ok;       // push-pull
-  ok = updateReg(REG_GPIO_OUT, 0, GPIO2) && ok;       // high
+  ok = updateReg(REG_GPIO_MODE, 0, GPIO2) && ok;       // output
+  ok = updateReg(REG_GPIO_DRV, GPIO2, 0) && ok;        // push-pull
+  ok = updateReg(REG_GPIO_OUT, 0, GPIO2) && ok;        // high
 
   // PM1 GPIO3 is CHG_STAT (active-low, needs a pull-up); BatteryMonitor reads it.
   ok = updateReg(REG_GPIO_FUNC0, 0x03 << 6, 0) && ok;          // GPIO3 = plain GPIO

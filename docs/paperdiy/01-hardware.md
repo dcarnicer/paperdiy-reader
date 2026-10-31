@@ -117,7 +117,12 @@ validar en PaperDIY porque el PMIC/VCOM es distinto. Ver
   `PowerManager::powerDownRailsForSleep()`; hay que medir.
 - Wake: `ext1` en GPIO3/4 (RTC GPIOs del S3), activo bajo. Cualquiera de los
   dos botones despierta.
-- Carga: el PM1 gestiona la curva; `CHG_EN` debe estar activo.
+- Carga: `CHG_EN` del PM1 habilita el LGS4056H. El esquema K159 lleva
+  `R11=2K`, que fija 500 mA; con la celda original de 140 mAh son ~3,6C y con
+  una 604050 de ~2000 mAh, ~0,25C.
+- `CHG_STAT` es PM1 GPIO3, activo bajo: se lee para saber si realmente está
+  cargando, no solo si hay USB.
+- Protección de baja tensión: `REG_BATT_LVP` a 3,4 V.
 - El botón físico de power no es un GPIO del ESP32; no se puede leer por
   firmware. Para dormir desde la UI se usa A+B.
 

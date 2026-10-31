@@ -40,6 +40,22 @@ void HalPowerManager::begin() {
   // Board charger setup (Picco SGM41562: stock charge voltage and limits); a
   // no-op on boards without a configurable charger.
   if (BatteryMonitor::configureCharger()) LOG_INF("PWR", "Charger configured");
+#if FREEINK_DEVICE_PAPERDIY
+  // PaperDIY's PM1 exposes only voltage, not a coulomb counter. Log the raw
+  // rails once at boot so a percentage that looks stuck can be compared with
+  // the actual cell voltage and charge source.
+  if (BoardConfig::isPaperDiy()) {
+    const BatteryMonitor battery;
+    const auto status = battery.readStatus();
+    uint8_t pwrCfg = 0;
+    uint8_t gpioIn = 0;
+    freeink::m5pm1::readReg(freeink::m5pm1::REG_PWR_CFG, &pwrCfg);
+    freeink::m5pm1::readReg(freeink::m5pm1::REG_GPIO_IN, &gpioIn);
+    LOG_INF("PWR", "Battery: VBAT=%dmV VIN=%dmV 5VOUT=%dmV PWR_SRC=%d pct=%d chg=%d ext=%d cfg=%02x gpio=%02x",
+            status.millivolts, status.pm1VinMv, status.pm1VinOutMv, status.pm1PowerSource, status.percentage,
+            status.charging, status.externalPower, pwrCfg, gpioIn);
+  }
+#endif
   normalFreq = getCpuFrequencyMhz();
   modeMutex = xSemaphoreCreateMutex();
   assert(modeMutex != nullptr);

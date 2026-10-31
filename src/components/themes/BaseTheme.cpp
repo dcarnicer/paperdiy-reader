@@ -82,7 +82,7 @@ void BaseTheme::drawBatteryLightningBolt(const GfxRenderer& renderer, int boltX,
 }
 
 void BaseTheme::fillBatteryIcon(const GfxRenderer& renderer, Rect rect, uint16_t percentage) const {
-  const bool charging = gpio.isUsbConnected();
+  const bool charging = gpio.isCharging();
 
   const int maxFillWidth = rect.width - 5;
   const int fillHeight = rect.height - 4;
@@ -335,7 +335,7 @@ void BaseTheme::applyHeaderStatus(const GfxRenderer& renderer, freeink::ui::Head
   status.showBattery = true;
   const uint16_t percentage = powerManager.getBatteryPercentage();
   status.battery.percent = static_cast<uint8_t>(percentage > 100 ? 100 : percentage);
-  status.battery.charging = gpio.isUsbConnected();
+  status.battery.charging = gpio.isCharging();
   // Static label buffers: headers draw on the single render task, and the
   // strings only need to outlive the fui::header() call that consumes them.
   static char percentText[8];

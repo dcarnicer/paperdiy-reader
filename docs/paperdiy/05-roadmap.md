@@ -22,7 +22,9 @@ Objetivo: demostrar que el port funciona en un PaperDIY real y recoger datos.
       prolongada. `cleanBankNeedsFreshBackground` se probó y se revirtió.
 - [ ] Probar A/B: navegación, página, back, confirm, A+B. Cortos ya funcionan;
       largos y A+B pendientes.
-- [x] Batería: lectura al 100 %. Pendiente carga, VBAT y USB presente.
+- [x] Batería: curva PaperDIY (4,10 V = 100 %), LVP a 3,4 V, `About` con
+      VBAT/estado de carga y rayo según `CHG_STAT`. Pendiente validar la nueva
+      604050 y medir autonomía.
 - [x] SD: monta tras reiniciar, aparecen `Books/*.epub`, abre y lee.
 - [ ] Libro grande / caché / cambios de fuente.
 - [x] Wi-Fi + web UI + transferencia de archivos.
@@ -37,6 +39,12 @@ autonomía es al menos "unas horas de lectura" con una carga.
 
 ## Fase 1 — Port pulido y UX de 2 botones
 
+- [ ] **Siguiente:** refresco parcial de regiones (barra de estado, batería,
+      diálogos) usando `displayWindow`/`Panel_EPD::display(x, y, w, h)` y el
+      patrón de `M5PaperDIY-UserDemo`; límite de parciales antes de un
+      `epd_quality` completo.
+- [ ] **Siguiente:** detección de tarjeta SD por GPIO48 (`CARD_DET`) con
+      hot-plug, aviso al usuario y re-mount seguro.
 - [ ] Ajustar el perfil según la fase 0 (rotación, LUTs, PM1, timeout).
 - [ ] Revisar todos los diálogos/actividades para que sean operables con
       A/B/largos; eliminar dependencias de táctil.

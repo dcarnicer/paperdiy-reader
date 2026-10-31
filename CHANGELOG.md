@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-31 — batería, carga y PM1
+
+- PaperDIY: curva de porcentaje propia para la celda de 140 mAh. El LGS4056H
+  termina la carga y la celda queda en ~4,10 V; la curva genérica de 4,20 V
+  mostraba 90 % con la batería llena. Ahora 4,10 V = 100 %.
+- `About` muestra `VBAT`, porcentaje y estado de carga (charging/idle/USB) para
+  diagnosticar la batería sin conectar el serial.
+- El icono de rayo usa `CHG_STAT` real, no solo la presencia de USB.
+- PM1: protección de baja tensión configurada a 3,4 V (`REG_BATT_LVP`).
+- Log de arranque con `VBAT`, `VIN`, `5VOUT`, `PWR_SRC`, `PWR_CFG` y
+  `GPIO_IN` para futuras calibraciones.
+- Nota de hardware: el esquema K159 usa `R11=2K` en el LGS4056H (500 mA). Para
+  la celda de 140 mAh era ~3,6C; una 604050 de ~2000 mAh queda en ~0,25C.
+
 ## 2026-10-31 — sincronización con upstream `b6605a51`
 
 - `main` avanza de `31dc683f` a `b6605a51` (20 commits).

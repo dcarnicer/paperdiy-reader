@@ -116,7 +116,7 @@ antes de abrir el menú; es un compromiso de UX pendiente de decidir.
 | No monta la SD | FAT32/exFAT, contacto, probar otra tarjeta |
 | No pasa página | ¿batería? ¿A/B? ¿está en modo sleep? |
 | No despierta | ¿el botón está bien? ¿`ext1` GPIO3/4? |
-| Batería rara | leer VBAT del PM1; calibrar; comprobar carga |
+| Batería rara | mirar `About > Battery` (VBAT/estado) o el log `[PWR] Battery:`; recalibrar si se cambia la celda |
 | Wi-Fi no conecta | 2,4 GHz, contraseña, AP aislado; probar hotspot |
 | Libro no abre | EPUB válido, tamaño, RAM; borrar caché del libro |
 | UI rara tras update | borrar `/.crosspoint/` y reiniciar |
