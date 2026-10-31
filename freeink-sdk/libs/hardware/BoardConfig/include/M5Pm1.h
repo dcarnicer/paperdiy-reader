@@ -53,6 +53,7 @@ constexpr uint8_t REG_PWR_CFG = 0x06;   // [3]BOOST_EN [2]LDO_EN [1]DCDC_EN [0]C
                                         // auto-clears to 0 on reset/download/shutdown
 constexpr uint8_t REG_WAKE_SRC = 0x05;  // latched wake source; write 0 to clear
 constexpr uint8_t REG_HOLD_CFG = 0x07;
+constexpr uint8_t REG_BATT_LVP = 0x08;   // battery low-voltage protection, 2000 + n*7.81 mV
 constexpr uint8_t REG_I2C_CFG = 0x09;    // [4]SPD(0=100k) [3:0]SLP_TO (0=no idle sleep)
 constexpr uint8_t REG_WDT_CNT = 0x0A;    // seconds; 0 disables the PMIC watchdog
 constexpr uint8_t REG_SYS_CMD = 0x0C;    // KEY=0xA in high nibble; 1=off, 2=reset, 3=download
@@ -185,6 +186,14 @@ inline bool configureAppPowerButton(uint8_t* configuredValue = nullptr) {
   if (!readReg(REG_BTN_CFG_1, &verify)) return false;
   if (configuredValue) *configuredValue = verify;
   return (verify & (BTN_SINGLE_RESET_DISABLE | BTN_DOWNLOAD_LOCK)) == BTN_SINGLE_RESET_DISABLE;
+}
+
+// Battery low-voltage protection. The PM1 shuts the system down below this
+// threshold; the register is 2000 + n*7.81 mV. Keep the cell above the
+// protection-board cliff and give the e-ink refresh some sag headroom.
+inline bool setBatteryLowVoltageProtection(uint16_t mv) {
+  if (mv < 2000 || mv > 4000) return false;
+  return writeReg(REG_BATT_LVP, static_cast<uint8_t>((mv - 2000) * 100 / 781));
 }
 
 inline bool readButtonStatus(uint8_t* value) { return readReg(REG_BTN_STATUS, value); }

@@ -18,6 +18,7 @@
 #include <Arduino.h>
 #include <driver/gpio.h>  // gpio_hold_dis in releaseSdRail()
 #include <esp_rom_sys.h>  // esp_rom_printf in holdPowerRails()
+#include <initializer_list>  // holdPowerRails() iterates a braced list; host stubs omit it
 
 // ============================================================================
 // Build composition — devices x capabilities

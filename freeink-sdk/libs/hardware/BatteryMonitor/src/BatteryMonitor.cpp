@@ -1035,6 +1035,26 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
     4200,  // 100%
 };
 
+#if FREEINK_DEVICE_PAPERDIY
+// PaperDIY's LGS4056H charger terminates around 4.10 V. The generic 4.20 V
+// curve therefore reports 90% on a full pack and never reaches 100%. Keep the
+// same lower notches and move only the top anchor to the observed full-cell
+// voltage; a 4.10 V pack is full, not 90%.
+constexpr uint16_t PAPERDIY_LIION_NOTCH_MV[11] = {
+    3450,  //   0%
+    3680,  //  10%
+    3740,  //  20%
+    3770,  //  30%
+    3790,  //  40%
+    3820,  //  50%
+    3870,  //  60%
+    3920,  //  70%
+    3980,  //  80%
+    4060,  //  90%
+    4100,  // 100%
+};
+#endif
+
 // A notch change has to clear the boundary by this much before it is accepted.
 // The 20-40% band is only 50 mV wide, so without a deadband a few millivolts of
 // sampler noise would swap the icon back and forth between page turns. Kept
@@ -1042,14 +1062,18 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
 constexpr uint16_t NOTCH_HYSTERESIS_MV = 8;
 
 uint16_t BatteryMonitor::percentageFromMillivolts(uint16_t millivolts) {
+  const uint16_t* notches = LIION_NOTCH_MV;
+#if FREEINK_DEVICE_PAPERDIY
+  if (BoardConfig::isPaperDiy()) notches = PAPERDIY_LIION_NOTCH_MV;
+#endif
   // A failed read reports 0 mV, which lands on 0% here. That is deliberate: the
   // cubic this table replaced evaluated to +7501 at 0 V and clamped to a
   // confident 100%, so an I2C or ADC failure showed a full battery.
-  if (millivolts >= LIION_NOTCH_MV[10]) return 100;
+  if (millivolts >= notches[10]) return 100;
   // Round at the midpoint of each segment instead of flooring, so a cell resting
-  // just below 4.20 V straight off the charger still reads 100%.
+  // just below the full-cell voltage straight off the charger reads 100%.
   for (uint8_t i = 10; i > 0; --i) {
-    const uint16_t boundary = static_cast<uint16_t>((LIION_NOTCH_MV[i - 1] + LIION_NOTCH_MV[i]) / 2);
+    const uint16_t boundary = static_cast<uint16_t>((notches[i - 1] + notches[i]) / 2);
     if (millivolts >= boundary) return static_cast<uint16_t>(i * 10);
   }
   return 0;

@@ -213,6 +213,32 @@ Pendiente de validar en lectura prolongada. Si esta LUT no mejora el
 ghosting, las siguientes opciones son una waveform `text` propia o un
 refresco `epd_quality` periódico.
 
+### Batería, carga y PM1
+
+El M5PM1 no tiene coulomb counter: solo expone `VBAT` en mV. La carga la hace
+un LGS4056H con `R11=2K`, es decir, 500 mA. En la celda original de 140 mAh eso
+es ~3,6C; con una 604050 de ~2000 mAh queda en ~0,25C, mucho más razonable.
+
+Medición en hardware con la celda original y USB conectado:
+
+```
+VBAT=4110 mV  VIN=5082 mV  PWR_SRC=5  CHG_STAT=alto  PWR_CFG=0x03
+```
+
+El cargador ya había terminado y la celda quedaba en ~4,10 V, no en 4,20 V.
+La curva genérica de `BatteryMonitor` asumía 4,20 V y mostraba 90 %. Se añadió
+`PAPERDIY_LIION_NOTCH_MV` con el mismo tramo inferior y **4,10 V = 100 %**.
+Si se cambia a una celda que cargue hasta 4,20 V, hay que recalibrar el ancla
+superior o volver a la curva genérica.
+
+También se integran del ecosistema M5Stack:
+
+- `M5PM1::setBatteryLvp()`: umbral de protección a 3,4 V (`REG_BATT_LVP`).
+- `CHG_STAT` (PM1 GPIO3, activo bajo) para el icono de carga real.
+- Muestreo de `VBAT`/`VIN` en `About` y log de arranque.
+- Referencias: `m5stack/M5PM1`, `m5stack/M5PaperDIY-UserDemo` y
+  `m5stack/uiflow-micropython` (driver `m5pm1.py`).
+
 ## Checklist de validación en hardware
 
 Marca cada punto y anota el resultado; es la información que falta para

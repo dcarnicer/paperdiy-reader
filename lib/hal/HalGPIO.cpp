@@ -256,6 +256,11 @@ bool HalGPIO::isUsbConnected() const {
   return battery.isCharging();
 }
 
+bool HalGPIO::isCharging() const {
+  static const BatteryMonitor battery;
+  return battery.isCharging();
+}
+
 bool HalGPIO::coldBootImpliesPowerButton() const {
   // Xteink-style power topology: the power button energizes the rail until
   // firmware latches it, so a no-USB POWERON can only be a still-held button
