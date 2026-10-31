@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-31 — ajuste de ghosting al pasar página
+
+- PaperDIY: se probó `cleanBankNeedsFreshBackground=true` con una LUT
+  no-drive en `lutFastest`. No redujo el ghosting y añadía refrescos completos
+  visibles, así que se revirtió.
+- PaperDIY: `lutFast`/`lutFastest` usan ahora la waveform AA de ED047TC1 que
+  ya usa el LilyGo T5 S3. Mantiene la base B/W y el plano de grises en el
+  mismo offset de LUT, evita el flash negro de `lut_fast` y da un empuje
+  específico a los grises del antialiasing.
+- El intervalo de refresco limpio por defecto pasa de 15 a 5 páginas. La
+  migración única también mueve el 1 heredado de la prueba anterior a 5 para
+  evaluar la LUT con pasada rápida; después se respeta lo que elija el lector.
+- `Settings > Display > Refresh Frequency` sigue permitiendo volver a 1 página.
+
 ## 2026-10-28 — primera validación PaperDIY
 
 - Port de CrossPoint 2.0 a M5Stack PaperDIY K159:

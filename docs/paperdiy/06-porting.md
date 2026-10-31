@@ -189,6 +189,30 @@ es esperado.
 Si al **cerrar** el menú aparece sombra del menú sobre la página, aplicar el
 mismo tratamiento al re-render del lector.
 
+### Ghosting al pasar páginas
+
+El panel ED047TC1 en modo paralelo crudo acumula ghosting más rápido que los
+controladores SPI para los que se calibró CrossPoint. Con antialiasing de
+texto cada página envía **dos** waveforms (base B/W + plano de grises), así
+que el intervalo por defecto de 15 páginas equivalía a ~30 pasadas rápidas
+antes del limpiado.
+
+Primer intento (31/10/2026): activar `cleanBankNeedsFreshBackground` con una
+LUT no-drive en `lutFastest`. En hardware no redujo el ghosting y añadía
+refrescos completos visibles, así que se revirtió.
+
+Estado actual (prueba): `lutFast`/`lutFastest` usan la waveform AA de ED047TC1
+del LilyGo T5 S3 (mismo panel). Mantiene la base B/W y el plano de grises en
+el mismo offset de LUT, evita el flash negro de `lut_fast` y empuja de forma
+específica los niveles grises que produce el antialiasing. El intervalo por
+defecto pasa a **5 páginas** y una migración única mueve a 5 el 1 heredado de
+la prueba anterior; después se respeta lo que elija el lector en
+`Settings > Display > Refresh Frequency`.
+
+Pendiente de validar en lectura prolongada. Si esta LUT no mejora el
+ghosting, las siguientes opciones son una waveform `text` propia o un
+refresco `epd_quality` periódico.
+
 ## Checklist de validación en hardware
 
 Marca cada punto y anota el resultado; es la información que falta para

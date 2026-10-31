@@ -2,6 +2,7 @@
 
 #include <ArduinoJson.h>
 #include <BlePageTurner.h>
+#include <BoardConfig.h>
 #include <Epub/ReaderRenderSpec.h>
 #include <PersistableStore.h>
 
@@ -327,8 +328,15 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   uint8_t paragraphAlignment = JUSTIFIED;
   // Auto-sleep timeout setting (default 10 minutes). Legacy sleepTimeout enum values are migration-only.
   uint8_t sleepTimeoutMinutes = 10;
-  // E-ink refresh frequency (default 15 pages)
+  // E-ink refresh frequency. Raw-parallel ED047TC1 panels (PaperDIY/PaperS3)
+  // accumulate ghosting faster than the SPI controllers CrossPoint was tuned
+  // for: every AA page turn already sends a B/W base plus a gray overlay, so
+  // 15 pages means ~30 fast waveforms before the next clean pass.
+#if FREEINK_DEVICE_PAPERDIY
+  uint8_t refreshFrequency = REFRESH_5;
+#else
   uint8_t refreshFrequency = REFRESH_15;
+#endif
   uint8_t hyphenationEnabled = 0;
 
   // Reader screen margin settings
