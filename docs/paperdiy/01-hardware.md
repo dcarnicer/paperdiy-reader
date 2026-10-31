@@ -102,9 +102,12 @@ M5GFX expone cuatro modos:
 
 CrossPoint usa un framebuffer de 1 bpp + planos de grises para antialiasing;
 `LgfxEpdDriver` mapea `Full/Half` a `epd_text` y `Fast/Fastest` a `epd_fast`.
-El port usa las LUTs estándar de `Panel_EPD` (las mismas que el perfil
-PaperS3). **Hay que validar** si el PaperDIY necesita
-`cleanBankNeedsFreshBackground=true` o LUTs propias como el LilyGo.
+El port mantiene las LUTs estándar de `Panel_EPD` para `quality` y `text`.
+Para `fast`/`fastest` usa la waveform AA de ED047TC1 validada en el LilyGo
+T5 S3: una sola LUT para la base B/W y el plano de grises, con empuje
+específico para los niveles que produce el antialiasing. Está pendiente de
+validar en PaperDIY porque el PMIC/VCOM es distinto. Ver
+[`06-porting.md`](06-porting.md#ghosting-al-pasar-páginas).
 
 ## Energía
 

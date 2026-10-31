@@ -17,6 +17,9 @@ Objetivo: demostrar que el port funciona en un PaperDIY real y recoger datos.
       o LUTs propias (comparar con PaperS3/LilyGo).
 - [x] Ghosting al abrir el menú del lector: corregido con `HALF_REFRESH` en la
       primera pintada; verificado en hardware.
+- [x] Ghosting al pasar páginas: default 15 -> 5 y prueba de LUT AA de
+      ED047TC1 (LilyGo T5 S3) en `fast`/`fastest`; validar en lectura
+      prolongada. `cleanBankNeedsFreshBackground` se probó y se revirtió.
 - [ ] Probar A/B: navegación, página, back, confirm, A+B. Cortos ya funcionan;
       largos y A+B pendientes.
 - [x] Batería: lectura al 100 %. Pendiente carga, VBAT y USB presente.

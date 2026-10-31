@@ -112,7 +112,7 @@ antes de abrir el menú; es un compromiso de UX pendiente de decidir.
 |---|---|
 | Pantalla en blanco | ¿PM1 GPIO2/GPIO46? ¿DCDC? ¿flasheo completo? |
 | Imagen invertida | cambiar `rotation` en `paperdiyLgfxConfig` (0 ↔ 2) |
-| Ghosting | refresco completo periódico; probar `cleanBankNeedsFreshBackground`/LUTs |
+| Ghosting al pasar páginas | probar `Refresh Frequency` en 5 y luego en 1 en Ajustes > Pantalla; la LUT rápida nueva está en validación |
 | No monta la SD | FAT32/exFAT, contacto, probar otra tarjeta |
 | No pasa página | ¿batería? ¿A/B? ¿está en modo sleep? |
 | No despierta | ¿el botón está bien? ¿`ext1` GPIO3/4? |
