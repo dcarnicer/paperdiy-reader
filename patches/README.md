@@ -5,8 +5,8 @@ versiones de upstream:
 
 | Archivo | Base | Contenido |
 |---|---|---|
-| `sdk.patch` | FreeInk SDK `44427f8` | Perfil PaperDIY, `BoardPaperDiy`, PM1, InputManager, PowerManager, driver LGFX |
-| `firmware.patch` | CrossPoint `31dc683f` | Env `paperdiy`, board tag, OTA, `HalGPIO`, `HalPowerManager`, `main` |
+| `sdk.patch` | FreeInk SDK `2d383f8` | Perfil PaperDIY, `BoardPaperDiy`, PM1, InputManager, PowerManager, driver LGFX |
+| `firmware.patch` | CrossPoint `b6605a51` | Env `paperdiy`, settings, UI, board tag, OTA, `HalGPIO`, `HalPowerManager`, `main` |
 | `paperdiy-support.patch` | ambos | Concatenación de `sdk.patch` + `firmware.patch` |
 
 Orden de aplicación:
@@ -29,11 +29,8 @@ Generación:
 # sdk.patch: diff entre el SDK pristine vendorizado y el SDK de paperdiy
 git diff sdk-baseline..paperdiy -- freeink-sdk > patches/sdk.patch
 
-# firmware.patch: diff de los archivos CrossPoint tocados
-git diff sdk-baseline..paperdiy -- \
-  platformio.ini src/main.cpp src/network/FirmwareBoardTag.cpp \
-  src/network/OtaUpdater.cpp lib/hal/HalGPIO.cpp lib/hal/HalPowerManager.cpp \
-  > patches/firmware.patch
+# firmware.patch: diff de todo el código no-SDK propio
+git diff main..paperdiy -- platformio.ini src lib/hal > patches/firmware.patch
 
 cat patches/sdk.patch patches/firmware.patch > patches/paperdiy-support.patch
 ```
