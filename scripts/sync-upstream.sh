@@ -62,4 +62,4 @@ echo
 echo "paperdiy-next prepared. Review the diff, then run:"
 echo "  make build"
 echo "  # hardware smoke test"
-echo "  git checkout paperdiy && git merge --ff-only paperdiy-next"
+echo "  git checkout paperdiy && git merge --no-ff paperdiy-next"

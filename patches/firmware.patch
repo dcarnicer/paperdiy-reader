@@ -96,11 +96,122 @@ index f96f6634..1bf112e1 100644
  ; --- EEGO Reader A4 — ESP32-S3 N16R8, UC8279C 768x552 + GSLX680 touch ---------
  ; UC8279C SPI panel, GSLX680 touch, PCF8563 RTC, dedicated HSPI MicroSD (SPI,
  ; not SDMMC). 16MB DIO flash + 8MB OPI PSRAM. One binary serves the frontlit
+diff --git a/src/CrossPointSettings.cpp b/src/CrossPointSettings.cpp
+index 56d612c6..4afda30f 100644
+--- a/src/CrossPointSettings.cpp
++++ b/src/CrossPointSettings.cpp
+@@ -120,6 +120,12 @@ void CrossPointSettings::toJson(JsonDocument& doc) const {
+     doc["keyboardLayouts"] = keyboardLayouts;
+   }
+ 
++#if FREEINK_DEVICE_PAPERDIY
++  // Marks a file written after the PaperDIY refresh defaults were tuned. Old
++  // settings files lack it and are migrated once in fromJson(); see there.
++  doc["paperdiyRefreshDefaults"] = 2;
++#endif
++
+   bleturner::writeJson(ble, doc);
+ }
+ 
+@@ -298,6 +304,22 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
+     keyboardLayouts = doc["keyboardLayouts"].as<uint16_t>();
+   }
+ 
++#if FREEINK_DEVICE_PAPERDIY
++  // The first PaperDIY builds inherited CrossPoint's 15-page default, which
++  // ghosts visibly on this panel. A later trial moved the 1-page setting to 5
++  // to exercise the ED047TC1 fast LUT. Both are one-time upgrades; a file
++  // written at version 2 keeps whatever the reader chose afterwards.
++  const uint8_t refreshDefaults = doc["paperdiyRefreshDefaults"] | 0;
++  if (refreshDefaults < 2) {
++    if (refreshFrequency == REFRESH_15 || refreshFrequency == REFRESH_1) {
++      refreshFrequency = REFRESH_5;
++      LOG_INF("CPS", "PaperDIY: refresh interval -> 5 pages for the fast-LUT trial");
++    }
++    needsResave = true;
++  }
++  LOG_DBG("CPS", "PaperDIY refresh interval: %u pages", static_cast<unsigned>(refreshFrequency));
++#endif
++
+   if (!bleturner::readJson(ble, doc)) {
+     needsResave = true;
+   }
+diff --git a/src/CrossPointSettings.h b/src/CrossPointSettings.h
+index f7a9d49e..c7320d6f 100644
+--- a/src/CrossPointSettings.h
++++ b/src/CrossPointSettings.h
+@@ -2,6 +2,7 @@
+ 
+ #include <ArduinoJson.h>
+ #include <BlePageTurner.h>
++#include <BoardConfig.h>
+ #include <Epub/ReaderRenderSpec.h>
+ #include <PersistableStore.h>
+ 
+@@ -327,8 +328,15 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
+   uint8_t paragraphAlignment = JUSTIFIED;
+   // Auto-sleep timeout setting (default 10 minutes). Legacy sleepTimeout enum values are migration-only.
+   uint8_t sleepTimeoutMinutes = 10;
+-  // E-ink refresh frequency (default 15 pages)
++  // E-ink refresh frequency. Raw-parallel ED047TC1 panels (PaperDIY/PaperS3)
++  // accumulate ghosting faster than the SPI controllers CrossPoint was tuned
++  // for: every AA page turn already sends a B/W base plus a gray overlay, so
++  // 15 pages means ~30 fast waveforms before the next clean pass.
++#if FREEINK_DEVICE_PAPERDIY
++  uint8_t refreshFrequency = REFRESH_5;
++#else
+   uint8_t refreshFrequency = REFRESH_15;
++#endif
+   uint8_t hyphenationEnabled = 0;
+ 
+   // Reader screen margin settings
+diff --git a/src/activities/UiListActivity.cpp b/src/activities/UiListActivity.cpp
+index f58f2c42..1fcbfdac 100644
+--- a/src/activities/UiListActivity.cpp
++++ b/src/activities/UiListActivity.cpp
+@@ -261,5 +261,7 @@ void UiListActivity::render(RenderLock&&) {
+     renderUi();
+   }
+   drawFooter();
+-  renderer.displayBuffer();
++  const auto refreshMode = cleanFirstRender ? HalDisplay::HALF_REFRESH : HalDisplay::FAST_REFRESH;
++  cleanFirstRender = false;
++  renderer.displayBuffer(refreshMode);
+ }
+diff --git a/src/activities/UiListActivity.h b/src/activities/UiListActivity.h
+index 2f8e3705..b3293acb 100644
+--- a/src/activities/UiListActivity.h
++++ b/src/activities/UiListActivity.h
+@@ -92,6 +92,10 @@ class UiListActivity : public Activity, protected UiAppHost {
+   freeink::ui::ListNav nav;
+   ButtonNavigator buttonNavigator;
+ 
++  // Set by a screen that replaces a reader page and must scrub the previous
++  // ink on its first paint (the reader menu). Subsequent paints stay FAST.
++  bool cleanFirstRender = false;
++
+  private:
+   static void screenTrampoline(UiScreen& screen, void* user);
+   static void rowActionTrampoline(const freeink::ui::ActionEvent& event, void* user);
+diff --git a/src/activities/reader/EpubReaderMenuActivity.cpp b/src/activities/reader/EpubReaderMenuActivity.cpp
+index 06ecd724..2f3cadae 100644
+--- a/src/activities/reader/EpubReaderMenuActivity.cpp
++++ b/src/activities/reader/EpubReaderMenuActivity.cpp
+@@ -33,6 +33,9 @@ EpubReaderMenuActivity::EpubReaderMenuActivity(GfxRenderer& renderer, MappedInpu
+ 
+ void EpubReaderMenuActivity::onEnter() {
+   RenderLock lock;
++  // The reader page is still on the glass. A FAST full-screen replacement
++  // leaves its text faintly visible behind the menu; scrub it once.
++  cleanFirstRender = true;
+   UiListActivity::onEnter();
+   for (size_t i = 0; i < menuItems.size(); ++i) {
+     if (menuItems[i].action == selectedAction) {
 diff --git a/src/main.cpp b/src/main.cpp
-index 61d35b30..e0d05361 100644
+index 65b4aed3..6b9535cd 100644
 --- a/src/main.cpp
 +++ b/src/main.cpp
-@@ -708,8 +708,8 @@ void setup() {
+@@ -717,8 +717,8 @@ void setup() {
      case HalGPIO::WakeupReason::AfterUSBPower:
        // Most devices return to sleep after a USB-powered cold boot.
        LOG_DBG("MAIN", "Wakeup reason: After USB Power");
@@ -111,7 +222,7 @@ index 61d35b30..e0d05361 100644
        // X4 Pro must stay awake so USB Serial/JTAG remains available after leaving
        // USB Drive and reconnecting the cable. Paper Mono has no armable GPIO wake
        // (its button is behind the PMIC). Metalio also needs native USB available
-@@ -1027,10 +1027,10 @@ void loop() {
+@@ -1040,10 +1040,10 @@ void loop() {
      return;
    }
  

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-31 — sincronización con upstream `b6605a51`
+
+- `main` avanza de `31dc683f` a `b6605a51` (20 commits).
+- SDK de FreeInk actualizado de `44427f8` a `2d383f8` (52 commits) y
+  re-vendorizado; el port PaperDIY se reaplicó sobre la base nueva.
+- Incluye mejoras de diccionario, fuentes, plugins, portal cautivo, imágenes
+  de suspensión aleatorias y correcciones de red/UI de upstream.
+- `patches/sdk.patch` y `patches/firmware.patch` regenerados contra las nuevas
+  bases; `firmware.patch` ahora incluye también settings y UI propios.
+- Build `paperdiy` correcto tras resolver el conflicto árbol/submódulo del SDK.
+
 ## 2026-10-31 — ajuste de ghosting al pasar página
 
 - PaperDIY: se probó `cleanBankNeedsFreshBackground=true` con una LUT
