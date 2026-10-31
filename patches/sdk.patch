@@ -16,7 +16,7 @@ index 0e2cc958..92e3415b 100644
  const LgfxEpdConfig& FREEINK_LGFX_EPD_CONFIG();
  PanelDriver& lgfxEpdDriver() {
 diff --git a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
-index a90b4473..7b857f7c 100644
+index a90b4473..e6f16929 100644
 --- a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
 +++ b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
 @@ -692,7 +692,7 @@ bool BatteryMonitor::hasGaugeBackend() const {
@@ -54,11 +54,68 @@ index a90b4473..7b857f7c 100644
    return status.percentageKnown || status.millivoltsKnown || status.externalPowerKnown;
  }
  
+@@ -1022,6 +1035,26 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
+     4200,  // 100%
+ };
+ 
++#if FREEINK_DEVICE_PAPERDIY
++// PaperDIY's LGS4056H charger terminates around 4.10 V. The generic 4.20 V
++// curve therefore reports 90% on a full pack and never reaches 100%. Keep the
++// same lower notches and move only the top anchor to the observed full-cell
++// voltage; a 4.10 V pack is full, not 90%.
++constexpr uint16_t PAPERDIY_LIION_NOTCH_MV[11] = {
++    3450,  //   0%
++    3680,  //  10%
++    3740,  //  20%
++    3770,  //  30%
++    3790,  //  40%
++    3820,  //  50%
++    3870,  //  60%
++    3920,  //  70%
++    3980,  //  80%
++    4060,  //  90%
++    4100,  // 100%
++};
++#endif
++
+ // A notch change has to clear the boundary by this much before it is accepted.
+ // The 20-40% band is only 50 mV wide, so without a deadband a few millivolts of
+ // sampler noise would swap the icon back and forth between page turns. Kept
+@@ -1029,14 +1062,18 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
+ constexpr uint16_t NOTCH_HYSTERESIS_MV = 8;
+ 
+ uint16_t BatteryMonitor::percentageFromMillivolts(uint16_t millivolts) {
++  const uint16_t* notches = LIION_NOTCH_MV;
++#if FREEINK_DEVICE_PAPERDIY
++  if (BoardConfig::isPaperDiy()) notches = PAPERDIY_LIION_NOTCH_MV;
++#endif
+   // A failed read reports 0 mV, which lands on 0% here. That is deliberate: the
+   // cubic this table replaced evaluated to +7501 at 0 V and clamped to a
+   // confident 100%, so an I2C or ADC failure showed a full battery.
+-  if (millivolts >= LIION_NOTCH_MV[10]) return 100;
++  if (millivolts >= notches[10]) return 100;
+   // Round at the midpoint of each segment instead of flooring, so a cell resting
+-  // just below 4.20 V straight off the charger still reads 100%.
++  // just below the full-cell voltage straight off the charger reads 100%.
+   for (uint8_t i = 10; i > 0; --i) {
+-    const uint16_t boundary = static_cast<uint16_t>((LIION_NOTCH_MV[i - 1] + LIION_NOTCH_MV[i]) / 2);
++    const uint16_t boundary = static_cast<uint16_t>((notches[i - 1] + notches[i]) / 2);
+     if (millivolts >= boundary) return static_cast<uint16_t>(i * 10);
+   }
+   return 0;
 diff --git a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
-index d2b84168..8ede0d98 100644
+index d2b84168..aedbd487 100644
 --- a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
 +++ b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
-@@ -66,6 +66,9 @@
+@@ -18,6 +18,7 @@
+ #include <Arduino.h>
+ #include <driver/gpio.h>  // gpio_hold_dis in releaseSdRail()
+ #include <esp_rom_sys.h>  // esp_rom_printf in holdPowerRails()
++#include <initializer_list>  // holdPowerRails() iterates a braced list; host stubs omit it
+ 
+ // ============================================================================
+ // Build composition — devices x capabilities
+@@ -66,6 +67,9 @@
  #ifndef FREEINK_DEVICE_PAPERS3
  #define FREEINK_DEVICE_PAPERS3 0
  #endif
@@ -68,7 +125,7 @@ index d2b84168..8ede0d98 100644
  #ifndef FREEINK_DEVICE_MURPHY_M4
  #define FREEINK_DEVICE_MURPHY_M4 0
  #endif
-@@ -94,9 +97,9 @@
+@@ -94,9 +98,9 @@
        FREEINK_DEVICE_MURPHY || FREEINK_DEVICE_DELINK || FREEINK_DEVICE_LILYGO || FREEINK_DEVICE_M5PAPER ||               \
        FREEINK_DEVICE_STICKY || FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERS3 || FREEINK_DEVICE_MURPHY_M4 ||         \
        FREEINK_DEVICE_EEGO_A4 || FREEINK_DEVICE_ONEPAGE || FREEINK_DEVICE_WS397 || FREEINK_DEVICE_METALIO_EINK4 || \
@@ -80,7 +137,7 @@ index d2b84168..8ede0d98 100644
  #endif
  // Each device belongs to one MCU family; a binary targets exactly one. X3/X4 are
  // ESP32-C3; M5 PaperColor/Murphy/de-link/LilyGo are ESP32-S3; M5Paper v1.1 is the
-@@ -107,7 +110,7 @@
+@@ -107,7 +111,7 @@
  #define FREEINK_MCU_S3                                                                                    \
    (FREEINK_DEVICE_M5 || FREEINK_DEVICE_MURPHY || FREEINK_DEVICE_DELINK || FREEINK_DEVICE_LILYGO ||        \
     FREEINK_DEVICE_STICKY || FREEINK_DEVICE_X4PRO || FREEINK_DEVICE_X4CLASSIC || FREEINK_DEVICE_PAPERMONO ||  \
@@ -89,7 +146,7 @@ index d2b84168..8ede0d98 100644
     FREEINK_DEVICE_PICCO)
  #define FREEINK_MCU_ESP32 (FREEINK_DEVICE_M5PAPER)
  #if (FREEINK_MCU_C3 + FREEINK_MCU_C61 + FREEINK_MCU_S3 + FREEINK_MCU_ESP32) != 1
-@@ -180,7 +183,7 @@
+@@ -180,7 +184,7 @@
  // LilyGo T5 S3 and M5Stack PaperS3: raw-parallel ED047TC1 via LovyanGFX (M5GFX).
  // External-bus driver; each board injects its own bus pins/power in an
  // LgfxEpdConfig (PaperS3's rails are plain GPIOs, LilyGo's ride a PMIC+expander).
@@ -98,7 +155,7 @@ index d2b84168..8ede0d98 100644
  #define FREEINK_DRIVER_LGFX_EPD 1
  #else
  #define FREEINK_DRIVER_LGFX_EPD 0
-@@ -396,7 +399,7 @@
+@@ -396,7 +400,7 @@
  // (The prebuilt Arduino-ESP32 libs disable BSS-in-PSRAM, so this is a runtime
  // heap allocation, not EXT_RAM_BSS_ATTR.)
  #ifndef FREEINK_FB_PSRAM
@@ -107,7 +164,7 @@ index d2b84168..8ede0d98 100644
  #endif
  
  // SD transport. de-link (4-bit) and X4 Pro (1-bit) are wired for SDMMC; SdFat
-@@ -462,6 +465,7 @@ enum class Board : uint8_t {
+@@ -462,6 +466,7 @@ enum class Board : uint8_t {
    Sticky,
    PaperMono,
    M5PaperS3,  // ESP32-S3 sibling of M5Paper v1.1: same ED047TC1 glass, no IT8951 — raw parallel via LovyanGFX
@@ -115,7 +172,7 @@ index d2b84168..8ede0d98 100644
    EegoA4,     // EEGO Reader A4: ESP32-S3, UC8279C 768x552 SPI panel, GSLX680 touch, PCF8563 RTC
    OnePage,    // OnePage: ESP32-C61, SSD1677 800x480 SPI panel, 4-key ADC ladder + 3 side keys
    WsEpaper397,  // Waveshare ESP32-S3-ePaper-3.97: SSD1677 800x480, 3 keys + BOOT, AXP2101 PMIC
-@@ -1539,6 +1543,60 @@ constexpr BoardProfile M5PAPER_S3 = {
+@@ -1539,6 +1544,60 @@ constexpr BoardProfile M5PAPER_S3 = {
      0,      // wifiMaxTxPower: radio default
      false};  // usbDetectActiveHigh: GPIO5 is driven LOW while a cable is attached
  
@@ -176,7 +233,7 @@ index d2b84168..8ede0d98 100644
  // --- EEGO Reader A4 — ESP32-S3 N16R8, UC8279C (768x552) + GSLX680 touch -------
  // CrossPoint fork device; pins/resolution/calibration from stock-firmware RE,
  // none hardware-confirmed. See docs/eego-a4-support.md.
-@@ -2122,7 +2180,7 @@ constexpr uint32_t cmax(uint32_t a, uint32_t b) { return a > b ? a : b; }
+@@ -2122,7 +2181,7 @@ constexpr uint32_t cmax(uint32_t a, uint32_t b) { return a > b ? a : b; }
  constexpr uint32_t panelBytes(const BoardProfile& p) {
    return static_cast<uint32_t>(p.displayWidth / 8) * p.displayHeight;
  }
@@ -185,7 +242,7 @@ index d2b84168..8ede0d98 100644
      cmax(cmax(FREEINK_DEVICE_X4 ? panelBytes(XTEINK_X4) : 0u, FREEINK_DEVICE_X3 ? panelBytes(XTEINK_X3) : 0u),
           cmax(FREEINK_DEVICE_M5 ? panelBytes(M5STACK_PAPER_COLOR) : 0u,
                FREEINK_DEVICE_MURPHY ? panelBytes(MURPHY_M3) : 0u)),
-@@ -2140,6 +2198,8 @@ constexpr uint32_t MAX_FRAMEBUFFER_BYTES = cmax(
+@@ -2140,6 +2199,8 @@ constexpr uint32_t MAX_FRAMEBUFFER_BYTES = cmax(
                          cmax(FREEINK_DEVICE_WS397 ? panelBytes(WS_EPAPER_397) : 0u,
                               cmax(FREEINK_DEVICE_METALIO_EINK4 ? panelBytes(METALIO_EINK4) : 0u,
                                    FREEINK_DEVICE_PICCO ? panelBytes(PICCO) : 0u)))))));
@@ -194,7 +251,7 @@ index d2b84168..8ede0d98 100644
  
  // Compile-time default device — the profile ACTIVE starts as. With a single
  // device in the build this is the only device; with several same-MCU devices it
-@@ -2170,6 +2230,8 @@ constexpr BoardProfile DEFAULT_DEVICE = LILYGO_T5S3;
+@@ -2170,6 +2231,8 @@ constexpr BoardProfile DEFAULT_DEVICE = LILYGO_T5S3;
  constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_V11;
  #elif FREEINK_DEVICE_PAPERS3
  constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_S3;
@@ -203,7 +260,7 @@ index d2b84168..8ede0d98 100644
  #elif FREEINK_DEVICE_STICKY
  constexpr BoardProfile DEFAULT_DEVICE = STICKY;
  #elif FREEINK_DEVICE_X4PRO
-@@ -2318,6 +2380,11 @@ inline bool selectDevice(Board which) {
+@@ -2318,6 +2381,11 @@ inline bool selectDevice(Board which) {
        ACTIVE = M5PAPER_S3;
        break;
  #endif
@@ -215,7 +272,7 @@ index d2b84168..8ede0d98 100644
  #if FREEINK_DEVICE_EEGO_A4
      case Board::EegoA4:
        ACTIVE = EEGO_A4;
-@@ -2359,6 +2426,7 @@ inline bool isMurphyM3() { return ACTIVE.board == Board::MurphyM3; }
+@@ -2359,6 +2427,7 @@ inline bool isMurphyM3() { return ACTIVE.board == Board::MurphyM3; }
  inline bool isDeLink() { return ACTIVE.board == Board::DeLink; }
  inline bool isM5PaperV11() { return ACTIVE.board == Board::M5PaperV11; }
  inline bool isM5PaperS3() { return ACTIVE.board == Board::M5PaperS3; }
@@ -224,7 +281,7 @@ index d2b84168..8ede0d98 100644
  inline bool isX4Pro() { return ACTIVE.board == Board::XteinkX4Pro; }
  inline bool isX4Classic() { return ACTIVE.board == Board::XteinkX4Classic; }
 diff --git a/freeink-sdk/libs/hardware/BoardConfig/include/M5Pm1.h b/freeink-sdk/libs/hardware/BoardConfig/include/M5Pm1.h
-index 4c2ce964..21b8f3f9 100644
+index 4c2ce964..7c044d92 100644
 --- a/freeink-sdk/libs/hardware/BoardConfig/include/M5Pm1.h
 +++ b/freeink-sdk/libs/hardware/BoardConfig/include/M5Pm1.h
 @@ -29,6 +29,8 @@ constexpr uint8_t ADDR = 0x6E;
@@ -245,7 +302,13 @@ index 4c2ce964..21b8f3f9 100644
  #else
  #define FREEINK_M5PM1_SCL 2
  #endif
-@@ -54,6 +58,7 @@ constexpr uint8_t REG_WDT_CNT = 0x0A;    // seconds; 0 disables the PMIC watchdo
+@@ -49,11 +53,13 @@ constexpr uint8_t REG_PWR_CFG = 0x06;   // [3]BOOST_EN [2]LDO_EN [1]DCDC_EN [0]C
+                                         // auto-clears to 0 on reset/download/shutdown
+ constexpr uint8_t REG_WAKE_SRC = 0x05;  // latched wake source; write 0 to clear
+ constexpr uint8_t REG_HOLD_CFG = 0x07;
++constexpr uint8_t REG_BATT_LVP = 0x08;   // battery low-voltage protection, 2000 + n*7.81 mV
+ constexpr uint8_t REG_I2C_CFG = 0x09;    // [4]SPD(0=100k) [3:0]SLP_TO (0=no idle sleep)
+ constexpr uint8_t REG_WDT_CNT = 0x0A;    // seconds; 0 disables the PMIC watchdog
  constexpr uint8_t REG_SYS_CMD = 0x0C;    // KEY=0xA in high nibble; 1=off, 2=reset, 3=download
  constexpr uint8_t REG_GPIO_MODE = 0x10;  // 1 = output
  constexpr uint8_t REG_GPIO_OUT = 0x11;   // output level
@@ -253,7 +316,7 @@ index 4c2ce964..21b8f3f9 100644
  constexpr uint8_t REG_GPIO_DRV = 0x13;   // 0 = push-pull
  constexpr uint8_t REG_GPIO_PULL0 = 0x14;
  constexpr uint8_t REG_GPIO_FUNC0 = 0x16;  // 0 = plain GPIO (vs alt function)
-@@ -83,8 +88,11 @@ constexpr uint8_t BTN_DOWNLOAD_LOCK = 1 << 7;
+@@ -83,8 +89,11 @@ constexpr uint8_t BTN_DOWNLOAD_LOCK = 1 << 7;
  constexpr uint8_t BTN_SINGLE_RESET_DISABLE = 1 << 0;
  constexpr uint8_t SYS_CMD_SHUTDOWN = 0xA1;
  
@@ -266,6 +329,21 @@ index 4c2ce964..21b8f3f9 100644
  constexpr uint8_t GPIO_WAKE_MASK = 0x1F;
  
  // Init the internal I2C bus and pin the PM1 to 100 kHz with idle-sleep disabled
+@@ -179,6 +188,14 @@ inline bool configureAppPowerButton(uint8_t* configuredValue = nullptr) {
+   return (verify & (BTN_SINGLE_RESET_DISABLE | BTN_DOWNLOAD_LOCK)) == BTN_SINGLE_RESET_DISABLE;
+ }
+ 
++// Battery low-voltage protection. The PM1 shuts the system down below this
++// threshold; the register is 2000 + n*7.81 mV. Keep the cell above the
++// protection-board cliff and give the e-ink refresh some sag headroom.
++inline bool setBatteryLowVoltageProtection(uint16_t mv) {
++  if (mv < 2000 || mv > 4000) return false;
++  return writeReg(REG_BATT_LVP, static_cast<uint8_t>((mv - 2000) * 100 / 781));
++}
++
+ inline bool readButtonStatus(uint8_t* value) { return readReg(REG_BTN_STATUS, value); }
+ 
+ inline bool readWakeSource(uint8_t* value) { return readReg(REG_WAKE_SRC, value); }
 diff --git a/freeink-sdk/libs/hardware/BoardPaperDiy/include/BoardPaperDiy.h b/freeink-sdk/libs/hardware/BoardPaperDiy/include/BoardPaperDiy.h
 new file mode 100644
 index 00000000..6d6c8609
@@ -371,12 +449,11 @@ index 00000000..864dabc7
 +}
 diff --git a/freeink-sdk/libs/hardware/BoardPaperDiy/src/BoardPaperDiy.cpp b/freeink-sdk/libs/hardware/BoardPaperDiy/src/BoardPaperDiy.cpp
 new file mode 100644
-index 00000000..c1c40c10
+index 00000000..7134b038
 --- /dev/null
 +++ b/freeink-sdk/libs/hardware/BoardPaperDiy/src/BoardPaperDiy.cpp
-@@ -0,0 +1,81 @@
+@@ -0,0 +1,84 @@
 +#include <BoardPaperDiy.h>
-+
 +#include <M5Pm1.h>
 +
 +namespace {
@@ -394,11 +471,15 @@ index 00000000..c1c40c10
 +  // LDO_EN and LED_R_EN off. PWR_CFG auto-clears on reset: re-apply each boot.
 +  updateReg(REG_PWR_CFG, BOOST_EN | LDO_EN | LED_R_EN, CHG_EN | DCDC_EN);
 +  writeReg(REG_NEO_CFG, 0x00);
++  // The LGS4056H has a 4.2 V target, but the PM1 protects the cell from deep
++  // discharge. 3.4 V leaves the tail of the Li-ion curve and e-ink sag margin.
++  // Best-effort: a rejected LVP write must not stop the EPD rail from coming up.
++  setBatteryLowVoltageProtection(3400);
 +
 +  bool ok = updateReg(REG_GPIO_FUNC0, 0x03 << 4, 0);  // GPIO2 = plain GPIO
-+  ok = updateReg(REG_GPIO_MODE, 0, GPIO2) && ok;      // output
-+  ok = updateReg(REG_GPIO_DRV, GPIO2, 0) && ok;       // push-pull
-+  ok = updateReg(REG_GPIO_OUT, 0, GPIO2) && ok;       // high
++  ok = updateReg(REG_GPIO_MODE, 0, GPIO2) && ok;       // output
++  ok = updateReg(REG_GPIO_DRV, GPIO2, 0) && ok;        // push-pull
++  ok = updateReg(REG_GPIO_OUT, 0, GPIO2) && ok;        // high
 +
 +  // PM1 GPIO3 is CHG_STAT (active-low, needs a pull-up); BatteryMonitor reads it.
 +  ok = updateReg(REG_GPIO_FUNC0, 0x03 << 6, 0) && ok;          // GPIO3 = plain GPIO
