@@ -14,9 +14,13 @@ inline void delay(unsigned ms) { nowMs += ms; }
 inline void vTaskDelay(unsigned ticks) { ++yields; nowMs += ticks; }
 inline void pinMode(int, int) {}
 inline void digitalWrite(int, int) {}
+constexpr int INPUT = 0;
+constexpr int INPUT_PULLUP = 2;
 constexpr int OUTPUT = 1;
 constexpr int HIGH = 1;
 constexpr int LOW = 0;
+inline int digitalReadLevel = HIGH;
+inline int digitalRead(int) { return digitalReadLevel; }
 
 class Print {
  public:

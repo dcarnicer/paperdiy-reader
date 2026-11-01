@@ -1763,6 +1763,22 @@ void GfxRenderer::displayBuffer(HalDisplay::RefreshMode refreshMode) const {
   display.displayBuffer(refreshMode, fadingFix);
 }
 
+void GfxRenderer::displayWindow(int x, int y, int width, int height) const {
+  const AlignedMemRect rect =
+      screenRectToAlignedMemRect(orientation, x, y, width, height, display.getDisplayWidth(), display.getDisplayHeight());
+  if (!rect.valid) return;
+  LOG_DBG("GFX", "Window refresh %u,%u %ux%u", rect.x, rect.y, rect.w, rect.h);
+  display.displayWindow(rect.x, rect.y, rect.w, rect.h);
+}
+
+void GfxRenderer::displayWindowPortrait(int x, int y, int width, int height) const {
+  const AlignedMemRect rect =
+      screenRectToAlignedMemRect(Orientation::Portrait, x, y, width, height, panelWidth, panelHeight);
+  if (!rect.valid) return;
+  LOG_DBG("GFX", "Window refresh (portrait) %u,%u %ux%u", rect.x, rect.y, rect.w, rect.h);
+  display.displayWindow(rect.x, rect.y, rect.w, rect.h);
+}
+
 void GfxRenderer::displayBufferAsync(HalDisplay::RefreshMode refreshMode) const {
   refreshMode = applyPromotedRefresh(refreshMode);
   // The async path has no turn-off-screen hook, which the sunlight fading fix

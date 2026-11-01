@@ -11,7 +11,7 @@
 | Interfaz de pantalla | paralela de 8 bits, **sin controlador IT8951** |
 | Botones | A=GPIO4, B=GPIO3 (activos a nivel bajo); power por M5PM1 |
 | Batería | 140 mAh, cargada por M5PM1 |
-| SD | microSD por SPI |
+| SD | microSD por SPI (SCLK39/MISO40/MOSI38/CS47), CARD_DET GPIO48 activo bajo |
 | USB | USB-C nativo del ESP32-S3 (Serial/JTAG) |
 | Radio | Wi-Fi 2,4 GHz, BLE 5.0 |
 | Sin | táctil, frontlight, RTC, IMU, audio, Grove |

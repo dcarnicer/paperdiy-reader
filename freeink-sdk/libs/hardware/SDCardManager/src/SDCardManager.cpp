@@ -22,6 +22,13 @@ SDCardManager::SDCardManager() {}
 
 bool SDCardManager::begin() {
   if (initialized) return true;
+  if (!isCardPresent()) {
+    if (Serial) Serial.printf("[%lu] [SD] SD card absent (detect=%d)\n", millis(), BoardConfig::ACTIVE.sd.detect);
+    initialized = false;
+    cachedTotalBytes = 0;
+    cachedUsedBytesValid = false;
+    return false;
+  }
 #if FREEINK_DEVICE_METALIO_EINK4
   if (BoardConfig::isMetalioEInk4() && !freeink::metalio::ensureBooted()) return false;
 #endif
@@ -122,6 +129,13 @@ void SDCardManager::shutdown() {
 SDCardManager::SDCardManager() : sd() {}
 
 bool SDCardManager::begin() {
+  if (!isCardPresent()) {
+    if (Serial) Serial.printf("[%lu] [SD] SD card absent (detect=%d)\n", millis(), BoardConfig::ACTIVE.sd.detect);
+    initialized = false;
+    cachedTotalBytes = 0;
+    cachedUsedBytesValid = false;
+    return false;
+  }
   // Profiles whose SD CS is not yet known leave it unassigned so the card stays
   // dormant — bail out before any pin is touched, or SdFat drives "pin 255" and
   // floods the log. (Native-SDMMC boards like the X4 Pro take the #if branch above.)
@@ -284,6 +298,36 @@ FsBlockDeviceInterface* SDCardManager::detachFilesystemForRawAccess() { return n
 
 bool SDCardManager::ready() const {
   return initialized;
+}
+
+bool SDCardManager::isCardPresent() const {
+  const int8_t pin = BoardConfig::ACTIVE.sd.detect;
+  if (pin < 0) return true;
+  pinMode(pin, INPUT_PULLUP);
+  return digitalRead(pin) == LOW;
+}
+
+void SDCardManager::unmount() {
+  if (!initialized) return;
+#if FREEINK_SD_SDMMC
+  _vol.end();
+  if (_dev) _dev->end();
+#else
+  sd.end();
+#endif
+  initialized = false;
+  cachedTotalBytes = 0;
+  cachedUsedBytes = 0;
+  cachedUsedBytesValid = false;
+}
+
+bool SDCardManager::remount() {
+  if (!isCardPresent()) {
+    unmount();
+    return false;
+  }
+  unmount();
+  return begin();
 }
 
 std::vector<String> SDCardManager::listFiles(const char* path, const int maxFiles) {

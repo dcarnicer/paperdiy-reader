@@ -1065,7 +1065,7 @@ void LibraryListActivity::drawHoldHelp() const {
 // OptionPopup is a self-contained modal: it owns the whole frame (hints
 // included) whenever it is up, mirroring the FileBrowser pattern.
 void LibraryListActivity::render(RenderLock&& lock) {
-  if (optionPopup.processRender(renderer, mappedInput)) return;
+  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
   UiTabListActivity::render(std::move(lock));
 }
 

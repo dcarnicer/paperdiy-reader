@@ -588,7 +588,7 @@ bool FileBrowserActivity::handleButtons() {
 }
 
 void FileBrowserActivity::render(RenderLock&& lock) {
-  if (optionPopup.processRender(renderer, mappedInput)) return;
+  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
   UiListActivity::render(std::move(lock));
 }
 
