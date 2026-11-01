@@ -2,6 +2,7 @@
 
 #include <BoardConfig.h>
 
+#include <algorithm>
 #include <cstring>
 
 #if FREEINK_DRIVER_LGFX_EPD
@@ -98,6 +99,30 @@ class FreeInkLgfxEpd : public lgfx::LGFX_Device {
     _panel.config(pc);
 
     setPanel(&_panel);
+  }
+
+  // Push a grayscale window from the full-width canvas. LovyanGFX's
+  // pixelcopy_t derives the row stride from the destination width, so pack the
+  // window into a contiguous temporary buffer before pushing it.
+  bool pushGrayWindow(const uint8_t* src, int32_t x, int32_t y, int32_t w, int32_t h, int32_t stride) {
+    const size_t bytes = static_cast<size_t>(w) * static_cast<size_t>(h);
+    auto* packed = static_cast<uint8_t*>(heap_caps_malloc(bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
+    if (!packed) packed = static_cast<uint8_t*>(heap_caps_malloc(bytes, MALLOC_CAP_8BIT));
+    if (!packed) return false;
+    for (int32_t row = 0; row < h; ++row) {
+      memcpy(packed + static_cast<size_t>(row) * w, src + static_cast<size_t>(row) * stride, w);
+    }
+
+    auto pc = create_pc(reinterpret_cast<const lgfx::grayscale_t*>(packed));
+    pc.src_width = w;
+    pc.src_height = h;
+    pc.src_x = 0;
+    pc.src_y = 0;
+    pc.src_xe = w - 1;
+    pc.src_ye = h - 1;
+    pushImage(x, y, w, h, &pc);
+    free(packed);
+    return true;
   }
 
  private:
@@ -311,6 +336,40 @@ void LgfxEpdDriver::display(EpdBus& bus, const uint8_t* fb, const uint8_t* prev,
 #else
   (void)fb;
   (void)mode;
+  (void)turnOff;
+#endif
+}
+
+void LgfxEpdDriver::displayWindow(EpdBus& bus, const uint8_t* fb, const uint8_t* prev, uint16_t x, uint16_t y,
+                                  uint16_t w, uint16_t h, bool turnOff) {
+  (void)bus;
+  (void)prev;
+#if FREEINK_DRIVER_LGFX_EPD
+  if (!fb || !g_canvas || w == 0 || h == 0) return;
+  const int32_t x0 = std::min<int32_t>(x, g_w);
+  const int32_t y0 = std::min<int32_t>(y, g_h);
+  const int32_t x1 = std::min<int32_t>(static_cast<int32_t>(x) + w, g_w);
+  const int32_t y1 = std::min<int32_t>(static_cast<int32_t>(y) + h, g_h);
+  if (x1 <= x0 || y1 <= y0) return;
+
+  fillCanvasBW(fb);
+  auto* canvas = static_cast<uint8_t*>(g_canvas->getBuffer());
+  if (!canvas) return;
+
+  g_dev.waitDisplay();
+  g_dev.setEpdMode(lgfx::epd_mode::epd_fast);
+  g_dev.setAutoDisplay(true);
+  if (!g_dev.pushGrayWindow(canvas + static_cast<size_t>(y0) * g_w + x0, x0, y0, x1 - x0, y1 - y0, g_w)) {
+    // Allocation failed: fall back to the full-frame path rather than leaving
+    // the UI half-refreshed.
+    display(bus, fb, prev, RefreshMode::Fast, turnOff);
+    return;
+  }
+  g_dev.waitDisplay();
+  g_lastBaseEpdMode = lgfx::epd_mode::epd_fast;
+  if (turnOff) g_dev.sleep();
+#else
+  (void)fb;
   (void)turnOff;
 #endif
 }

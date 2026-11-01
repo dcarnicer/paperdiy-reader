@@ -550,6 +550,6 @@ void SettingsActivity::drawFooter() {
 }
 
 void SettingsActivity::render(RenderLock&& lock) {
-  if (optionPopup.processRender(renderer, mappedInput)) return;
+  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
   UiListActivity::render(std::move(lock));
 }

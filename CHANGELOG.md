@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-31 — refresco parcial y detección de SD
+
+- `GfxRenderer::displayWindow()` y `HalDisplay::displayWindow()` exponen el
+  refresco de una región; `LgfxEpdDriver` lo implementa sobre `Panel_EPD`
+  empujando solo el rectángulo solicitado.
+- `OptionPopup` refresca solo el diálogo y la tira de botones. Activado en
+  Settings, File Browser, Library y el menú del lector. El resto de pantallas
+  conserva el refresco completo.
+- `SdPins.detect` (GPIO48 en PaperDIY, activo bajo) y
+  `SDCardManager::isCardPresent()/remount()`. Al arrancar sin tarjeta se espera
+  la inserción; en caliente se reintenta el montaje al insertar.
+- Test host de SD ampliado con la lógica de card-detect.
+- Log de diagnóstico de refresco parcial en `GFX`.
+- El firmware se mantiene despierto mientras haya un host CDC USB conectado,
+  para no competir con el auto-sleep durante desarrollo/flasheo.
+
 ## 2026-10-31 — batería, carga y PM1
 
 - PaperDIY: curva de porcentaje propia para la celda de 140 mAh. El LGS4056H

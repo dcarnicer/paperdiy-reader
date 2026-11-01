@@ -39,11 +39,26 @@ static void reset(size_t size) {
 
 int main() {
   SDCardManager manager;
+
+  // Card-detect switch: active low; unassigned means "assume present".
+  BoardConfig::ACTIVE.sd.detect = 48;
+  digitalReadLevel = LOW;
+  assert(manager.isCardPresent());
+  digitalReadLevel = HIGH;
+  assert(!manager.isCardPresent());
+  BoardConfig::ACTIVE.sd.detect = -1;
+  assert(manager.isCardPresent());
+
   reset(8);
   Sink unopened;
   assert(!manager.readFileToStream("/test", unopened));
   assert(fakeSd::reads == 0 && fakeSd::closes == 0);
   assert(manager.begin());
+  BoardConfig::ACTIVE.sd.detect = 48;
+  digitalReadLevel = LOW;
+  assert(manager.remount());
+  assert(manager.ready());
+  BoardConfig::ACTIVE.sd.detect = -1;
 
   fakeSd::openFails = true;
   assert(!manager.readFileToStream("/test", unopened));

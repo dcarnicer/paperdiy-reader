@@ -39,12 +39,15 @@ autonomía es al menos "unas horas de lectura" con una carga.
 
 ## Fase 1 — Port pulido y UX de 2 botones
 
-- [ ] **Siguiente:** refresco parcial de regiones (barra de estado, batería,
-      diálogos) usando `displayWindow`/`Panel_EPD::display(x, y, w, h)` y el
-      patrón de `M5PaperDIY-UserDemo`; límite de parciales antes de un
-      `epd_quality` completo.
-- [ ] **Siguiente:** detección de tarjeta SD por GPIO48 (`CARD_DET`) con
-      hot-plug, aviso al usuario y re-mount seguro.
+- [x] Refresco parcial de diálogos con `GfxRenderer::displayWindow` +
+      `Panel_EPD::display(x, y, w, h)`: `OptionPopup` refresca solo el diálogo
+      y la tira de botones; activo en Settings, File Browser, Library y el menú
+      del lector. Probado por compilación y pendiente de validar en pantalla.
+- [ ] Refresco parcial de barra de estado/batería (siguiente iteración).
+- [x] Detección de tarjeta SD por GPIO48 (`CARD_DET`, activo bajo): espera de
+      inserción al arrancar y re-mount al insertar en caliente. Probado con
+      host test; pendiente de validar en hardware.
+- [ ] Aviso visual/bloqueo seguro si se quita la SD durante la lectura.
 - [ ] Ajustar el perfil según la fase 0 (rotación, LUTs, PM1, timeout).
 - [ ] Revisar todos los diálogos/actividades para que sean operables con
       A/B/largos; eliminar dependencias de táctil.

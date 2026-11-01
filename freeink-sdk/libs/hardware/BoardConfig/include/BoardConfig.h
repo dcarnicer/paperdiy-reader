@@ -554,6 +554,10 @@ struct SdPins {
   // attempt, as the X4 Pro's stock mountSD does. false just holds it on — for
   // boards whose enable also feeds other already-running peripherals (Picco).
   bool powerCycleOnMount = true;
+  // Optional card-detect switch. Active LOW (card inserted pulls the pin down),
+  // matching the PaperDIY CARD_DET line on GPIO48. PIN_UNASSIGNED means the
+  // board cannot detect insertion and the manager assumes a card is present.
+  int8_t detect = PIN_UNASSIGNED;
 };
 
 // 4-bit SDMMC/SDIO wiring (e.g. de-link). SdFat can't drive SDIO, so a board with
@@ -1564,7 +1568,8 @@ constexpr BoardProfile M5PAPER_DIY = {
     {PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED,
      PIN_UNASSIGNED},                            // no SPI display pins: parallel bus lives in LgfxEpdConfig
     0,                                           // displaySpiHz n/a (external bus)
-    {39, 40, 38, 47, PIN_UNASSIGNED, false, 0},  // SD over SPI: SCLK39 MISO40 MOSI38 CS47
+    // SD over SPI: SCLK39 MISO40 MOSI38 CS47; CARD_DET=GPIO48, active low.
+    {39, 40, 38, 47, PIN_UNASSIGNED, false, 0, true, true, 48},
     // up=GPIO4 (BtnA), down=GPIO3 (BtnB), active-low; no GPIO power button.
     {PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, 4, 3, PIN_UNASSIGNED, false},
     PIN_UNASSIGNED,  // batteryAdc: none — M5PM1 reports VBAT

@@ -13,6 +13,7 @@ struct Profile {
     int cs = 1, sclk = 2, mosi = 3, miso = 4, powerEnable = -1;
     bool separateSpi = false, powerActiveHigh = true;
     uint32_t spiHz = 0;
+    int detect = -1;
   } sd;
   struct {
     int cs = -1, sclk = -1, mosi = -1;

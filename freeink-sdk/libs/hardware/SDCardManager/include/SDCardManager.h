@@ -32,6 +32,14 @@ class SDCardManager {
   SDCardManager();
   bool begin();
   bool ready() const;
+  // Card-detect switch (active LOW). True on boards without one, so callers
+  // that only need a hint keep working on every profile.
+  bool isCardPresent() const;
+  // Drop the mounted volume so the next begin() can probe a freshly inserted
+  // card. No-op if nothing is mounted.
+  void unmount();
+  // unmount() + begin(); false when the card is absent or the mount fails.
+  bool remount();
   // Returns the total card capacity in bytes. Cached at begin(); 0 if not mounted.
   uint64_t sdTotalBytes() const;
   // Returns used space in bytes, cached with a 20-second TTL (freeClusterCount

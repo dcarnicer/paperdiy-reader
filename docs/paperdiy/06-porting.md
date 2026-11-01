@@ -239,6 +239,38 @@ También se integran del ecosistema M5Stack:
 - Referencias: `m5stack/M5PM1`, `m5stack/M5PaperDIY-UserDemo` y
   `m5stack/uiflow-micropython` (driver `m5pm1.py`).
 
+### Refresco parcial
+
+El panel se puede actualizar por regiones sin repintar la pantalla completa:
+
+- `GfxRenderer::displayWindow(x, y, w, h)` recibe coordenadas lógicas, las
+  rota a memoria de panel, alinea x a 8 píxeles y llama a
+  `HalDisplay::displayWindow`.
+- `LgfxEpdDriver::displayWindow()` rellena el canvas de 8 bits desde el
+  framebuffer y hace `pushImage(x, y, w, h)` sobre `Panel_EPD`; LovyanGFX
+  refresca solo el `_range_mod` escrito.
+- `OptionPopup` usa el camino parcial para el diálogo y la tira de botones
+  (que se dibuja siempre en Portrait). Está activo en Settings, File Browser,
+  Library y el menú del lector; las actividades que limpian la pantalla
+  (`ConfirmationActivity`, `ClearCacheActivity`) siguen usando refresco
+  completo.
+- Pendiente: barra de estado/batería y un límite de parciales antes de un
+  `epd_quality` completo, como hace el UserDemo de M5Stack.
+
+### Detección de tarjeta SD
+
+PaperDIY expone `CARD_DET` en GPIO48, activo bajo. `SdPins.detect` lo lleva al
+`SDCardManager`:
+
+- `isCardPresent()` lee el pin con pull-up.
+- `begin()` no intenta montar si no hay tarjeta.
+- Al arrancar sin tarjeta, `main` muestra “Insert SD card” y espera; al
+  insertarla se reinicia para montar.
+- En caliente, el bucle principal consulta el pin cada 500 ms; al insertar
+  llama a `Storage.remount()`. Al quitarla no se desmonta a la fuerza para no
+  invalidar archivos abiertos; el siguiente insert re-proba la tarjeta.
+- Pendiente: bloquear/avisar de forma segura si se quita durante una lectura.
+
 ## Checklist de validación en hardware
 
 Marca cada punto y anota el resultado; es la información que falta para
