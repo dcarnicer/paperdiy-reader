@@ -1,8 +1,88 @@
 diff --git a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp
-index 0e2cc958..92e3415b 100644
+index 0e2cc958..298756a6 100644
 --- a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp
 +++ b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp
-@@ -405,6 +405,12 @@ PanelDriver& lgfxEpdDriver() {
+@@ -2,6 +2,7 @@
+ 
+ #include <BoardConfig.h>
+ 
++#include <algorithm>
+ #include <cstring>
+ 
+ #if FREEINK_DRIVER_LGFX_EPD
+@@ -100,6 +101,30 @@ class FreeInkLgfxEpd : public lgfx::LGFX_Device {
+     setPanel(&_panel);
+   }
+ 
++  // Push a grayscale window from the full-width canvas. LovyanGFX's
++  // pixelcopy_t derives the row stride from the destination width, so pack the
++  // window into a contiguous temporary buffer before pushing it.
++  bool pushGrayWindow(const uint8_t* src, int32_t x, int32_t y, int32_t w, int32_t h, int32_t stride) {
++    const size_t bytes = static_cast<size_t>(w) * static_cast<size_t>(h);
++    auto* packed = static_cast<uint8_t*>(heap_caps_malloc(bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
++    if (!packed) packed = static_cast<uint8_t*>(heap_caps_malloc(bytes, MALLOC_CAP_8BIT));
++    if (!packed) return false;
++    for (int32_t row = 0; row < h; ++row) {
++      memcpy(packed + static_cast<size_t>(row) * w, src + static_cast<size_t>(row) * stride, w);
++    }
++
++    auto pc = create_pc(reinterpret_cast<const lgfx::grayscale_t*>(packed));
++    pc.src_width = w;
++    pc.src_height = h;
++    pc.src_x = 0;
++    pc.src_y = 0;
++    pc.src_xe = w - 1;
++    pc.src_ye = h - 1;
++    pushImage(x, y, w, h, &pc);
++    free(packed);
++    return true;
++  }
++
+  private:
+   FreeInkBusEPD _bus;
+   lgfx::Panel_EPD _panel;
+@@ -315,6 +340,40 @@ void LgfxEpdDriver::display(EpdBus& bus, const uint8_t* fb, const uint8_t* prev,
+ #endif
+ }
+ 
++void LgfxEpdDriver::displayWindow(EpdBus& bus, const uint8_t* fb, const uint8_t* prev, uint16_t x, uint16_t y,
++                                  uint16_t w, uint16_t h, bool turnOff) {
++  (void)bus;
++  (void)prev;
++#if FREEINK_DRIVER_LGFX_EPD
++  if (!fb || !g_canvas || w == 0 || h == 0) return;
++  const int32_t x0 = std::min<int32_t>(x, g_w);
++  const int32_t y0 = std::min<int32_t>(y, g_h);
++  const int32_t x1 = std::min<int32_t>(static_cast<int32_t>(x) + w, g_w);
++  const int32_t y1 = std::min<int32_t>(static_cast<int32_t>(y) + h, g_h);
++  if (x1 <= x0 || y1 <= y0) return;
++
++  fillCanvasBW(fb);
++  auto* canvas = static_cast<uint8_t*>(g_canvas->getBuffer());
++  if (!canvas) return;
++
++  g_dev.waitDisplay();
++  g_dev.setEpdMode(lgfx::epd_mode::epd_fast);
++  g_dev.setAutoDisplay(true);
++  if (!g_dev.pushGrayWindow(canvas + static_cast<size_t>(y0) * g_w + x0, x0, y0, x1 - x0, y1 - y0, g_w)) {
++    // Allocation failed: fall back to the full-frame path rather than leaving
++    // the UI half-refreshed.
++    display(bus, fb, prev, RefreshMode::Fast, turnOff);
++    return;
++  }
++  g_dev.waitDisplay();
++  g_lastBaseEpdMode = lgfx::epd_mode::epd_fast;
++  if (turnOff) g_dev.sleep();
++#else
++  (void)fb;
++  (void)turnOff;
++#endif
++}
++
+ void LgfxEpdDriver::copyGrayscaleLsb(EpdBus& bus, const uint8_t* lsb) {
+   (void)bus;
+ #if FREEINK_DRIVER_LGFX_EPD
+@@ -405,6 +464,12 @@ PanelDriver& lgfxEpdDriver() {
    static LgfxEpdDriver instance(m5PaperS3LgfxConfig());
    return instance;
  }
@@ -15,6 +95,19 @@ index 0e2cc958..92e3415b 100644
  #elif defined(FREEINK_LGFX_EPD_CONFIG)
  const LgfxEpdConfig& FREEINK_LGFX_EPD_CONFIG();
  PanelDriver& lgfxEpdDriver() {
+diff --git a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.h b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.h
+index 0646a9f5..c80e9f83 100644
+--- a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.h
++++ b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.h
+@@ -38,6 +38,8 @@ class LgfxEpdDriver : public PanelDriver {
+   void begin(EpdBus& bus) override;
+   void deepSleep(EpdBus& bus) override;
+   void display(EpdBus& bus, const uint8_t* fb, const uint8_t* prev, RefreshMode mode, bool turnOff) override;
++  void displayWindow(EpdBus& bus, const uint8_t* fb, const uint8_t* prev, uint16_t x, uint16_t y, uint16_t w,
++                     uint16_t h, bool turnOff) override;
+ 
+   // 16-gray path: the facade streams LSB/MSB 1-bpp planes (whole or in strips);
+   // displayGray combines them with the B/W base into the panel's 8-bit gray canvas.
 diff --git a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
 index a90b4473..e6f16929 100644
 --- a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
@@ -104,7 +197,7 @@ index a90b4473..e6f16929 100644
    }
    return 0;
 diff --git a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
-index d2b84168..aedbd487 100644
+index d2b84168..eebce8bb 100644
 --- a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
 +++ b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
 @@ -18,6 +18,7 @@
@@ -172,7 +265,18 @@ index d2b84168..aedbd487 100644
    EegoA4,     // EEGO Reader A4: ESP32-S3, UC8279C 768x552 SPI panel, GSLX680 touch, PCF8563 RTC
    OnePage,    // OnePage: ESP32-C61, SSD1677 800x480 SPI panel, 4-key ADC ladder + 3 side keys
    WsEpaper397,  // Waveshare ESP32-S3-ePaper-3.97: SSD1677 800x480, 3 keys + BOOT, AXP2101 PMIC
-@@ -1539,6 +1544,60 @@ constexpr BoardProfile M5PAPER_S3 = {
+@@ -549,6 +554,10 @@ struct SdPins {
+   // attempt, as the X4 Pro's stock mountSD does. false just holds it on — for
+   // boards whose enable also feeds other already-running peripherals (Picco).
+   bool powerCycleOnMount = true;
++  // Optional card-detect switch. Active LOW (card inserted pulls the pin down),
++  // matching the PaperDIY CARD_DET line on GPIO48. PIN_UNASSIGNED means the
++  // board cannot detect insertion and the manager assumes a card is present.
++  int8_t detect = PIN_UNASSIGNED;
+ };
+ 
+ // 4-bit SDMMC/SDIO wiring (e.g. de-link). SdFat can't drive SDIO, so a board with
+@@ -1539,6 +1548,61 @@ constexpr BoardProfile M5PAPER_S3 = {
      0,      // wifiMaxTxPower: radio default
      false};  // usbDetectActiveHigh: GPIO5 is driven LOW while a cable is attached
  
@@ -196,7 +300,8 @@ index d2b84168..aedbd487 100644
 +    {PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED,
 +     PIN_UNASSIGNED},                            // no SPI display pins: parallel bus lives in LgfxEpdConfig
 +    0,                                           // displaySpiHz n/a (external bus)
-+    {39, 40, 38, 47, PIN_UNASSIGNED, false, 0},  // SD over SPI: SCLK39 MISO40 MOSI38 CS47
++    // SD over SPI: SCLK39 MISO40 MOSI38 CS47; CARD_DET=GPIO48, active low.
++    {39, 40, 38, 47, PIN_UNASSIGNED, false, 0, true, true, 48},
 +    // up=GPIO4 (BtnA), down=GPIO3 (BtnB), active-low; no GPIO power button.
 +    {PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, 4, 3, PIN_UNASSIGNED, false},
 +    PIN_UNASSIGNED,  // batteryAdc: none — M5PM1 reports VBAT
@@ -233,7 +338,7 @@ index d2b84168..aedbd487 100644
  // --- EEGO Reader A4 — ESP32-S3 N16R8, UC8279C (768x552) + GSLX680 touch -------
  // CrossPoint fork device; pins/resolution/calibration from stock-firmware RE,
  // none hardware-confirmed. See docs/eego-a4-support.md.
-@@ -2122,7 +2181,7 @@ constexpr uint32_t cmax(uint32_t a, uint32_t b) { return a > b ? a : b; }
+@@ -2122,7 +2186,7 @@ constexpr uint32_t cmax(uint32_t a, uint32_t b) { return a > b ? a : b; }
  constexpr uint32_t panelBytes(const BoardProfile& p) {
    return static_cast<uint32_t>(p.displayWidth / 8) * p.displayHeight;
  }
@@ -242,7 +347,7 @@ index d2b84168..aedbd487 100644
      cmax(cmax(FREEINK_DEVICE_X4 ? panelBytes(XTEINK_X4) : 0u, FREEINK_DEVICE_X3 ? panelBytes(XTEINK_X3) : 0u),
           cmax(FREEINK_DEVICE_M5 ? panelBytes(M5STACK_PAPER_COLOR) : 0u,
                FREEINK_DEVICE_MURPHY ? panelBytes(MURPHY_M3) : 0u)),
-@@ -2140,6 +2199,8 @@ constexpr uint32_t MAX_FRAMEBUFFER_BYTES = cmax(
+@@ -2140,6 +2204,8 @@ constexpr uint32_t MAX_FRAMEBUFFER_BYTES = cmax(
                          cmax(FREEINK_DEVICE_WS397 ? panelBytes(WS_EPAPER_397) : 0u,
                               cmax(FREEINK_DEVICE_METALIO_EINK4 ? panelBytes(METALIO_EINK4) : 0u,
                                    FREEINK_DEVICE_PICCO ? panelBytes(PICCO) : 0u)))))));
@@ -251,7 +356,7 @@ index d2b84168..aedbd487 100644
  
  // Compile-time default device — the profile ACTIVE starts as. With a single
  // device in the build this is the only device; with several same-MCU devices it
-@@ -2170,6 +2231,8 @@ constexpr BoardProfile DEFAULT_DEVICE = LILYGO_T5S3;
+@@ -2170,6 +2236,8 @@ constexpr BoardProfile DEFAULT_DEVICE = LILYGO_T5S3;
  constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_V11;
  #elif FREEINK_DEVICE_PAPERS3
  constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_S3;
@@ -260,7 +365,7 @@ index d2b84168..aedbd487 100644
  #elif FREEINK_DEVICE_STICKY
  constexpr BoardProfile DEFAULT_DEVICE = STICKY;
  #elif FREEINK_DEVICE_X4PRO
-@@ -2318,6 +2381,11 @@ inline bool selectDevice(Board which) {
+@@ -2318,6 +2386,11 @@ inline bool selectDevice(Board which) {
        ACTIVE = M5PAPER_S3;
        break;
  #endif
@@ -272,7 +377,7 @@ index d2b84168..aedbd487 100644
  #if FREEINK_DEVICE_EEGO_A4
      case Board::EegoA4:
        ACTIVE = EEGO_A4;
-@@ -2359,6 +2427,7 @@ inline bool isMurphyM3() { return ACTIVE.board == Board::MurphyM3; }
+@@ -2359,6 +2432,7 @@ inline bool isMurphyM3() { return ACTIVE.board == Board::MurphyM3; }
  inline bool isDeLink() { return ACTIVE.board == Board::DeLink; }
  inline bool isM5PaperV11() { return ACTIVE.board == Board::M5PaperV11; }
  inline bool isM5PaperS3() { return ACTIVE.board == Board::M5PaperS3; }
@@ -714,3 +819,164 @@ index 890a1650..d53fa219 100644
  #if FREEINK_DEVICE_METALIO_EINK4
    if (BoardConfig::isMetalioEInk4()) {
      metalio::setAmplifier(false);
+diff --git a/freeink-sdk/libs/hardware/SDCardManager/include/SDCardManager.h b/freeink-sdk/libs/hardware/SDCardManager/include/SDCardManager.h
+index 50d87bd6..39bda19a 100644
+--- a/freeink-sdk/libs/hardware/SDCardManager/include/SDCardManager.h
++++ b/freeink-sdk/libs/hardware/SDCardManager/include/SDCardManager.h
+@@ -32,6 +32,14 @@ class SDCardManager {
+   SDCardManager();
+   bool begin();
+   bool ready() const;
++  // Card-detect switch (active LOW). True on boards without one, so callers
++  // that only need a hint keep working on every profile.
++  bool isCardPresent() const;
++  // Drop the mounted volume so the next begin() can probe a freshly inserted
++  // card. No-op if nothing is mounted.
++  void unmount();
++  // unmount() + begin(); false when the card is absent or the mount fails.
++  bool remount();
+   // Returns the total card capacity in bytes. Cached at begin(); 0 if not mounted.
+   uint64_t sdTotalBytes() const;
+   // Returns used space in bytes, cached with a 20-second TTL (freeClusterCount
+diff --git a/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp b/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp
+index 29c263ae..33ea8491 100644
+--- a/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp
++++ b/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp
+@@ -22,6 +22,13 @@ SDCardManager::SDCardManager() {}
+ 
+ bool SDCardManager::begin() {
+   if (initialized) return true;
++  if (!isCardPresent()) {
++    if (Serial) Serial.printf("[%lu] [SD] SD card absent (detect=%d)\n", millis(), BoardConfig::ACTIVE.sd.detect);
++    initialized = false;
++    cachedTotalBytes = 0;
++    cachedUsedBytesValid = false;
++    return false;
++  }
+ #if FREEINK_DEVICE_METALIO_EINK4
+   if (BoardConfig::isMetalioEInk4() && !freeink::metalio::ensureBooted()) return false;
+ #endif
+@@ -122,6 +129,13 @@ void SDCardManager::shutdown() {
+ SDCardManager::SDCardManager() : sd() {}
+ 
+ bool SDCardManager::begin() {
++  if (!isCardPresent()) {
++    if (Serial) Serial.printf("[%lu] [SD] SD card absent (detect=%d)\n", millis(), BoardConfig::ACTIVE.sd.detect);
++    initialized = false;
++    cachedTotalBytes = 0;
++    cachedUsedBytesValid = false;
++    return false;
++  }
+   // Profiles whose SD CS is not yet known leave it unassigned so the card stays
+   // dormant — bail out before any pin is touched, or SdFat drives "pin 255" and
+   // floods the log. (Native-SDMMC boards like the X4 Pro take the #if branch above.)
+@@ -286,6 +300,36 @@ bool SDCardManager::ready() const {
+   return initialized;
+ }
+ 
++bool SDCardManager::isCardPresent() const {
++  const int8_t pin = BoardConfig::ACTIVE.sd.detect;
++  if (pin < 0) return true;
++  pinMode(pin, INPUT_PULLUP);
++  return digitalRead(pin) == LOW;
++}
++
++void SDCardManager::unmount() {
++  if (!initialized) return;
++#if FREEINK_SD_SDMMC
++  _vol.end();
++  if (_dev) _dev->end();
++#else
++  sd.end();
++#endif
++  initialized = false;
++  cachedTotalBytes = 0;
++  cachedUsedBytes = 0;
++  cachedUsedBytesValid = false;
++}
++
++bool SDCardManager::remount() {
++  if (!isCardPresent()) {
++    unmount();
++    return false;
++  }
++  unmount();
++  return begin();
++}
++
+ std::vector<String> SDCardManager::listFiles(const char* path, const int maxFiles) {
+   std::vector<String> ret;
+   if (!initialized) {
+diff --git a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/Arduino.h b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/Arduino.h
+index 0d421f71..606a138d 100644
+--- a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/Arduino.h
++++ b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/Arduino.h
+@@ -14,9 +14,13 @@ inline void delay(unsigned ms) { nowMs += ms; }
+ inline void vTaskDelay(unsigned ticks) { ++yields; nowMs += ticks; }
+ inline void pinMode(int, int) {}
+ inline void digitalWrite(int, int) {}
++constexpr int INPUT = 0;
++constexpr int INPUT_PULLUP = 2;
+ constexpr int OUTPUT = 1;
+ constexpr int HIGH = 1;
+ constexpr int LOW = 0;
++inline int digitalReadLevel = HIGH;
++inline int digitalRead(int) { return digitalReadLevel; }
+ 
+ class Print {
+  public:
+diff --git a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/BoardConfig.h b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/BoardConfig.h
+index 95806d1e..abd02c30 100644
+--- a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/BoardConfig.h
++++ b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/BoardConfig.h
+@@ -13,6 +13,7 @@ struct Profile {
+     int cs = 1, sclk = 2, mosi = 3, miso = 4, powerEnable = -1;
+     bool separateSpi = false, powerActiveHigh = true;
+     uint32_t spiHz = 0;
++    int detect = -1;
+   } sd;
+   struct {
+     int cs = -1, sclk = -1, mosi = -1;
+diff --git a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/SdFat.h b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/SdFat.h
+index 4910097e..43188ac0 100644
+--- a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/SdFat.h
++++ b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/SdFat.h
+@@ -71,6 +71,7 @@ class FsVolume {
+ class SdFat : public FsVolume {
+  public:
+   bool begin(uint8_t, uint32_t) { return true; }
++  void end() {}
+   int sdErrorCode() const { return 0; }
+   int sdErrorData() const { return 0; }
+ };
+diff --git a/freeink-sdk/libs/hardware/SDCardManager/test/host/test_stream.cpp b/freeink-sdk/libs/hardware/SDCardManager/test/host/test_stream.cpp
+index 33b71279..9863a894 100644
+--- a/freeink-sdk/libs/hardware/SDCardManager/test/host/test_stream.cpp
++++ b/freeink-sdk/libs/hardware/SDCardManager/test/host/test_stream.cpp
+@@ -39,11 +39,26 @@ static void reset(size_t size) {
+ 
+ int main() {
+   SDCardManager manager;
++
++  // Card-detect switch: active low; unassigned means "assume present".
++  BoardConfig::ACTIVE.sd.detect = 48;
++  digitalReadLevel = LOW;
++  assert(manager.isCardPresent());
++  digitalReadLevel = HIGH;
++  assert(!manager.isCardPresent());
++  BoardConfig::ACTIVE.sd.detect = -1;
++  assert(manager.isCardPresent());
++
+   reset(8);
+   Sink unopened;
+   assert(!manager.readFileToStream("/test", unopened));
+   assert(fakeSd::reads == 0 && fakeSd::closes == 0);
+   assert(manager.begin());
++  BoardConfig::ACTIVE.sd.detect = 48;
++  digitalReadLevel = LOW;
++  assert(manager.remount());
++  assert(manager.ready());
++  BoardConfig::ACTIVE.sd.detect = -1;
+ 
+   fakeSd::openFails = true;
+   assert(!manager.readFileToStream("/test", unopened));
