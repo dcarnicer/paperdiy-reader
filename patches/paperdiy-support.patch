@@ -1,8 +1,88 @@
 diff --git a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp
-index 0e2cc958..92e3415b 100644
+index 0e2cc958..298756a6 100644
 --- a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp
 +++ b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp
-@@ -405,6 +405,12 @@ PanelDriver& lgfxEpdDriver() {
+@@ -2,6 +2,7 @@
+ 
+ #include <BoardConfig.h>
+ 
++#include <algorithm>
+ #include <cstring>
+ 
+ #if FREEINK_DRIVER_LGFX_EPD
+@@ -100,6 +101,30 @@ class FreeInkLgfxEpd : public lgfx::LGFX_Device {
+     setPanel(&_panel);
+   }
+ 
++  // Push a grayscale window from the full-width canvas. LovyanGFX's
++  // pixelcopy_t derives the row stride from the destination width, so pack the
++  // window into a contiguous temporary buffer before pushing it.
++  bool pushGrayWindow(const uint8_t* src, int32_t x, int32_t y, int32_t w, int32_t h, int32_t stride) {
++    const size_t bytes = static_cast<size_t>(w) * static_cast<size_t>(h);
++    auto* packed = static_cast<uint8_t*>(heap_caps_malloc(bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
++    if (!packed) packed = static_cast<uint8_t*>(heap_caps_malloc(bytes, MALLOC_CAP_8BIT));
++    if (!packed) return false;
++    for (int32_t row = 0; row < h; ++row) {
++      memcpy(packed + static_cast<size_t>(row) * w, src + static_cast<size_t>(row) * stride, w);
++    }
++
++    auto pc = create_pc(reinterpret_cast<const lgfx::grayscale_t*>(packed));
++    pc.src_width = w;
++    pc.src_height = h;
++    pc.src_x = 0;
++    pc.src_y = 0;
++    pc.src_xe = w - 1;
++    pc.src_ye = h - 1;
++    pushImage(x, y, w, h, &pc);
++    free(packed);
++    return true;
++  }
++
+  private:
+   FreeInkBusEPD _bus;
+   lgfx::Panel_EPD _panel;
+@@ -315,6 +340,40 @@ void LgfxEpdDriver::display(EpdBus& bus, const uint8_t* fb, const uint8_t* prev,
+ #endif
+ }
+ 
++void LgfxEpdDriver::displayWindow(EpdBus& bus, const uint8_t* fb, const uint8_t* prev, uint16_t x, uint16_t y,
++                                  uint16_t w, uint16_t h, bool turnOff) {
++  (void)bus;
++  (void)prev;
++#if FREEINK_DRIVER_LGFX_EPD
++  if (!fb || !g_canvas || w == 0 || h == 0) return;
++  const int32_t x0 = std::min<int32_t>(x, g_w);
++  const int32_t y0 = std::min<int32_t>(y, g_h);
++  const int32_t x1 = std::min<int32_t>(static_cast<int32_t>(x) + w, g_w);
++  const int32_t y1 = std::min<int32_t>(static_cast<int32_t>(y) + h, g_h);
++  if (x1 <= x0 || y1 <= y0) return;
++
++  fillCanvasBW(fb);
++  auto* canvas = static_cast<uint8_t*>(g_canvas->getBuffer());
++  if (!canvas) return;
++
++  g_dev.waitDisplay();
++  g_dev.setEpdMode(lgfx::epd_mode::epd_fast);
++  g_dev.setAutoDisplay(true);
++  if (!g_dev.pushGrayWindow(canvas + static_cast<size_t>(y0) * g_w + x0, x0, y0, x1 - x0, y1 - y0, g_w)) {
++    // Allocation failed: fall back to the full-frame path rather than leaving
++    // the UI half-refreshed.
++    display(bus, fb, prev, RefreshMode::Fast, turnOff);
++    return;
++  }
++  g_dev.waitDisplay();
++  g_lastBaseEpdMode = lgfx::epd_mode::epd_fast;
++  if (turnOff) g_dev.sleep();
++#else
++  (void)fb;
++  (void)turnOff;
++#endif
++}
++
+ void LgfxEpdDriver::copyGrayscaleLsb(EpdBus& bus, const uint8_t* lsb) {
+   (void)bus;
+ #if FREEINK_DRIVER_LGFX_EPD
+@@ -405,6 +464,12 @@ PanelDriver& lgfxEpdDriver() {
    static LgfxEpdDriver instance(m5PaperS3LgfxConfig());
    return instance;
  }
@@ -15,6 +95,19 @@ index 0e2cc958..92e3415b 100644
  #elif defined(FREEINK_LGFX_EPD_CONFIG)
  const LgfxEpdConfig& FREEINK_LGFX_EPD_CONFIG();
  PanelDriver& lgfxEpdDriver() {
+diff --git a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.h b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.h
+index 0646a9f5..c80e9f83 100644
+--- a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.h
++++ b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.h
+@@ -38,6 +38,8 @@ class LgfxEpdDriver : public PanelDriver {
+   void begin(EpdBus& bus) override;
+   void deepSleep(EpdBus& bus) override;
+   void display(EpdBus& bus, const uint8_t* fb, const uint8_t* prev, RefreshMode mode, bool turnOff) override;
++  void displayWindow(EpdBus& bus, const uint8_t* fb, const uint8_t* prev, uint16_t x, uint16_t y, uint16_t w,
++                     uint16_t h, bool turnOff) override;
+ 
+   // 16-gray path: the facade streams LSB/MSB 1-bpp planes (whole or in strips);
+   // displayGray combines them with the B/W base into the panel's 8-bit gray canvas.
 diff --git a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
 index a90b4473..e6f16929 100644
 --- a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
@@ -104,7 +197,7 @@ index a90b4473..e6f16929 100644
    }
    return 0;
 diff --git a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
-index d2b84168..aedbd487 100644
+index d2b84168..eebce8bb 100644
 --- a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
 +++ b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
 @@ -18,6 +18,7 @@
@@ -172,7 +265,18 @@ index d2b84168..aedbd487 100644
    EegoA4,     // EEGO Reader A4: ESP32-S3, UC8279C 768x552 SPI panel, GSLX680 touch, PCF8563 RTC
    OnePage,    // OnePage: ESP32-C61, SSD1677 800x480 SPI panel, 4-key ADC ladder + 3 side keys
    WsEpaper397,  // Waveshare ESP32-S3-ePaper-3.97: SSD1677 800x480, 3 keys + BOOT, AXP2101 PMIC
-@@ -1539,6 +1544,60 @@ constexpr BoardProfile M5PAPER_S3 = {
+@@ -549,6 +554,10 @@ struct SdPins {
+   // attempt, as the X4 Pro's stock mountSD does. false just holds it on — for
+   // boards whose enable also feeds other already-running peripherals (Picco).
+   bool powerCycleOnMount = true;
++  // Optional card-detect switch. Active LOW (card inserted pulls the pin down),
++  // matching the PaperDIY CARD_DET line on GPIO48. PIN_UNASSIGNED means the
++  // board cannot detect insertion and the manager assumes a card is present.
++  int8_t detect = PIN_UNASSIGNED;
+ };
+ 
+ // 4-bit SDMMC/SDIO wiring (e.g. de-link). SdFat can't drive SDIO, so a board with
+@@ -1539,6 +1548,61 @@ constexpr BoardProfile M5PAPER_S3 = {
      0,      // wifiMaxTxPower: radio default
      false};  // usbDetectActiveHigh: GPIO5 is driven LOW while a cable is attached
  
@@ -196,7 +300,8 @@ index d2b84168..aedbd487 100644
 +    {PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED,
 +     PIN_UNASSIGNED},                            // no SPI display pins: parallel bus lives in LgfxEpdConfig
 +    0,                                           // displaySpiHz n/a (external bus)
-+    {39, 40, 38, 47, PIN_UNASSIGNED, false, 0},  // SD over SPI: SCLK39 MISO40 MOSI38 CS47
++    // SD over SPI: SCLK39 MISO40 MOSI38 CS47; CARD_DET=GPIO48, active low.
++    {39, 40, 38, 47, PIN_UNASSIGNED, false, 0, true, true, 48},
 +    // up=GPIO4 (BtnA), down=GPIO3 (BtnB), active-low; no GPIO power button.
 +    {PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, PIN_UNASSIGNED, 4, 3, PIN_UNASSIGNED, false},
 +    PIN_UNASSIGNED,  // batteryAdc: none — M5PM1 reports VBAT
@@ -233,7 +338,7 @@ index d2b84168..aedbd487 100644
  // --- EEGO Reader A4 — ESP32-S3 N16R8, UC8279C (768x552) + GSLX680 touch -------
  // CrossPoint fork device; pins/resolution/calibration from stock-firmware RE,
  // none hardware-confirmed. See docs/eego-a4-support.md.
-@@ -2122,7 +2181,7 @@ constexpr uint32_t cmax(uint32_t a, uint32_t b) { return a > b ? a : b; }
+@@ -2122,7 +2186,7 @@ constexpr uint32_t cmax(uint32_t a, uint32_t b) { return a > b ? a : b; }
  constexpr uint32_t panelBytes(const BoardProfile& p) {
    return static_cast<uint32_t>(p.displayWidth / 8) * p.displayHeight;
  }
@@ -242,7 +347,7 @@ index d2b84168..aedbd487 100644
      cmax(cmax(FREEINK_DEVICE_X4 ? panelBytes(XTEINK_X4) : 0u, FREEINK_DEVICE_X3 ? panelBytes(XTEINK_X3) : 0u),
           cmax(FREEINK_DEVICE_M5 ? panelBytes(M5STACK_PAPER_COLOR) : 0u,
                FREEINK_DEVICE_MURPHY ? panelBytes(MURPHY_M3) : 0u)),
-@@ -2140,6 +2199,8 @@ constexpr uint32_t MAX_FRAMEBUFFER_BYTES = cmax(
+@@ -2140,6 +2204,8 @@ constexpr uint32_t MAX_FRAMEBUFFER_BYTES = cmax(
                          cmax(FREEINK_DEVICE_WS397 ? panelBytes(WS_EPAPER_397) : 0u,
                               cmax(FREEINK_DEVICE_METALIO_EINK4 ? panelBytes(METALIO_EINK4) : 0u,
                                    FREEINK_DEVICE_PICCO ? panelBytes(PICCO) : 0u)))))));
@@ -251,7 +356,7 @@ index d2b84168..aedbd487 100644
  
  // Compile-time default device — the profile ACTIVE starts as. With a single
  // device in the build this is the only device; with several same-MCU devices it
-@@ -2170,6 +2231,8 @@ constexpr BoardProfile DEFAULT_DEVICE = LILYGO_T5S3;
+@@ -2170,6 +2236,8 @@ constexpr BoardProfile DEFAULT_DEVICE = LILYGO_T5S3;
  constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_V11;
  #elif FREEINK_DEVICE_PAPERS3
  constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_S3;
@@ -260,7 +365,7 @@ index d2b84168..aedbd487 100644
  #elif FREEINK_DEVICE_STICKY
  constexpr BoardProfile DEFAULT_DEVICE = STICKY;
  #elif FREEINK_DEVICE_X4PRO
-@@ -2318,6 +2381,11 @@ inline bool selectDevice(Board which) {
+@@ -2318,6 +2386,11 @@ inline bool selectDevice(Board which) {
        ACTIVE = M5PAPER_S3;
        break;
  #endif
@@ -272,7 +377,7 @@ index d2b84168..aedbd487 100644
  #if FREEINK_DEVICE_EEGO_A4
      case Board::EegoA4:
        ACTIVE = EEGO_A4;
-@@ -2359,6 +2427,7 @@ inline bool isMurphyM3() { return ACTIVE.board == Board::MurphyM3; }
+@@ -2359,6 +2432,7 @@ inline bool isMurphyM3() { return ACTIVE.board == Board::MurphyM3; }
  inline bool isDeLink() { return ACTIVE.board == Board::DeLink; }
  inline bool isM5PaperV11() { return ACTIVE.board == Board::M5PaperV11; }
  inline bool isM5PaperS3() { return ACTIVE.board == Board::M5PaperS3; }
@@ -714,6 +819,197 @@ index 890a1650..d53fa219 100644
  #if FREEINK_DEVICE_METALIO_EINK4
    if (BoardConfig::isMetalioEInk4()) {
      metalio::setAmplifier(false);
+diff --git a/freeink-sdk/libs/hardware/SDCardManager/include/SDCardManager.h b/freeink-sdk/libs/hardware/SDCardManager/include/SDCardManager.h
+index 50d87bd6..39bda19a 100644
+--- a/freeink-sdk/libs/hardware/SDCardManager/include/SDCardManager.h
++++ b/freeink-sdk/libs/hardware/SDCardManager/include/SDCardManager.h
+@@ -32,6 +32,14 @@ class SDCardManager {
+   SDCardManager();
+   bool begin();
+   bool ready() const;
++  // Card-detect switch (active LOW). True on boards without one, so callers
++  // that only need a hint keep working on every profile.
++  bool isCardPresent() const;
++  // Drop the mounted volume so the next begin() can probe a freshly inserted
++  // card. No-op if nothing is mounted.
++  void unmount();
++  // unmount() + begin(); false when the card is absent or the mount fails.
++  bool remount();
+   // Returns the total card capacity in bytes. Cached at begin(); 0 if not mounted.
+   uint64_t sdTotalBytes() const;
+   // Returns used space in bytes, cached with a 20-second TTL (freeClusterCount
+diff --git a/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp b/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp
+index 29c263ae..33ea8491 100644
+--- a/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp
++++ b/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp
+@@ -22,6 +22,13 @@ SDCardManager::SDCardManager() {}
+ 
+ bool SDCardManager::begin() {
+   if (initialized) return true;
++  if (!isCardPresent()) {
++    if (Serial) Serial.printf("[%lu] [SD] SD card absent (detect=%d)\n", millis(), BoardConfig::ACTIVE.sd.detect);
++    initialized = false;
++    cachedTotalBytes = 0;
++    cachedUsedBytesValid = false;
++    return false;
++  }
+ #if FREEINK_DEVICE_METALIO_EINK4
+   if (BoardConfig::isMetalioEInk4() && !freeink::metalio::ensureBooted()) return false;
+ #endif
+@@ -122,6 +129,13 @@ void SDCardManager::shutdown() {
+ SDCardManager::SDCardManager() : sd() {}
+ 
+ bool SDCardManager::begin() {
++  if (!isCardPresent()) {
++    if (Serial) Serial.printf("[%lu] [SD] SD card absent (detect=%d)\n", millis(), BoardConfig::ACTIVE.sd.detect);
++    initialized = false;
++    cachedTotalBytes = 0;
++    cachedUsedBytesValid = false;
++    return false;
++  }
+   // Profiles whose SD CS is not yet known leave it unassigned so the card stays
+   // dormant — bail out before any pin is touched, or SdFat drives "pin 255" and
+   // floods the log. (Native-SDMMC boards like the X4 Pro take the #if branch above.)
+@@ -286,6 +300,36 @@ bool SDCardManager::ready() const {
+   return initialized;
+ }
+ 
++bool SDCardManager::isCardPresent() const {
++  const int8_t pin = BoardConfig::ACTIVE.sd.detect;
++  if (pin < 0) return true;
++  pinMode(pin, INPUT_PULLUP);
++  return digitalRead(pin) == LOW;
++}
++
++void SDCardManager::unmount() {
++  if (!initialized) return;
++#if FREEINK_SD_SDMMC
++  _vol.end();
++  if (_dev) _dev->end();
++#else
++  sd.end();
++#endif
++  initialized = false;
++  cachedTotalBytes = 0;
++  cachedUsedBytes = 0;
++  cachedUsedBytesValid = false;
++}
++
++bool SDCardManager::remount() {
++  if (!isCardPresent()) {
++    unmount();
++    return false;
++  }
++  unmount();
++  return begin();
++}
++
+ std::vector<String> SDCardManager::listFiles(const char* path, const int maxFiles) {
+   std::vector<String> ret;
+   if (!initialized) {
+diff --git a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/Arduino.h b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/Arduino.h
+index 0d421f71..606a138d 100644
+--- a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/Arduino.h
++++ b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/Arduino.h
+@@ -14,9 +14,13 @@ inline void delay(unsigned ms) { nowMs += ms; }
+ inline void vTaskDelay(unsigned ticks) { ++yields; nowMs += ticks; }
+ inline void pinMode(int, int) {}
+ inline void digitalWrite(int, int) {}
++constexpr int INPUT = 0;
++constexpr int INPUT_PULLUP = 2;
+ constexpr int OUTPUT = 1;
+ constexpr int HIGH = 1;
+ constexpr int LOW = 0;
++inline int digitalReadLevel = HIGH;
++inline int digitalRead(int) { return digitalReadLevel; }
+ 
+ class Print {
+  public:
+diff --git a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/BoardConfig.h b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/BoardConfig.h
+index 95806d1e..abd02c30 100644
+--- a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/BoardConfig.h
++++ b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/BoardConfig.h
+@@ -13,6 +13,7 @@ struct Profile {
+     int cs = 1, sclk = 2, mosi = 3, miso = 4, powerEnable = -1;
+     bool separateSpi = false, powerActiveHigh = true;
+     uint32_t spiHz = 0;
++    int detect = -1;
+   } sd;
+   struct {
+     int cs = -1, sclk = -1, mosi = -1;
+diff --git a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/SdFat.h b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/SdFat.h
+index 4910097e..43188ac0 100644
+--- a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/SdFat.h
++++ b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/SdFat.h
+@@ -71,6 +71,7 @@ class FsVolume {
+ class SdFat : public FsVolume {
+  public:
+   bool begin(uint8_t, uint32_t) { return true; }
++  void end() {}
+   int sdErrorCode() const { return 0; }
+   int sdErrorData() const { return 0; }
+ };
+diff --git a/freeink-sdk/libs/hardware/SDCardManager/test/host/test_stream.cpp b/freeink-sdk/libs/hardware/SDCardManager/test/host/test_stream.cpp
+index 33b71279..9863a894 100644
+--- a/freeink-sdk/libs/hardware/SDCardManager/test/host/test_stream.cpp
++++ b/freeink-sdk/libs/hardware/SDCardManager/test/host/test_stream.cpp
+@@ -39,11 +39,26 @@ static void reset(size_t size) {
+ 
+ int main() {
+   SDCardManager manager;
++
++  // Card-detect switch: active low; unassigned means "assume present".
++  BoardConfig::ACTIVE.sd.detect = 48;
++  digitalReadLevel = LOW;
++  assert(manager.isCardPresent());
++  digitalReadLevel = HIGH;
++  assert(!manager.isCardPresent());
++  BoardConfig::ACTIVE.sd.detect = -1;
++  assert(manager.isCardPresent());
++
+   reset(8);
+   Sink unopened;
+   assert(!manager.readFileToStream("/test", unopened));
+   assert(fakeSd::reads == 0 && fakeSd::closes == 0);
+   assert(manager.begin());
++  BoardConfig::ACTIVE.sd.detect = 48;
++  digitalReadLevel = LOW;
++  assert(manager.remount());
++  assert(manager.ready());
++  BoardConfig::ACTIVE.sd.detect = -1;
+ 
+   fakeSd::openFails = true;
+   assert(!manager.readFileToStream("/test", unopened));
+diff --git a/lib/hal/HalDisplay.cpp b/lib/hal/HalDisplay.cpp
+index 2b3c8c6a..89ff7744 100644
+--- a/lib/hal/HalDisplay.cpp
++++ b/lib/hal/HalDisplay.cpp
+@@ -67,6 +67,10 @@ void HalDisplay::displayBuffer(HalDisplay::RefreshMode mode, bool turnOffScreen)
+   einkDisplay.displayBuffer(convertRefreshMode(mode), turnOffScreen);
+ }
+ 
++void HalDisplay::displayWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
++  einkDisplay.displayWindow(x, y, w, h);
++}
++
+ void HalDisplay::displayBufferAsync(HalDisplay::RefreshMode mode) {
+   if (gpio.deviceIsX3() && mode == RefreshMode::HALF_REFRESH) {
+     einkDisplay.requestResync(1);
+diff --git a/lib/hal/HalDisplay.h b/lib/hal/HalDisplay.h
+index e6ed0190..e01f970c 100644
+--- a/lib/hal/HalDisplay.h
++++ b/lib/hal/HalDisplay.h
+@@ -50,6 +50,10 @@ class HalDisplay {
+                             bool fromProgmem = false) const;
+ 
+   void displayBuffer(RefreshMode mode = RefreshMode::FAST_REFRESH, bool turnOffScreen = false);
++  // Refresh only a panel-memory rectangle. Coordinates are physical panel
++  // coordinates (already rotation/alignment adjusted by the caller). Drivers
++  // without a regional path fall back to a full refresh.
++  void displayWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+   // Non-blocking refresh (shadow-free): starts the panel waveform and returns
+   // while the panel refreshes on its own. The framebuffer must stay untouched
+   // until waitRefreshComplete(), and the caller must rebuild the differential
 diff --git a/lib/hal/HalGPIO.cpp b/lib/hal/HalGPIO.cpp
 index e2254133..e6ae9af3 100644
 --- a/lib/hal/HalGPIO.cpp
@@ -821,6 +1117,45 @@ index 2889e769..e04b2ac2 100644
  
    if (wakeOnHeldButton) {
      freeink::PowerManager::armPowerButtonWakeup();
+diff --git a/lib/hal/HalStorage.cpp b/lib/hal/HalStorage.cpp
+index e4d76c93..005c65e0 100644
+--- a/lib/hal/HalStorage.cpp
++++ b/lib/hal/HalStorage.cpp
+@@ -37,6 +37,8 @@ bool HalStorage::begin() { return SDCard.begin(); }
+ 
+ bool HalStorage::ready() const { return SDCard.ready(); }
+ 
++bool HalStorage::isCardPresent() const { return SDCard.isCardPresent(); }
++
+ // For the rest of the methods, we acquire the mutex to ensure thread safety
+ 
+ class HalStorage::StorageLock {
+@@ -45,6 +47,11 @@ class HalStorage::StorageLock {
+   ~StorageLock() { xSemaphoreGiveRecursive(HalStorage::getInstance().storageMutex); }
+ };
+ 
++bool HalStorage::remount() {
++  StorageLock lock;
++  return SDCard.remount();
++}
++
+ void HalStorage::prepareForDeepSleep() {
+   StorageLock lock;
+   SDCard.shutdown();
+diff --git a/lib/hal/HalStorage.h b/lib/hal/HalStorage.h
+index a8ada953..a53fd908 100644
+--- a/lib/hal/HalStorage.h
++++ b/lib/hal/HalStorage.h
+@@ -24,6 +24,9 @@ class HalStorage {
+   HalStorage();
+   bool begin();
+   bool ready() const;
++  bool isCardPresent() const;
++  // Unmount and probe again after a card is inserted.
++  bool remount();
+   // Stop the SD card for deep sleep: unmount, stop the SDMMC host, and release
+   // the bus pads (no-op on SPI boards). Call only after all file users have
+   // stopped; open HalFiles become invalid. A deep-sleep wake resets the MCU and
 diff --git a/platformio.ini b/platformio.ini
 index f96f6634..1bf112e1 100644
 --- a/platformio.ini
@@ -958,8 +1293,34 @@ index 2f8e3705..b3293acb 100644
   private:
    static void screenTrampoline(UiScreen& screen, void* user);
    static void rowActionTrampoline(const freeink::ui::ActionEvent& event, void* user);
+diff --git a/src/activities/home/FileBrowserActivity.cpp b/src/activities/home/FileBrowserActivity.cpp
+index 271d9ce6..1dab9aa2 100644
+--- a/src/activities/home/FileBrowserActivity.cpp
++++ b/src/activities/home/FileBrowserActivity.cpp
+@@ -588,7 +588,7 @@ bool FileBrowserActivity::handleButtons() {
+ }
+ 
+ void FileBrowserActivity::render(RenderLock&& lock) {
+-  if (optionPopup.processRender(renderer, mappedInput)) return;
++  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
+   UiListActivity::render(std::move(lock));
+ }
+ 
+diff --git a/src/activities/library/LibraryListActivity.cpp b/src/activities/library/LibraryListActivity.cpp
+index c5c0535f..8e71089f 100644
+--- a/src/activities/library/LibraryListActivity.cpp
++++ b/src/activities/library/LibraryListActivity.cpp
+@@ -1065,7 +1065,7 @@ void LibraryListActivity::drawHoldHelp() const {
+ // OptionPopup is a self-contained modal: it owns the whole frame (hints
+ // included) whenever it is up, mirroring the FileBrowser pattern.
+ void LibraryListActivity::render(RenderLock&& lock) {
+-  if (optionPopup.processRender(renderer, mappedInput)) return;
++  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
+   UiTabListActivity::render(std::move(lock));
+ }
+ 
 diff --git a/src/activities/reader/EpubReaderMenuActivity.cpp b/src/activities/reader/EpubReaderMenuActivity.cpp
-index 06ecd724..2f3cadae 100644
+index 06ecd724..9498d0a9 100644
 --- a/src/activities/reader/EpubReaderMenuActivity.cpp
 +++ b/src/activities/reader/EpubReaderMenuActivity.cpp
 @@ -33,6 +33,9 @@ EpubReaderMenuActivity::EpubReaderMenuActivity(GfxRenderer& renderer, MappedInpu
@@ -972,6 +1333,15 @@ index 06ecd724..2f3cadae 100644
    UiListActivity::onEnter();
    for (size_t i = 0; i < menuItems.size(); ++i) {
      if (menuItems[i].action == selectedAction) {
+@@ -264,7 +267,7 @@ void EpubReaderMenuActivity::drawChrome() {
+ }
+ 
+ void EpubReaderMenuActivity::render(RenderLock&& lock) {
+-  if (optionPopup.processRender(renderer, mappedInput)) return;
++  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
+ 
+   UiListActivity::render(std::move(lock));
+ }
 diff --git a/src/activities/settings/AboutActivity.cpp b/src/activities/settings/AboutActivity.cpp
 index c01e3842..4b66fc3a 100644
 --- a/src/activities/settings/AboutActivity.cpp
@@ -1037,6 +1407,67 @@ index ec4dc70c..417bed3c 100644
  
    void onEnter() override;
  
+diff --git a/src/activities/settings/SettingsActivity.cpp b/src/activities/settings/SettingsActivity.cpp
+index 8938844b..319a6507 100644
+--- a/src/activities/settings/SettingsActivity.cpp
++++ b/src/activities/settings/SettingsActivity.cpp
+@@ -550,6 +550,6 @@ void SettingsActivity::drawFooter() {
+ }
+ 
+ void SettingsActivity::render(RenderLock&& lock) {
+-  if (optionPopup.processRender(renderer, mappedInput)) return;
++  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
+   UiListActivity::render(std::move(lock));
+ }
+diff --git a/src/components/OptionPopup.h b/src/components/OptionPopup.h
+index 550584bc..cf4f19e5 100644
+--- a/src/components/OptionPopup.h
++++ b/src/components/OptionPopup.h
+@@ -149,12 +149,27 @@ class OptionPopup {
+     return true;
+   }
+ 
+-  bool processRender(GfxRenderer& renderer, const MappedInputManager& input) const {
++  // `partial` refreshes only the dialog and the button-hint strip, leaving the
++  // screen under the popup on the glass. Callers must have rendered that screen
++  // first; standalone activities that clear the framebuffer keep the default
++  // full refresh.
++  bool processRender(GfxRenderer& renderer, const MappedInputManager& input, bool partial = false) const {
+     if (!active) return false;
+     const auto popupLabels = input.mapLabels(tr(STR_BACK), tr(STR_SELECT), tr(STR_DIR_UP), tr(STR_DIR_DOWN));
+     GUI.drawButtonHints(renderer, popupLabels.btn1, popupLabels.btn2, popupLabels.btn3, popupLabels.btn4);
+     render(renderer);
+-    renderer.displayBuffer();
++    if (partial && lastDialogRect_.width > 0) {
++      renderer.displayWindow(lastDialogRect_.x, lastDialogRect_.y, lastDialogRect_.width, lastDialogRect_.height);
++      constexpr int hintHeight = BaseMetrics::values.buttonHintsHeight;
++      if (!input.hasTouch() && hintHeight > 0) {
++        // drawButtonHints() draws in Portrait regardless of the activity's
++        // orientation, so refresh the same physical strip.
++        renderer.displayWindowPortrait(0, renderer.getDisplayWidth() - hintHeight, renderer.getDisplayHeight(),
++                                       hintHeight);
++      }
++    } else {
++      renderer.displayBuffer();
++    }
+     return true;
+   }
+ 
+@@ -247,6 +262,7 @@ class OptionPopup {
+         fui::clampI16(std::min<int>(screen.width * 3 / 4, screen.width - metrics.optionPopupDialogSideMargin * 2));
+     const int16_t height = fui::clampI16(fui::optionDialogHeight(target, props, width), 0, screen.height);
+     const fui::Rect dialogRect = fui::centeredRect(screen, fui::Size{width, height});
++    lastDialogRect_ = dialogRect;
+ 
+     // Chrome guard first, options after: route() scans newest-first, so the
+     // option buttons win inside the dialog and the guard absorbs the rest.
+@@ -295,5 +311,6 @@ class OptionPopup {
+   // Written by the render task (frame registration), routed by the loop task;
+   // uiReady closes the rebuild window exactly like UiListActivity::uiReady.
+   mutable freeink::ui::InteractionBuffer<INTERACTION_CAPACITY> interactions;
++  mutable freeink::ui::Rect lastDialogRect_{};
+   mutable std::atomic<bool> uiReady{false};
+ };
 diff --git a/src/components/themes/BaseTheme.cpp b/src/components/themes/BaseTheme.cpp
 index 0854756b..834a089f 100644
 --- a/src/components/themes/BaseTheme.cpp
@@ -1060,10 +1491,26 @@ index 0854756b..834a089f 100644
    // strings only need to outlive the fui::header() call that consumes them.
    static char percentText[8];
 diff --git a/src/main.cpp b/src/main.cpp
-index 65b4aed3..6b9535cd 100644
+index 65b4aed3..71ab8b22 100644
 --- a/src/main.cpp
 +++ b/src/main.cpp
-@@ -717,8 +717,8 @@ void setup() {
+@@ -638,6 +638,15 @@ void setup() {
+   if (!Storage.begin()) {
+     LOG_ERR("MAIN", "SD card initialization failed");
+     setupDisplayAndFonts(isSilentReboot);
++    // Boards with a card-detect switch can wait for a missing card instead of
++    // ending in a dead error screen. A card that is present but fails to mount
++    // still reports an error; reinsertion is handled by the running monitor.
++    if (BoardConfig::ACTIVE.sd.detect >= 0 && !Storage.isCardPresent()) {
++      activityManager.goToFullScreenMessage("Insert SD card", EpdFontFamily::BOLD);
++      while (!Storage.isCardPresent()) delay(200);
++      ESP.restart();
++      return;
++    }
+     activityManager.goToFullScreenMessage("SD card error", EpdFontFamily::BOLD);
+     return;
+   }
+@@ -717,8 +726,8 @@ void setup() {
      case HalGPIO::WakeupReason::AfterUSBPower:
        // Most devices return to sleep after a USB-powered cold boot.
        LOG_DBG("MAIN", "Wakeup reason: After USB Power");
@@ -1074,7 +1521,35 @@ index 65b4aed3..6b9535cd 100644
        // X4 Pro must stay awake so USB Serial/JTAG remains available after leaving
        // USB Drive and reconnecting the cable. Paper Mono has no armable GPIO wake
        // (its button is behind the PMIC). Metalio also needs native USB available
-@@ -1040,10 +1040,10 @@ void loop() {
+@@ -854,6 +863,10 @@ void loop() {
+   gpio.setSharedConfirmPowerShortPressEmitsPower(SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP);
+   mappedInputManager.update();
+ 
++
++
++
++
+   // Bluetooth page turner, before the USB drive's early return: a card handed to USB stops the radio
+   // before anything else.
+   bleturner::Scene scene{};
+@@ -1008,7 +1021,15 @@ void loop() {
+   }
+ 
+   const unsigned long sleepTimeoutMs = SETTINGS.getSleepTimeoutMs();
+-  if (sleepTimeoutMs > 0 && millis() - lastActivityTime >= sleepTimeoutMs) {
++#if defined(ENABLE_SERIAL_LOG)
++  // A USB CDC host (serial monitor/flasher) is a development session, not a
++  // battery-powered reader. Keep the board awake so a flash/reset does not race
++  // the auto-sleep timer; a dumb USB charger has no CDC host and still sleeps.
++  const bool serialHostConnected = static_cast<bool>(Serial);
++#else
++  const bool serialHostConnected = false;
++#endif
++  if (!serialHostConnected && sleepTimeoutMs > 0 && millis() - lastActivityTime >= sleepTimeoutMs) {
+     LOG_DBG("SLP", "Auto-sleep triggered after %lu ms of inactivity", sleepTimeoutMs);
+     enterDeepSleep(true);
+     // This should never be hit as `enterDeepSleep` calls esp_deep_sleep_start
+@@ -1040,10 +1061,10 @@ void loop() {
      return;
    }
  
@@ -1089,6 +1564,34 @@ index 65b4aed3..6b9535cd 100644
    if ((SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP ||
         SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::IGNORE) &&
        millis() >= allowSleepAt && mappedInputManager.wasReleased(MappedInputManager::Button::Power)) {
+@@ -1066,6 +1087,27 @@ void loop() {
+     }
+   }
+ 
++  // Card-detect hot-plug. The board profile may leave detect unassigned; in
++  // that case isCardPresent() stays true and this is a no-op. Do not unmount on
++  // removal: open files/activities may still hold handles, and the next insert
++  // re-probes the card through remount().
++  static bool lastCardPresent = Storage.isCardPresent();
++  static unsigned long lastCardPollMs = 0;
++  if (millis() - lastCardPollMs >= 500) {
++    lastCardPollMs = millis();
++    const bool cardPresent = Storage.isCardPresent();
++    if (cardPresent != lastCardPresent) {
++      lastCardPresent = cardPresent;
++      if (cardPresent) {
++        LOG_INF("SD", "Card inserted, remounting");
++        if (Storage.remount()) activityManager.requestUpdate();
++      } else {
++        LOG_INF("SD", "Card removed");
++        activityManager.requestUpdate();
++      }
++    }
++  }
++
+   // Refresh the battery icon when USB is plugged or unplugged.
+   // Placed after sleep guards so we never queue a render that won't be processed.
+   // Not while reading: there a repaint is a full page re-render (visible
 diff --git a/src/network/FirmwareBoardTag.cpp b/src/network/FirmwareBoardTag.cpp
 index 7109854a..7e0ddadc 100644
 --- a/src/network/FirmwareBoardTag.cpp

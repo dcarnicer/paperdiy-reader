@@ -1,3 +1,33 @@
+diff --git a/lib/hal/HalDisplay.cpp b/lib/hal/HalDisplay.cpp
+index 2b3c8c6a..89ff7744 100644
+--- a/lib/hal/HalDisplay.cpp
++++ b/lib/hal/HalDisplay.cpp
+@@ -67,6 +67,10 @@ void HalDisplay::displayBuffer(HalDisplay::RefreshMode mode, bool turnOffScreen)
+   einkDisplay.displayBuffer(convertRefreshMode(mode), turnOffScreen);
+ }
+ 
++void HalDisplay::displayWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
++  einkDisplay.displayWindow(x, y, w, h);
++}
++
+ void HalDisplay::displayBufferAsync(HalDisplay::RefreshMode mode) {
+   if (gpio.deviceIsX3() && mode == RefreshMode::HALF_REFRESH) {
+     einkDisplay.requestResync(1);
+diff --git a/lib/hal/HalDisplay.h b/lib/hal/HalDisplay.h
+index e6ed0190..e01f970c 100644
+--- a/lib/hal/HalDisplay.h
++++ b/lib/hal/HalDisplay.h
+@@ -50,6 +50,10 @@ class HalDisplay {
+                             bool fromProgmem = false) const;
+ 
+   void displayBuffer(RefreshMode mode = RefreshMode::FAST_REFRESH, bool turnOffScreen = false);
++  // Refresh only a panel-memory rectangle. Coordinates are physical panel
++  // coordinates (already rotation/alignment adjusted by the caller). Drivers
++  // without a regional path fall back to a full refresh.
++  void displayWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+   // Non-blocking refresh (shadow-free): starts the panel waveform and returns
+   // while the panel refreshes on its own. The framebuffer must stay untouched
+   // until waitRefreshComplete(), and the caller must rebuild the differential
 diff --git a/lib/hal/HalGPIO.cpp b/lib/hal/HalGPIO.cpp
 index e2254133..e6ae9af3 100644
 --- a/lib/hal/HalGPIO.cpp
@@ -105,6 +135,45 @@ index 2889e769..e04b2ac2 100644
  
    if (wakeOnHeldButton) {
      freeink::PowerManager::armPowerButtonWakeup();
+diff --git a/lib/hal/HalStorage.cpp b/lib/hal/HalStorage.cpp
+index e4d76c93..005c65e0 100644
+--- a/lib/hal/HalStorage.cpp
++++ b/lib/hal/HalStorage.cpp
+@@ -37,6 +37,8 @@ bool HalStorage::begin() { return SDCard.begin(); }
+ 
+ bool HalStorage::ready() const { return SDCard.ready(); }
+ 
++bool HalStorage::isCardPresent() const { return SDCard.isCardPresent(); }
++
+ // For the rest of the methods, we acquire the mutex to ensure thread safety
+ 
+ class HalStorage::StorageLock {
+@@ -45,6 +47,11 @@ class HalStorage::StorageLock {
+   ~StorageLock() { xSemaphoreGiveRecursive(HalStorage::getInstance().storageMutex); }
+ };
+ 
++bool HalStorage::remount() {
++  StorageLock lock;
++  return SDCard.remount();
++}
++
+ void HalStorage::prepareForDeepSleep() {
+   StorageLock lock;
+   SDCard.shutdown();
+diff --git a/lib/hal/HalStorage.h b/lib/hal/HalStorage.h
+index a8ada953..a53fd908 100644
+--- a/lib/hal/HalStorage.h
++++ b/lib/hal/HalStorage.h
+@@ -24,6 +24,9 @@ class HalStorage {
+   HalStorage();
+   bool begin();
+   bool ready() const;
++  bool isCardPresent() const;
++  // Unmount and probe again after a card is inserted.
++  bool remount();
+   // Stop the SD card for deep sleep: unmount, stop the SDMMC host, and release
+   // the bus pads (no-op on SPI boards). Call only after all file users have
+   // stopped; open HalFiles become invalid. A deep-sleep wake resets the MCU and
 diff --git a/platformio.ini b/platformio.ini
 index f96f6634..1bf112e1 100644
 --- a/platformio.ini
@@ -242,8 +311,34 @@ index 2f8e3705..b3293acb 100644
   private:
    static void screenTrampoline(UiScreen& screen, void* user);
    static void rowActionTrampoline(const freeink::ui::ActionEvent& event, void* user);
+diff --git a/src/activities/home/FileBrowserActivity.cpp b/src/activities/home/FileBrowserActivity.cpp
+index 271d9ce6..1dab9aa2 100644
+--- a/src/activities/home/FileBrowserActivity.cpp
++++ b/src/activities/home/FileBrowserActivity.cpp
+@@ -588,7 +588,7 @@ bool FileBrowserActivity::handleButtons() {
+ }
+ 
+ void FileBrowserActivity::render(RenderLock&& lock) {
+-  if (optionPopup.processRender(renderer, mappedInput)) return;
++  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
+   UiListActivity::render(std::move(lock));
+ }
+ 
+diff --git a/src/activities/library/LibraryListActivity.cpp b/src/activities/library/LibraryListActivity.cpp
+index c5c0535f..8e71089f 100644
+--- a/src/activities/library/LibraryListActivity.cpp
++++ b/src/activities/library/LibraryListActivity.cpp
+@@ -1065,7 +1065,7 @@ void LibraryListActivity::drawHoldHelp() const {
+ // OptionPopup is a self-contained modal: it owns the whole frame (hints
+ // included) whenever it is up, mirroring the FileBrowser pattern.
+ void LibraryListActivity::render(RenderLock&& lock) {
+-  if (optionPopup.processRender(renderer, mappedInput)) return;
++  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
+   UiTabListActivity::render(std::move(lock));
+ }
+ 
 diff --git a/src/activities/reader/EpubReaderMenuActivity.cpp b/src/activities/reader/EpubReaderMenuActivity.cpp
-index 06ecd724..2f3cadae 100644
+index 06ecd724..9498d0a9 100644
 --- a/src/activities/reader/EpubReaderMenuActivity.cpp
 +++ b/src/activities/reader/EpubReaderMenuActivity.cpp
 @@ -33,6 +33,9 @@ EpubReaderMenuActivity::EpubReaderMenuActivity(GfxRenderer& renderer, MappedInpu
@@ -256,6 +351,15 @@ index 06ecd724..2f3cadae 100644
    UiListActivity::onEnter();
    for (size_t i = 0; i < menuItems.size(); ++i) {
      if (menuItems[i].action == selectedAction) {
+@@ -264,7 +267,7 @@ void EpubReaderMenuActivity::drawChrome() {
+ }
+ 
+ void EpubReaderMenuActivity::render(RenderLock&& lock) {
+-  if (optionPopup.processRender(renderer, mappedInput)) return;
++  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
+ 
+   UiListActivity::render(std::move(lock));
+ }
 diff --git a/src/activities/settings/AboutActivity.cpp b/src/activities/settings/AboutActivity.cpp
 index c01e3842..4b66fc3a 100644
 --- a/src/activities/settings/AboutActivity.cpp
@@ -321,6 +425,67 @@ index ec4dc70c..417bed3c 100644
  
    void onEnter() override;
  
+diff --git a/src/activities/settings/SettingsActivity.cpp b/src/activities/settings/SettingsActivity.cpp
+index 8938844b..319a6507 100644
+--- a/src/activities/settings/SettingsActivity.cpp
++++ b/src/activities/settings/SettingsActivity.cpp
+@@ -550,6 +550,6 @@ void SettingsActivity::drawFooter() {
+ }
+ 
+ void SettingsActivity::render(RenderLock&& lock) {
+-  if (optionPopup.processRender(renderer, mappedInput)) return;
++  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
+   UiListActivity::render(std::move(lock));
+ }
+diff --git a/src/components/OptionPopup.h b/src/components/OptionPopup.h
+index 550584bc..cf4f19e5 100644
+--- a/src/components/OptionPopup.h
++++ b/src/components/OptionPopup.h
+@@ -149,12 +149,27 @@ class OptionPopup {
+     return true;
+   }
+ 
+-  bool processRender(GfxRenderer& renderer, const MappedInputManager& input) const {
++  // `partial` refreshes only the dialog and the button-hint strip, leaving the
++  // screen under the popup on the glass. Callers must have rendered that screen
++  // first; standalone activities that clear the framebuffer keep the default
++  // full refresh.
++  bool processRender(GfxRenderer& renderer, const MappedInputManager& input, bool partial = false) const {
+     if (!active) return false;
+     const auto popupLabels = input.mapLabels(tr(STR_BACK), tr(STR_SELECT), tr(STR_DIR_UP), tr(STR_DIR_DOWN));
+     GUI.drawButtonHints(renderer, popupLabels.btn1, popupLabels.btn2, popupLabels.btn3, popupLabels.btn4);
+     render(renderer);
+-    renderer.displayBuffer();
++    if (partial && lastDialogRect_.width > 0) {
++      renderer.displayWindow(lastDialogRect_.x, lastDialogRect_.y, lastDialogRect_.width, lastDialogRect_.height);
++      constexpr int hintHeight = BaseMetrics::values.buttonHintsHeight;
++      if (!input.hasTouch() && hintHeight > 0) {
++        // drawButtonHints() draws in Portrait regardless of the activity's
++        // orientation, so refresh the same physical strip.
++        renderer.displayWindowPortrait(0, renderer.getDisplayWidth() - hintHeight, renderer.getDisplayHeight(),
++                                       hintHeight);
++      }
++    } else {
++      renderer.displayBuffer();
++    }
+     return true;
+   }
+ 
+@@ -247,6 +262,7 @@ class OptionPopup {
+         fui::clampI16(std::min<int>(screen.width * 3 / 4, screen.width - metrics.optionPopupDialogSideMargin * 2));
+     const int16_t height = fui::clampI16(fui::optionDialogHeight(target, props, width), 0, screen.height);
+     const fui::Rect dialogRect = fui::centeredRect(screen, fui::Size{width, height});
++    lastDialogRect_ = dialogRect;
+ 
+     // Chrome guard first, options after: route() scans newest-first, so the
+     // option buttons win inside the dialog and the guard absorbs the rest.
+@@ -295,5 +311,6 @@ class OptionPopup {
+   // Written by the render task (frame registration), routed by the loop task;
+   // uiReady closes the rebuild window exactly like UiListActivity::uiReady.
+   mutable freeink::ui::InteractionBuffer<INTERACTION_CAPACITY> interactions;
++  mutable freeink::ui::Rect lastDialogRect_{};
+   mutable std::atomic<bool> uiReady{false};
+ };
 diff --git a/src/components/themes/BaseTheme.cpp b/src/components/themes/BaseTheme.cpp
 index 0854756b..834a089f 100644
 --- a/src/components/themes/BaseTheme.cpp
@@ -344,10 +509,26 @@ index 0854756b..834a089f 100644
    // strings only need to outlive the fui::header() call that consumes them.
    static char percentText[8];
 diff --git a/src/main.cpp b/src/main.cpp
-index 65b4aed3..6b9535cd 100644
+index 65b4aed3..71ab8b22 100644
 --- a/src/main.cpp
 +++ b/src/main.cpp
-@@ -717,8 +717,8 @@ void setup() {
+@@ -638,6 +638,15 @@ void setup() {
+   if (!Storage.begin()) {
+     LOG_ERR("MAIN", "SD card initialization failed");
+     setupDisplayAndFonts(isSilentReboot);
++    // Boards with a card-detect switch can wait for a missing card instead of
++    // ending in a dead error screen. A card that is present but fails to mount
++    // still reports an error; reinsertion is handled by the running monitor.
++    if (BoardConfig::ACTIVE.sd.detect >= 0 && !Storage.isCardPresent()) {
++      activityManager.goToFullScreenMessage("Insert SD card", EpdFontFamily::BOLD);
++      while (!Storage.isCardPresent()) delay(200);
++      ESP.restart();
++      return;
++    }
+     activityManager.goToFullScreenMessage("SD card error", EpdFontFamily::BOLD);
+     return;
+   }
+@@ -717,8 +726,8 @@ void setup() {
      case HalGPIO::WakeupReason::AfterUSBPower:
        // Most devices return to sleep after a USB-powered cold boot.
        LOG_DBG("MAIN", "Wakeup reason: After USB Power");
@@ -358,7 +539,35 @@ index 65b4aed3..6b9535cd 100644
        // X4 Pro must stay awake so USB Serial/JTAG remains available after leaving
        // USB Drive and reconnecting the cable. Paper Mono has no armable GPIO wake
        // (its button is behind the PMIC). Metalio also needs native USB available
-@@ -1040,10 +1040,10 @@ void loop() {
+@@ -854,6 +863,10 @@ void loop() {
+   gpio.setSharedConfirmPowerShortPressEmitsPower(SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP);
+   mappedInputManager.update();
+ 
++
++
++
++
+   // Bluetooth page turner, before the USB drive's early return: a card handed to USB stops the radio
+   // before anything else.
+   bleturner::Scene scene{};
+@@ -1008,7 +1021,15 @@ void loop() {
+   }
+ 
+   const unsigned long sleepTimeoutMs = SETTINGS.getSleepTimeoutMs();
+-  if (sleepTimeoutMs > 0 && millis() - lastActivityTime >= sleepTimeoutMs) {
++#if defined(ENABLE_SERIAL_LOG)
++  // A USB CDC host (serial monitor/flasher) is a development session, not a
++  // battery-powered reader. Keep the board awake so a flash/reset does not race
++  // the auto-sleep timer; a dumb USB charger has no CDC host and still sleeps.
++  const bool serialHostConnected = static_cast<bool>(Serial);
++#else
++  const bool serialHostConnected = false;
++#endif
++  if (!serialHostConnected && sleepTimeoutMs > 0 && millis() - lastActivityTime >= sleepTimeoutMs) {
+     LOG_DBG("SLP", "Auto-sleep triggered after %lu ms of inactivity", sleepTimeoutMs);
+     enterDeepSleep(true);
+     // This should never be hit as `enterDeepSleep` calls esp_deep_sleep_start
+@@ -1040,10 +1061,10 @@ void loop() {
      return;
    }
  
@@ -373,6 +582,34 @@ index 65b4aed3..6b9535cd 100644
    if ((SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP ||
         SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::IGNORE) &&
        millis() >= allowSleepAt && mappedInputManager.wasReleased(MappedInputManager::Button::Power)) {
+@@ -1066,6 +1087,27 @@ void loop() {
+     }
+   }
+ 
++  // Card-detect hot-plug. The board profile may leave detect unassigned; in
++  // that case isCardPresent() stays true and this is a no-op. Do not unmount on
++  // removal: open files/activities may still hold handles, and the next insert
++  // re-probes the card through remount().
++  static bool lastCardPresent = Storage.isCardPresent();
++  static unsigned long lastCardPollMs = 0;
++  if (millis() - lastCardPollMs >= 500) {
++    lastCardPollMs = millis();
++    const bool cardPresent = Storage.isCardPresent();
++    if (cardPresent != lastCardPresent) {
++      lastCardPresent = cardPresent;
++      if (cardPresent) {
++        LOG_INF("SD", "Card inserted, remounting");
++        if (Storage.remount()) activityManager.requestUpdate();
++      } else {
++        LOG_INF("SD", "Card removed");
++        activityManager.requestUpdate();
++      }
++    }
++  }
++
+   // Refresh the battery icon when USB is plugged or unplugged.
+   // Placed after sleep guards so we never queue a render that won't be processed.
+   // Not while reading: there a repaint is a full page re-render (visible
 diff --git a/src/network/FirmwareBoardTag.cpp b/src/network/FirmwareBoardTag.cpp
 index 7109854a..7e0ddadc 100644
 --- a/src/network/FirmwareBoardTag.cpp
