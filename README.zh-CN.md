@@ -12,8 +12,8 @@ OPDS/Calibre 以及日常使用所需一切功能的电子书阅读器。
 > 验证（2026-11-04）：同步到 CrossPoint `308cd522` 后，启动、屏幕/界面、
 > 主页、唤醒、A/B 按键、电池、SD 和导航均正常。
 > EPUB 阅读、Wi-Fi、网页界面和图书传输已于 2026-10-28 验证。
-> 待完成：OPDS、Calibre/KOReader Sync、多页后的残影、休眠电流、OTA 和
-> 续航。见
+> Calibre 无线传输和 OTA 已于 2026-11-04 验证。待完成：OPDS、KOReader
+> Sync、多页后的残影、休眠电流和续航。见
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md)。
 >
 > **下游分支：** `main` 镜像 `upstream/develop`；`paperdiy` 是我们的工作

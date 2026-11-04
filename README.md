@@ -13,8 +13,9 @@ a diario.
 > Validación (04/11/2026): arranque, pantalla/UI, Home, wake, botones A/B,
 > batería, SD y navegación OK tras sincronizar con CrossPoint `308cd522`.
 > La lectura EPUB, Wi-Fi, web UI y transferencia de libros ya se validaron el
-> 28/10/2026. Pendiente: OPDS, Calibre/KOReader Sync, ghosting tras muchas
-> páginas, consumo en sleep, OTA y autonomía. Ver
+> 28/10/2026. Calibre wireless y OTA verificados el 04/11/2026. Pendiente:
+> OPDS, KOReader Sync, ghosting tras muchas páginas, consumo en sleep y
+> autonomía. Ver
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md).
 >
 > **Fork downstream:** `main` es un espejo de `upstream/develop`; `paperdiy`
