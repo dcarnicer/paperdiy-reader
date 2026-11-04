@@ -38,6 +38,9 @@ git merge --ff-only upstream/develop
 git checkout -B paperdiy-next main
 
 echo "Vendoring the upstream FreeInk SDK..."
+# The checkout leaves the previous vendored SDK as untracked files, which blocks
+# the submodule clone. Remove it first; the pinned revision is fetched next.
+rm -rf freeink-sdk
 git submodule update --init --recursive freeink-sdk
 rm -rf /tmp/paperdiy-sdk-new
 cp -R freeink-sdk /tmp/paperdiy-sdk-new
@@ -45,6 +48,10 @@ git rm -f -q freeink-sdk
 mkdir -p freeink-sdk
 rsync -a --exclude='.git' /tmp/paperdiy-sdk-new/ freeink-sdk/
 git add freeink-sdk
+
+# `patches/` only exists on the paperdiy branch, so checking out main removed
+# it from the working tree. Restore the patches before applying them.
+git checkout paperdiy -- patches
 
 echo "Applying patches/sdk.patch..."
 git apply --3way patches/sdk.patch
@@ -54,7 +61,7 @@ git apply --3way patches/firmware.patch
 
 echo "Overlaying docs, Makefile, scripts and workflows..."
 rm -rf .github
-git checkout paperdiy -- README.md Makefile NOTICE LICENSE .gitignore \
+git checkout paperdiy -- README.md CHANGELOG.md Makefile NOTICE LICENSE .gitignore \
   docs/paperdiy docs/README.md docs/upstream scripts patches .github
 rm -f ROADMAP.md SCOPE.md GOVERNANCE.md AGENTS.md USER_GUIDE.md CLAUDE.md .gitmodules
 

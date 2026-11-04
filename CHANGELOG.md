@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-04 — sincronización con upstream
+
+- CrossPoint actualizado a `308cd522` (18 commits): web/plugins, diccionario,
+  bidi, selección de texto, fuentes TTF, traducciones y avisos de licencia.
+- FreeInk SDK vendorizado en `5e94fe7`.
+- `sdk.patch` y `firmware.patch` reaplicados sin conflictos.
+- `scripts/sync-upstream.sh` recupera `patches/` tras cambiar a `main` y limpia
+  el SDK vendorizado antes de inicializar el submódulo.
+
 ## 2026-10-31 — refresco parcial y detección de SD
 
 - `GfxRenderer::displayWindow()` y `HalDisplay::displayWindow()` exponen el

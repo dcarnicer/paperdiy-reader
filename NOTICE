@@ -6,13 +6,14 @@ This project is a hardware port and downstream fork of CrossPoint Reader.
 Upstream:
   CrossPoint Reader 2.0.0 (develop branch)
   https://github.com/crosspoint-reader/crosspoint-reader
-  Commit: 31dc683f9ad54d85a35a1eeb698470bb6da69224 (2026-10-28)
+  Commit: 308cd522155ec11c3f62e346a1a961facd3dad80 (2026-11-03)
   License: MIT
   Copyright (c) 2025 CrossPoint Reader organization
 
 Hardware abstraction:
   FreeInk SDK
-  https://github.com/crosspoint-reader/crosspoint-reader (freeink-sdk submodule)
+  https://github.com/Free-Ink/freeink-sdk
+  Commit: 5e94fe7480f019c89fbf691aef87523eb1b46704
   License: MIT
   Copyright (c) 2026 FreeInk
 
@@ -23,8 +24,12 @@ Display / board support:
 
 Other third-party libraries (SdFat, ArduinoJson, PNGdec, JPEGDEC,
 AnimatedGIF, WebSockets, wolfSSL, NimBLE-Arduino, QRCode, expat, FreeType,
-miniz, etc.) retain their own licenses; see the respective library
-directories / PlatformIO package metadata.
+miniz, etc.) retain their own licenses; see `licenses/README.md`, the
+respective library directories and PlatformIO package metadata.
+
+The combined firmware executable uses GPLv3 because it includes wolfSSL.
+The root `LICENSE` covers the original CrossPoint code; third-party material
+keeps its own terms.
 
 The PaperDIY board profile, BoardPaperDiy support library, documentation and
 the changes in this repository are:
