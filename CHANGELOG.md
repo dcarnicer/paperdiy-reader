@@ -15,6 +15,8 @@
   japonés (`*.en.md`, `*.zh-CN.md`, `*.ja.md`).
 - Añadido el entorno `paperdiy-test` con `CMD:KEY` por USB y
   `scripts/paperdiy_serial.py` para capturas y pruebas de UI automatizadas.
+- Corregida la recuperación de SD en caliente: reintentos de montaje y pantalla
+  de error recuperable; al reinsertar la tarjeta reinicia y vuelve a Home.
 
 ## 2026-10-31 — refresco parcial y detección de SD
 

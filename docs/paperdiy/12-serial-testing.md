@@ -112,8 +112,8 @@ Probado con `paperdiy-test` sobre el firmware `308cd522`:
 - Recuperación: `firmware.factory.bin` en `0x0` verificado; arranca y conserva
   la página.
 - SD en caliente: quitar/reinsertar en Home funciona. Quitarla **leyendo**
-  muestra “Insert SD card”; al reinsertar queda “SD card error” sin salida y
-  solo se recupera con power cycle. Es un fallo de robustez pendiente.
+  muestra “Insert SD card”; al reinsertar, el equipo reinicia, monta la tarjeta
+  y vuelve a Home. Verificado con el fix de reintentos de montaje (04/11/2026).
 - USB MSC: la SD aparece como volumen `DABI` (FAT32, 8 GB); al expulsar, la
   placa vuelve sola a Home.
 - EPUB grande (7,3 MB): abre sin OOM; primera sección ~3,0 s y páginas
@@ -121,4 +121,4 @@ Probado con `paperdiy-test` sobre el firmware `308cd522`:
 - Ghosting real: leve y legible con refresco cada 5 páginas.
 
 Pendiente de probar: consumo/autonomía, OPDS/Calibre con contenido, BLE page
-turner, lectura muy larga y corrección del flujo de SD en caliente.
+turner y lectura muy larga.

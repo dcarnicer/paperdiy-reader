@@ -47,7 +47,9 @@ autonomía es al menos "unas horas de lectura" con una carga.
 - [x] Detección de tarjeta SD por GPIO48 (`CARD_DET`, activo bajo): espera de
       inserción al arrancar y re-mount al insertar en caliente. Verificado en
       hardware + host test.
-- [ ] Aviso visual/bloqueo seguro si se quita la SD durante la lectura.
+- [x] Aviso y recuperación si se quita la SD durante la lectura: “Insert SD
+      card” y, al reinsertar, reinicio + montaje + Home. Verificado en hardware
+      (04/11/2026).
 - [ ] Ajustar el perfil según la fase 0 (rotación, LUTs, PM1, timeout).
 - [ ] Revisar todos los diálogos/actividades para que sean operables con
       A/B/largos; eliminar dependencias de táctil.

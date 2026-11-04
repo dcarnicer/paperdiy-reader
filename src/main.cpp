@@ -634,16 +634,36 @@ void setup() {
 #endif
 
   // SD Card Initialization
-  // We need 6 open files concurrently when parsing a new chapter
-  if (!Storage.begin()) {
+  // We need 6 open files concurrently when parsing a new chapter. A card that
+  // was just reinserted can take a moment to answer, so retry the mount before
+  // declaring an error.
+  bool storageReady = Storage.begin();
+  if (!storageReady && BoardConfig::ACTIVE.sd.detect >= 0 && Storage.isCardPresent()) {
+    for (uint8_t attempt = 0; attempt < 4 && !storageReady; ++attempt) {
+      delay(200);
+      storageReady = Storage.remount();
+    }
+  }
+  if (!storageReady) {
     LOG_ERR("MAIN", "SD card initialization failed");
     setupDisplayAndFonts(isSilentReboot);
     // Boards with a card-detect switch can wait for a missing card instead of
-    // ending in a dead error screen. A card that is present but fails to mount
-    // still reports an error; reinsertion is handled by the running monitor.
+    // ending in a dead error screen.
     if (BoardConfig::ACTIVE.sd.detect >= 0 && !Storage.isCardPresent()) {
       activityManager.goToFullScreenMessage("Insert SD card", EpdFontFamily::BOLD);
       while (!Storage.isCardPresent()) delay(200);
+      delay(500);
+      ESP.restart();
+      return;
+    }
+    // A present but unmountable card is recoverable: ask for a reinsert and
+    // restart when the card has been cycled. This avoids a dead-end screen
+    // after a hot removal/insertion left the card in a bad state.
+    if (BoardConfig::ACTIVE.sd.detect >= 0) {
+      activityManager.goToFullScreenMessage("SD card error - reinsert", EpdFontFamily::BOLD);
+      while (Storage.isCardPresent()) delay(200);
+      while (!Storage.isCardPresent()) delay(200);
+      delay(500);
       ESP.restart();
       return;
     }
