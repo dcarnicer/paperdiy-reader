@@ -33,6 +33,9 @@ EpubReaderMenuActivity::EpubReaderMenuActivity(GfxRenderer& renderer, MappedInpu
 
 void EpubReaderMenuActivity::onEnter() {
   RenderLock lock;
+  // The reader page is still on the glass. A FAST full-screen replacement
+  // leaves its text faintly visible behind the menu; scrub it once.
+  cleanFirstRender = true;
   UiListActivity::onEnter();
   for (size_t i = 0; i < menuItems.size(); ++i) {
     if (menuItems[i].action == selectedAction) {
@@ -264,7 +267,7 @@ void EpubReaderMenuActivity::drawChrome() {
 }
 
 void EpubReaderMenuActivity::render(RenderLock&& lock) {
-  if (optionPopup.processRender(renderer, mappedInput)) return;
+  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
 
   UiListActivity::render(std::move(lock));
 }

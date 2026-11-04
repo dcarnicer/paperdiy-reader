@@ -638,6 +638,15 @@ void setup() {
   if (!Storage.begin()) {
     LOG_ERR("MAIN", "SD card initialization failed");
     setupDisplayAndFonts(isSilentReboot);
+    // Boards with a card-detect switch can wait for a missing card instead of
+    // ending in a dead error screen. A card that is present but fails to mount
+    // still reports an error; reinsertion is handled by the running monitor.
+    if (BoardConfig::ACTIVE.sd.detect >= 0 && !Storage.isCardPresent()) {
+      activityManager.goToFullScreenMessage("Insert SD card", EpdFontFamily::BOLD);
+      while (!Storage.isCardPresent()) delay(200);
+      ESP.restart();
+      return;
+    }
     activityManager.goToFullScreenMessage("SD card error", EpdFontFamily::BOLD);
     return;
   }
@@ -717,8 +726,8 @@ void setup() {
     case HalGPIO::WakeupReason::AfterUSBPower:
       // Most devices return to sleep after a USB-powered cold boot.
       LOG_DBG("MAIN", "Wakeup reason: After USB Power");
-#if FREEINK_DEVICE_X4PRO || FREEINK_DEVICE_X4CLASSIC || FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_EEGO_A4 || \
-    FREEINK_DEVICE_METALIO_EINK4 || FREEINK_DEVICE_PICCO
+#if FREEINK_DEVICE_X4PRO || FREEINK_DEVICE_X4CLASSIC || FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY || \
+    FREEINK_DEVICE_EEGO_A4 || FREEINK_DEVICE_METALIO_EINK4 || FREEINK_DEVICE_PICCO
       // X4 Pro must stay awake so USB Serial/JTAG remains available after leaving
       // USB Drive and reconnecting the cable. Paper Mono has no armable GPIO wake
       // (its button is behind the PMIC). Metalio also needs native USB available
@@ -853,6 +862,10 @@ void loop() {
 
   gpio.setSharedConfirmPowerShortPressEmitsPower(SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP);
   mappedInputManager.update();
+
+
+
+
 
   // Bluetooth page turner, before the USB drive's early return: a card handed to USB stops the radio
   // before anything else.
@@ -1008,7 +1021,15 @@ void loop() {
   }
 
   const unsigned long sleepTimeoutMs = SETTINGS.getSleepTimeoutMs();
-  if (sleepTimeoutMs > 0 && millis() - lastActivityTime >= sleepTimeoutMs) {
+#if defined(ENABLE_SERIAL_LOG)
+  // A USB CDC host (serial monitor/flasher) is a development session, not a
+  // battery-powered reader. Keep the board awake so a flash/reset does not race
+  // the auto-sleep timer; a dumb USB charger has no CDC host and still sleeps.
+  const bool serialHostConnected = static_cast<bool>(Serial);
+#else
+  const bool serialHostConnected = false;
+#endif
+  if (!serialHostConnected && sleepTimeoutMs > 0 && millis() - lastActivityTime >= sleepTimeoutMs) {
     LOG_DBG("SLP", "Auto-sleep triggered after %lu ms of inactivity", sleepTimeoutMs);
     enterDeepSleep(true);
     // This should never be hit as `enterDeepSleep` calls esp_deep_sleep_start
@@ -1040,10 +1061,10 @@ void loop() {
     return;
   }
 
-#if FREEINK_DEVICE_PAPERMONO
-  // Paper Mono reports the PMIC power button as a one-tick click, so the held
-  // path above cannot fire. With the default Ignore action, retain the normal
-  // power-button meaning and shut down; explicit alternate bindings still win.
+#if FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY
+  // Paper Mono/PaperDIY report the PMIC power button as a one-tick click, so
+  // the held path above cannot fire. With the default Ignore action, retain the
+  // normal power-button meaning and shut down; explicit alternate bindings win.
   if ((SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP ||
        SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::IGNORE) &&
       millis() >= allowSleepAt && mappedInputManager.wasReleased(MappedInputManager::Button::Power)) {
@@ -1063,6 +1084,27 @@ void loop() {
     if (!activityManager.handleForcedRefresh()) {
       RenderLock lock;
       renderer.displayBuffer(HalDisplay::HALF_REFRESH);
+    }
+  }
+
+  // Card-detect hot-plug. The board profile may leave detect unassigned; in
+  // that case isCardPresent() stays true and this is a no-op. Do not unmount on
+  // removal: open files/activities may still hold handles, and the next insert
+  // re-probes the card through remount().
+  static bool lastCardPresent = Storage.isCardPresent();
+  static unsigned long lastCardPollMs = 0;
+  if (millis() - lastCardPollMs >= 500) {
+    lastCardPollMs = millis();
+    const bool cardPresent = Storage.isCardPresent();
+    if (cardPresent != lastCardPresent) {
+      lastCardPresent = cardPresent;
+      if (cardPresent) {
+        LOG_INF("SD", "Card inserted, remounting");
+        if (Storage.remount()) activityManager.requestUpdate();
+      } else {
+        LOG_INF("SD", "Card removed");
+        activityManager.requestUpdate();
+      }
     }
   }
 
