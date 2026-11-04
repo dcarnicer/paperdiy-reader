@@ -59,10 +59,25 @@ opening the menu; it is a UX trade-off still to be decided.
 
 ## Comics
 
-- The firmware does not open `.cbz`/`.cbr` directly; convert them to EPUB
-  first.
-- Recommended: `scripts/comic_to_epub.py`, which creates one XHTML page per
-  image (A/B page turns work). It accepts CBZ/ZIP or PDF:
+- The firmware does not open `.cbz`/`.cbr` directly; convert them to EPUB with
+  one XHTML page per image first.
+- **Best quality (recommended): Kindle Comic Converter (KCC)**. Use the
+  `Other` profile with width 540 and height 960, manga mode, margin + page
+  number cropping, double-page splitting, grayscale, and 16-level PNG. In the
+  desktop app, enable expert mode to select `Other` and the custom size. With
+  KCC 12.1.3 on the CLI:
+
+  ```sh
+  kcc-c2e tome.pdf -p OTHER --customwidth 540 --customheight 960 \
+    -f EPUB --nokepub -c 2 -r 0 -m -q -u --forcepng \
+    -t "Volume 1" -a "Author" -o tome.epub
+  ```
+
+  KCC crops the margins, resizes to the panel's real 540 px width, and avoids
+  a second rescale in the reader. On TOMO2 the content became ~20% larger and
+  the file went from 23 MB to 13 MB.
+- **Fallback without KCC**: `scripts/comic_to_epub.py`, which creates one
+  XHTML page per image. It accepts CBZ/ZIP or PDF:
 
   ```sh
   python3 scripts/comic_to_epub.py tome.cbz tome.epub
@@ -70,8 +85,8 @@ opening the menu; it is a UX trade-off still to be decided.
   ```
 
   PDF input needs `pdftoppm` (`brew install poppler` on macOS).
-- Calibre also works: add the CBZ and convert it to EPUB; it produces one page
-  per image.
+- Calibre can also convert CBZ to EPUB, but it does not crop or fit the panel;
+  use it only if KCC is unavailable.
 - Copy the EPUBs to `/Comics/` on the SD card. On first open the reader indexes
   the book: it can take tens of seconds, and buttons are ignored until it
   finishes.

@@ -60,9 +60,24 @@ antes de abrir el menú; es un compromiso de UX pendiente de decidir.
 ## Cómics
 
 - El firmware no abre `.cbz`/`.cbr` directamente: primero hay que convertirlos a
-  EPUB.
-- Recomendado: `scripts/comic_to_epub.py`, que genera un XHTML por página (el
-  lector pagina con A/B). Acepta CBZ/ZIP o PDF:
+  EPUB con una página XHTML por imagen.
+- **Máxima calidad (recomendado): Kindle Comic Converter (KCC)**. Usa el perfil
+  `Other` con ancho 540 y alto 960, modo manga, recorte de márgenes + números
+  de página, separación de páginas dobles, escala de grises y PNG de 16
+  niveles. En la app de escritorio, activa el modo experto para elegir `Other`
+  y el tamaño personalizado. Con KCC 12.1.3 por CLI:
+
+  ```sh
+  kcc-c2e tomo.pdf -p OTHER --customwidth 540 --customheight 960 \
+    -f EPUB --nokepub -c 2 -r 0 -m -q -u --forcepng \
+    -t "Tomo 1" -a "Autor" -o tomo.epub
+  ```
+
+  KCC recorta los márgenes, ajusta el ancho a los 540 px reales del panel y
+  evita que el lector tenga que reescalar. En TOMO2 el contenido quedó ~20% más
+  grande y el archivo pasó de 23 MB a 13 MB.
+- **Alternativa sin KCC**: `scripts/comic_to_epub.py`, que genera un XHTML por
+  página. Acepta CBZ/ZIP o PDF:
 
   ```sh
   python3 scripts/comic_to_epub.py tomo.cbz tomo.epub
@@ -70,8 +85,8 @@ antes de abrir el menú; es un compromiso de UX pendiente de decidir.
   ```
 
   Para PDF necesita `pdftoppm` (`brew install poppler` en macOS).
-- También sirve Calibre: añade el CBZ y conviértelo a EPUB; genera una página
-  por imagen.
+- Calibre también puede convertir CBZ a EPUB, pero no recorta ni ajusta al
+  panel; úsalo solo si no tienes KCC.
 - Copia los EPUB a `/Comics/` en la SD. En la primera apertura el lector indexa
   el libro: puede tardar decenas de segundos y los botones no responden hasta
   que termina.

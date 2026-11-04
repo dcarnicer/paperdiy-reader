@@ -61,9 +61,25 @@
 
 ## 漫画
 
-- ファームウェアは `.cbz`/`.cbr` を直接開けません。EPUB に変換してください。
-- 推奨: `scripts/comic_to_epub.py`。画像ごとに 1 つの XHTML ページを生成し
-  ます（A/B でページ送り可能）。CBZ/ZIP または PDF に対応:
+- ファームウェアは `.cbz`/`.cbr` を直接開けません。画像 1 枚につき XHTML
+  1 ページの EPUB に変換してください。
+- **最高画質（推奨）: Kindle Comic Converter（KCC）**。`Other` プロファイル
+  で幅 540、高さ 960、漫画モード、余白 + ページ番号の裁ち落とし、見開き
+  分割、グレースケール、16 階調 PNG を使います。デスクトップアプリでは
+  エキスパートモードを有効にして `Other` とカスタムサイズを選びます。
+  KCC 12.1.3 の CLI:
+
+  ```sh
+  kcc-c2e tome.pdf -p OTHER --customwidth 540 --customheight 960 \
+    -f EPUB --nokepub -c 2 -r 0 -m -q -u --forcepng \
+    -t "第1巻" -a "著者" -o tome.epub
+  ```
+
+  KCC は余白を切り、パネルの実幅 540 px に合わせるので、リーダー側での
+  再スケーリングがありません。TOMO2 では内容が約 20% 大きくなり、ファイル
+  は 23 MB から 13 MB になりました。
+- **KCC なしの代替**: `scripts/comic_to_epub.py`。画像ごとに XHTML ページを
+  生成します。CBZ/ZIP または PDF に対応:
 
   ```sh
   python3 scripts/comic_to_epub.py tome.cbz tome.epub
@@ -71,8 +87,8 @@
   ```
 
   PDF には `pdftoppm` が必要です（macOS では `brew install poppler`）。
-- Calibre でも可能です: CBZ を追加して EPUB に変換すると、画像ごとに
-  1 ページ生成されます。
+- Calibre でも CBZ を EPUB に変換できますが、裁ち落としやパネルへの適合は
+  しません。KCC がない場合だけ使ってください。
 - EPUB を SD カードの `/Comics/` にコピーします。初回オープン時は索引を
   作成するため数十秒かかり、その間ボタンは効きません。
 - EPUB は画像 1 枚につき XHTML 1 ページである必要があります。単一 HTML の

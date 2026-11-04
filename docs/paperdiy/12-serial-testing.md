@@ -118,6 +118,10 @@ Probado con `paperdiy-test` sobre el firmware `308cd522`:
   placa vuelve sola a Home.
 - EPUB grande (7,3 MB): abre sin OOM; primera sección ~3,0 s y páginas
   siguientes ~1,3 s.
+- Cómic: 15 tomos convertidos con KCC (`Other` 540×960, PNG 16 niveles,
+  recorte de márgenes, modo manga). TOMO1, TOMO2 y TOMO3 abren, muestran la
+  portada y pasan página; la primera indexación de ~150 páginas tarda unos
+  20–30 s. Los EPUB quedan en 9–15 MB por tomo.
 - Ghosting real: leve y legible con refresco cada 5 páginas.
 
 Pendiente de probar: consumo/autonomía, OPDS/Calibre con contenido, BLE page
