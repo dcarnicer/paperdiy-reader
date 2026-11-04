@@ -67,7 +67,7 @@ M5Stack **PaperDIY Complete Kit** 附带 PLA 打印外壳。我们在
 中复用）。
 
 原始模型、M5Stack 的 MIT 许可证以及 M2 螺丝警告见
-[`hardware/README.md`](hardware/README.md)。
+[`hardware/README.zh-CN.md`](hardware/README.zh-CN.md)。
 
 ## 操作（两个按键）
 
@@ -185,6 +185,9 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 ```
 
 ## 文档
+
+详细文档目前为西班牙语。[文档索引](docs/paperdiy/README.zh-CN.md) 和
+[用户指南](docs/paperdiy/07-user-guide.zh-CN.md) 也提供中文版本。
 
 - [研究与当前状态](docs/paperdiy/00-research.md)
 - [硬件与引脚](docs/paperdiy/01-hardware.md)

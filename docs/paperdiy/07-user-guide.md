@@ -1,5 +1,7 @@
 # 07 — Guía de usuario (PaperDIY)
 
+**Idiomas:** **Español** · [English](07-user-guide.en.md) · [简体中文](07-user-guide.zh-CN.md) · [日本語](07-user-guide.ja.md)
+
 Esta guía asume que ya has flasheado el firmware. Si todavía no, mira el
 [README](../../README.md) y `06-porting.md`.
 
