@@ -21,6 +21,7 @@
 10. [先行事例：issue #4005 と PaperDIY PR](09-prior-art.md)
 11. [フォークの維持と上流の更新](10-fork-maintenance.md)
 12. [issue #4005 向けコメント草稿](11-upstream-note.md)
+13. [USB テスト](12-serial-testing.md)（スペイン語）
 
 ## 一言ステータス
 

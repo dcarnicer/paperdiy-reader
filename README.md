@@ -215,6 +215,7 @@ disponibles en [English](docs/paperdiy/README.en.md),
 - [Prior art: issue #4005 y PRs de PaperDIY](docs/paperdiy/09-prior-art.md)
 - [Mantener el fork y actualizar upstream](docs/paperdiy/10-fork-maintenance.md)
 - [Borrador de comentario para la issue #4005](docs/paperdiy/11-upstream-note.md)
+- [Testing por USB](docs/paperdiy/12-serial-testing.md)
 
 ## Limitaciones conocidas
 

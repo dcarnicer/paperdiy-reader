@@ -938,6 +938,29 @@ void loop() {
         logSerial.write(buf, bufferSize);
         logSerial.printf("SCREENSHOT_END\n");
       }
+#ifdef PAPERDIY_SERIAL_TEST
+      else if (cmd.startsWith("KEY:")) {
+        // Development-only input injection for automated UI tests. The test
+        // build defines PAPERDIY_SERIAL_TEST; release builds do not expose it.
+        String key = cmd.substring(4);
+        key.trim();
+        key.toUpperCase();
+
+        bool ok = false;
+        if (key == "B" || key == "NEXT" || key == "DOWN") {
+          ok = activityManager.isForegroundReader() ? activityManager.remoteTurn(true, false)
+                                                     : mappedInputManager.injectRemoteClick(RemoteButton::Next);
+        } else if (key == "A" || key == "PREV" || key == "UP") {
+          ok = activityManager.isForegroundReader() ? activityManager.remoteTurn(false, false)
+                                                     : mappedInputManager.injectRemoteClick(RemoteButton::Previous);
+        } else if (key == "B_LONG" || key == "CONFIRM" || key == "OK") {
+          ok = mappedInputManager.injectRemoteClick(RemoteButton::Confirm);
+        } else if (key == "A_LONG" || key == "BACK") {
+          ok = mappedInputManager.injectRemoteClick(RemoteButton::Back);
+        }
+        logSerial.printf("KEY:%s:%d\n", key.c_str(), ok ? 1 : 0);
+      }
+#endif
     }
   }
 

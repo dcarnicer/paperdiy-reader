@@ -216,6 +216,7 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 - [先行事例：issue #4005 と PaperDIY PR](docs/paperdiy/09-prior-art.md)
 - [フォークの維持と上流の更新](docs/paperdiy/10-fork-maintenance.md)
 - [issue #4005 向けコメント草稿](docs/paperdiy/11-upstream-note.md)
+- [USB テスト（スペイン語）](docs/paperdiy/12-serial-testing.md)
 
 ## 既知の制限
 

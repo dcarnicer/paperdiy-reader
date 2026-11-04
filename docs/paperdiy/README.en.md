@@ -21,6 +21,7 @@ remains in `docs/` and `docs/upstream/`).
 10. [Prior art: issue #4005 and PaperDIY PRs](09-prior-art.md)
 11. [Maintaining the fork and updating upstream](10-fork-maintenance.md)
 12. [Draft comment for issue #4005](11-upstream-note.md)
+13. [USB testing](12-serial-testing.md) (Spanish)
 
 ## One-line status
 

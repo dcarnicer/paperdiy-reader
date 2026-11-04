@@ -212,6 +212,7 @@ The detailed documentation is in Spanish. The
 - [Prior art: issue #4005 and PaperDIY PRs](docs/paperdiy/09-prior-art.md)
 - [Maintaining the fork and updating upstream](docs/paperdiy/10-fork-maintenance.md)
 - [Draft comment for issue #4005](docs/paperdiy/11-upstream-note.md)
+- [USB testing (Spanish)](docs/paperdiy/12-serial-testing.md)
 
 ## Known limitations
 
