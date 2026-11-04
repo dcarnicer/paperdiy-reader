@@ -8,6 +8,8 @@
 - `sdk.patch` y `firmware.patch` reaplicados sin conflictos.
 - `scripts/sync-upstream.sh` recupera `patches/` tras cambiar a `main` y limpia
   el SDK vendorizado antes de inicializar el submódulo.
+- Añadida la carcasa 3D `hardware/3d/PaperDIY_kit_completo.3mf`, un remix del
+  modelo oficial del M5Stack PaperDIY Complete Kit (MIT).
 
 ## 2026-10-31 — refresco parcial y detección de SD
 

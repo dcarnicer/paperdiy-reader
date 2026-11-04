@@ -1,2 +1,5 @@
 # Preserve the original whitespace in copied license texts.
 licenses/*.txt -whitespace
+
+# 3D print assets are binary.
+*.3mf binary

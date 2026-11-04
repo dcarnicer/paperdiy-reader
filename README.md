@@ -62,6 +62,18 @@ El bus del panel es **pin a pin el mismo que el del M5Paper S3**: D0–D7 =
 diferencia es que el PaperDIY necesita además el rail EPD del M5PM1 (GPIO2 por
 I²C en SDA41/SCL42).
 
+### Carcasa 3D
+
+El **PaperDIY Complete Kit** de M5Stack incluye una carcasa impresa en PLA. En
+[`hardware/3d/PaperDIY_kit_completo.3mf`](hardware/3d/PaperDIY_kit_completo.3mf)
+dejamos una versión modificada del modelo oficial por si alguien quiere
+imprimirla o adaptarla. Incluye carcasa trasera, marco frontal y botones, y se
+abre como proyecto de Bambu Studio (también se puede reutilizar la geometría en
+otro slicer).
+
+El modelo original, la licencia MIT de M5Stack y el aviso de los tornillos M2
+están en [`hardware/README.md`](hardware/README.md).
+
 ## Controles (2 botones)
 
 CrossPoint usa `InputStyle::DigitalTwoButton`, pensado exactamente para dos
@@ -177,6 +189,7 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 │       └── BoardPaperDiy/# bus ED047TC1, rail PM1, power-off
 ├── docs/paperdiy/        # investigación, hardware, roadmap, port
 ├── docs/upstream/        # README/user guide originales de CrossPoint
+├── hardware/3d/          # carcasa 3D (remix del kit completo)
 ├── platformio.ini        # env `paperdiy`
 └── Makefile
 ```
@@ -217,4 +230,6 @@ MIT. El motor y la mayor parte del código son de
 [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader)
 (Copyright 2025 CrossPoint Reader organization); el SDK de hardware es
 [FreeInk](https://github.com/crosspoint-reader/crosspoint-reader) (MIT); el
-panel se maneja con M5GFX/LovyanGFX. Ver [LICENSE](LICENSE) y [NOTICE](NOTICE).
+panel se maneja con M5GFX/LovyanGFX. La carcasa 3D es un remix del modelo MIT
+de [M5Stack](https://github.com/m5stack/M5_Hardware). Ver [LICENSE](LICENSE) y
+[NOTICE](NOTICE).
