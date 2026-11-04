@@ -1,5 +1,7 @@
 # 06 — Notas del port y validación
 
+**Idiomas:** **Español** · [English](06-porting.en.md) · [简体中文](06-porting.zh-CN.md) · [日本語](06-porting.ja.md)
+
 ## Cambios respecto a CrossPoint 2.0
 
 Commit base: `308cd522155ec11c3f62e346a1a961facd3dad80` (develop, 2.0.0,
@@ -169,6 +171,11 @@ o `make flash PORT=/dev/cu.usbmodemXXXX`.
   abierto desde el lector.
 - Pendiente: OPDS, Calibre/KOReader Sync, ghosting general, consumo en sleep,
   botón power/shutdown, wake y OTA.
+
+Actualización (04/11/2026): tras sincronizar con upstream `308cd522`, se
+validaron de nuevo arranque, Home, wake, navegación A/B, batería y SD. Siguen
+pendientes OPDS/Calibre, ghosting tras sesiones largas, consumo en sleep, OTA y
+autonomía.
 
 ![Primer arranque](images/first-boot.png)
 
@@ -342,7 +349,7 @@ proceso de sync están en
 - [x] Wake por botones; shutdown en batería y fallback USB.
 - [x] Build reproducible y fork `main`/`paperdiy`.
 - [x] OTA configurable y tag `paperdiy`.
-- [ ] Validación en hardware.
+- [x] Validación básica en hardware (04/11/2026).
 - [ ] Ajuste de rotación/LUT/ghosting.
 - [ ] Medición de consumo/autonomía.
 - [ ] UX de 2 botones pulida.

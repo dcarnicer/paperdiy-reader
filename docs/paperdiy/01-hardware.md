@@ -1,5 +1,7 @@
 # 01 — Hardware y pines
 
+**Idiomas:** **Español** · [English](01-hardware.en.md) · [简体中文](01-hardware.zh-CN.md) · [日本語](01-hardware.ja.md)
+
 ## Specs
 
 | | |

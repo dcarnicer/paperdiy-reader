@@ -195,8 +195,10 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 ## Documentation
 
 The detailed documentation is in Spanish. The
-[documentation index](docs/paperdiy/README.en.md) and
-[user guide](docs/paperdiy/07-user-guide.en.md) are also available in English.
+[documentation index](docs/paperdiy/README.en.md),
+[user guide](docs/paperdiy/07-user-guide.en.md), and the
+[hardware](docs/paperdiy/01-hardware.en.md) and
+[port notes](docs/paperdiy/06-porting.en.md) are also available in English.
 
 - [Research and current state](docs/paperdiy/00-research.md)
 - [Hardware and pins](docs/paperdiy/01-hardware.md)
