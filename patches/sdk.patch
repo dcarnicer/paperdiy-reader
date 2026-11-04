@@ -109,7 +109,7 @@ index 0646a9f5..c80e9f83 100644
    // 16-gray path: the facade streams LSB/MSB 1-bpp planes (whole or in strips);
    // displayGray combines them with the B/W base into the panel's 8-bit gray canvas.
 diff --git a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
-index a90b4473..e6f16929 100644
+index 7b342baa..9e1bd2e3 100644
 --- a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
 +++ b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
 @@ -692,7 +692,7 @@ bool BatteryMonitor::hasGaugeBackend() const {
