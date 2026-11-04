@@ -57,6 +57,30 @@ antes de abrir el menú; es un compromiso de UX pendiente de decidir.
 - La posición se guarda automáticamente.
 - Los highlights/clippings se guardan en la SD (ver menú del lector).
 
+## Cómics
+
+- El firmware no abre `.cbz`/`.cbr` directamente: primero hay que convertirlos a
+  EPUB.
+- Recomendado: `scripts/comic_to_epub.py`, que genera un XHTML por página (el
+  lector pagina con A/B). Acepta CBZ/ZIP o PDF:
+
+  ```sh
+  python3 scripts/comic_to_epub.py tomo.cbz tomo.epub
+  python3 scripts/comic_to_epub.py tomo.pdf tomo.epub --title "Tomo 1" --author "Autor"
+  ```
+
+  Para PDF necesita `pdftoppm` (`brew install poppler` en macOS).
+- También sirve Calibre: añade el CBZ y conviértelo a EPUB; genera una página
+  por imagen.
+- Copia los EPUB a `/Comics/` en la SD. En la primera apertura el lector indexa
+  el libro: puede tardar decenas de segundos y los botones no responden hasta
+  que termina.
+- El EPUB debe tener una página XHTML por imagen. Los EPUB de PDF-reflow con un
+  único HTML (o pasados por el optimizador del plugin de Calibre) pueden
+  quedarse en `1/1` y no paginar.
+- El menú puede mostrar `Cap.: 1/1 pág.` porque cada página es un documento
+  distinto; el avance real se ve en `Página N` y `Libro: %`.
+
 ## Fuentes
 
 - Copia `.ttf`, `.otf` o `.ttc` a `/fonts/` o `/.fonts/` en la SD.
@@ -105,6 +129,7 @@ antes de abrir el menú; es un compromiso de UX pendiente de decidir.
 ```
 /
 ├── Books/                 # tus EPUB (puedes usar carpetas)
+├── Comics/                # cómics convertidos a EPUB
 ├── fonts/                 # TTF/OTF
 ├── dictionaries/          # StarDict por carpeta
 └── .crosspoint/           # caché del lector (no tocar salvo reset)

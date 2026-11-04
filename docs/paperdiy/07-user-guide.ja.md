@@ -59,6 +59,28 @@
 - 読書位置は自動保存されます。
 - ハイライト/切り抜きは SD カードに保存されます（リーダーメニュー参照）。
 
+## 漫画
+
+- ファームウェアは `.cbz`/`.cbr` を直接開けません。EPUB に変換してください。
+- 推奨: `scripts/comic_to_epub.py`。画像ごとに 1 つの XHTML ページを生成し
+  ます（A/B でページ送り可能）。CBZ/ZIP または PDF に対応:
+
+  ```sh
+  python3 scripts/comic_to_epub.py tome.cbz tome.epub
+  python3 scripts/comic_to_epub.py tome.pdf tome.epub --title "第1巻" --author "著者"
+  ```
+
+  PDF には `pdftoppm` が必要です（macOS では `brew install poppler`）。
+- Calibre でも可能です: CBZ を追加して EPUB に変換すると、画像ごとに
+  1 ページ生成されます。
+- EPUB を SD カードの `/Comics/` にコピーします。初回オープン時は索引を
+  作成するため数十秒かかり、その間ボタンは効きません。
+- EPUB は画像 1 枚につき XHTML 1 ページである必要があります。単一 HTML の
+  PDF-reflow EPUB（または Calibre プラグインの最適化後）は `1/1` のまま
+  ページ送りできないことがあります。
+- メニューに `章: 1/1 ページ` と表示されるのは、各ページが独立した文書だか
+  らです。実際の進捗は `ページ N`/`ブック: %` で確認します。
+
 ## フォント
 
 - `.ttf`、`.otf`、`.ttc` を SD カードの `/fonts/` または `/.fonts/` に
@@ -108,6 +130,7 @@
 ```
 /
 ├── Books/                 # EPUB（フォルダも使えます）
+├── Comics/                # EPUB に変換した漫画
 ├── fonts/                 # TTF/OTF
 ├── dictionaries/          # StarDict を辞書ごとに 1 フォルダ
 └── .crosspoint/           # リーダーキャッシュ（リセット時以外は触らない）
