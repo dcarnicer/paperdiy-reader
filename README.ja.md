@@ -13,8 +13,9 @@
 > 検証（2026-11-04）：CrossPoint `308cd522` への同期後、起動、画面/UI、
 > ホーム、復帰、A/B ボタン、バッテリー、SD、ナビゲーションが正常でした。
 > EPUB 読書、Wi-Fi、Web UI、書籍転送は 2026-10-28 に検証済みです。
-> 未完了：OPDS、Calibre/KOReader Sync、ページを重ねた後の残像、スリープ
-> 電流、OTA、バッテリー駆動時間。詳細は
+> Calibre ワイヤレスと OTA は 2026-11-04 に検証済みです。残りは OPDS、
+> KOReader Sync、ページを重ねた後の残像、スリープ電流、バッテリー駆動
+> 時間です。詳細は
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md) を参照。
 >
 > **ダウンストリームフォーク：** `main` は `upstream/develop` のミラーで、
