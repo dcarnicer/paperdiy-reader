@@ -57,6 +57,30 @@ opening the menu; it is a UX trade-off still to be decided.
 - The reading position is saved automatically.
 - Highlights/clippings are saved to the SD card (see the reader menu).
 
+## Comics
+
+- The firmware does not open `.cbz`/`.cbr` directly; convert them to EPUB
+  first.
+- Recommended: `scripts/comic_to_epub.py`, which creates one XHTML page per
+  image (A/B page turns work). It accepts CBZ/ZIP or PDF:
+
+  ```sh
+  python3 scripts/comic_to_epub.py tome.cbz tome.epub
+  python3 scripts/comic_to_epub.py tome.pdf tome.epub --title "Volume 1" --author "Author"
+  ```
+
+  PDF input needs `pdftoppm` (`brew install poppler` on macOS).
+- Calibre also works: add the CBZ and convert it to EPUB; it produces one page
+  per image.
+- Copy the EPUBs to `/Comics/` on the SD card. On first open the reader indexes
+  the book: it can take tens of seconds, and buttons are ignored until it
+  finishes.
+- The EPUB must have one XHTML page per image. PDF-reflow EPUBs with a single
+  HTML file (or optimized by the Calibre plugin) can collapse to `1/1` and stop
+  paginating.
+- The menu may show `Ch.: 1/1 page` because every page is its own document;
+  check `Page N` and `Book: %` for real progress.
+
 ## Fonts
 
 - Copy `.ttf`, `.otf` or `.ttc` files to `/fonts/` or `/.fonts/` on the SD card.
@@ -106,6 +130,7 @@ opening the menu; it is a UX trade-off still to be decided.
 ```
 /
 ├── Books/                 # your EPUB files (folders allowed)
+├── Comics/                # comics converted to EPUB
 ├── fonts/                 # TTF/OTF
 ├── dictionaries/          # one StarDict folder per dictionary
 └── .crosspoint/           # reader cache (do not touch unless resetting)

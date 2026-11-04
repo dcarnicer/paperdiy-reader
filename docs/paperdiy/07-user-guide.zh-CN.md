@@ -53,6 +53,26 @@
 - 阅读位置会自动保存。
 - 高亮/摘录保存到 SD 卡（见阅读器菜单）。
 
+## 漫画
+
+- 固件不能直接打开 `.cbz`/`.cbr`，需要先转换为 EPUB。
+- 推荐使用 `scripts/comic_to_epub.py`，它会把每张图片生成一个 XHTML 页面
+  （可用 A/B 翻页）。支持 CBZ/ZIP 或 PDF：
+
+  ```sh
+  python3 scripts/comic_to_epub.py tome.cbz tome.epub
+  python3 scripts/comic_to_epub.py tome.pdf tome.epub --title "第 1 卷" --author "作者"
+  ```
+
+  PDF 需要 `pdftoppm`（macOS 上 `brew install poppler`）。
+- 也可以用 Calibre：添加 CBZ 并转换为 EPUB，会为每张图片生成一页。
+- 把 EPUB 复制到 SD 卡的 `/Comics/`。首次打开时阅读器会建立索引，可能需要
+  几十秒，期间按键无响应。
+- EPUB 必须是一张图片对应一个 XHTML 页面。单个 HTML 的 PDF-reflow EPUB
+  （或经过 Calibre 插件优化的版本）可能显示为 `1/1` 并无法翻页。
+- 菜单可能显示 `章：1/1 页`，因为每页都是独立文档；实际进度看
+  `第 N 页`/`全书 %`。
+
 ## 字体
 
 - 将 `.ttf`、`.otf` 或 `.ttc` 复制到 SD 卡的 `/fonts/` 或 `/.fonts/`。
@@ -96,6 +116,7 @@
 ```
 /
 ├── Books/                 # 你的 EPUB（可以使用文件夹）
+├── Comics/                # 转换为 EPUB 的漫画
 ├── fonts/                 # TTF/OTF
 ├── dictionaries/          # 每个词典一个 StarDict 文件夹
 └── .crosspoint/           # 阅读器缓存（除非重置，不要动）
