@@ -72,7 +72,7 @@ or adapt it. It includes the back shell, front frame and buttons, and opens as
 a Bambu Studio project (the geometry can also be reused in another slicer).
 
 The original model, the M5Stack MIT license and the M2 screw warning are in
-[`hardware/README.md`](hardware/README.md).
+[`hardware/README.en.md`](hardware/README.en.md).
 
 ## Controls (2 buttons)
 
@@ -193,6 +193,10 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 ```
 
 ## Documentation
+
+The detailed documentation is in Spanish. The
+[documentation index](docs/paperdiy/README.en.md) and
+[user guide](docs/paperdiy/07-user-guide.en.md) are also available in English.
 
 - [Research and current state](docs/paperdiy/00-research.md)
 - [Hardware and pins](docs/paperdiy/01-hardware.md)

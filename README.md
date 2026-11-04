@@ -198,6 +198,10 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 
 ## Documentación
 
+El índice y la guía de usuario también están disponibles en
+[English](docs/paperdiy/README.en.md), [简体中文](docs/paperdiy/README.zh-CN.md)
+y [日本語](docs/paperdiy/README.ja.md).
+
 - [Investigación y estado actual](docs/paperdiy/00-research.md)
 - [Hardware y pines](docs/paperdiy/01-hardware.md)
 - [Análisis del POC y del ecosistema](docs/paperdiy/02-current-state.md)

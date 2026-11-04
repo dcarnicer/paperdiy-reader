@@ -1,5 +1,7 @@
 # Hardware
 
+**Idiomas:** **Español** · [English](README.en.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
+
 ## Carcasa 3D del PaperDIY Complete Kit
 
 [`3d/PaperDIY_kit_completo.3mf`](3d/PaperDIY_kit_completo.3mf) es una

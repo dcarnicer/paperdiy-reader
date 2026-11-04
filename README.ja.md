@@ -74,7 +74,7 @@ M5Stack の **PaperDIY Complete Kit** には PLA プリントのケースが付�
 プロジェクトとして開けます（形状は他のスライサーでも再利用できます）。
 
 元モデル、M5Stack の MIT ライセンス、M2 ネジの注意事項は
-[`hardware/README.md`](hardware/README.md) にあります。
+[`hardware/README.ja.md`](hardware/README.ja.md) にあります。
 
 ## 操作（2 ボタン）
 
@@ -198,6 +198,10 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 ```
 
 ## ドキュメント
+
+詳細ドキュメントはスペイン語です。[ドキュメント索引](docs/paperdiy/README.ja.md)
+と [ユーザーガイド](docs/paperdiy/07-user-guide.ja.md) は日本語でも利用
+できます。
 
 - [調査と現在の状態](docs/paperdiy/00-research.md)
 - [ハードウェアとピン](docs/paperdiy/01-hardware.md)
