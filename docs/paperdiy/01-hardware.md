@@ -63,7 +63,7 @@ es paralelo; la SD es SPI dedicada. Aun así, el SDK usa `SdFat` sobre SPI.
 |---|---:|---|
 | A | 4 | activo bajo, pull-up externo |
 | B | 3 | activo bajo, pull-up externo |
-| Power | — | M5PM1; single click on/reset, doble click off, long press download |
+| Power | — | M5PM1; single click on/reset, doble click off, long press ~10 s download |
 
 `InputStyle::DigitalTwoButton` traduce:
 
@@ -117,8 +117,8 @@ validar en PaperDIY porque el PMIC/VCOM es distinto. Ver
 - Deep sleep: el ESP32-S3 baja a decenas de µA, pero los rails del PM1, la SD y
   el panel pueden sumar mA. El port corta el rail EPD del PM1 en
   `PowerManager::powerDownRailsForSleep()`; hay que medir.
-- Wake: `ext1` en GPIO3/4 (RTC GPIOs del S3), activo bajo. Cualquiera de los
-  dos botones despierta.
+- Wake: `ext1` en GPIO3/4 (RTC GPIOs del S3) solo para el fallback de deep
+  sleep; en el apagado normal del PM1, solo el botón power vuelve a encender.
 - Carga: `CHG_EN` del PM1 habilita el LGS4056H. El esquema K159 lleva
   `R11=2K`, que fija 500 mA; con la celda original de 140 mAh son ~3,6C y con
   una 604050 de ~2000 mAh, ~0,25C.
@@ -168,7 +168,9 @@ Reader contributors el remix). Ver [`hardware/README.md`](../../hardware/README.
 
 ## Modo descarga y recuperación
 
-- Mantener power ~2 s hasta que el LED rojo parpadee → modo descarga.
+- Mantener power ~10 s hasta que el LED rojo parpadee → modo descarga. La
+  pantalla puede quedarse congelada; tras flashear/reset hay que pulsar power
+  para arrancar la app.
 - `esptool --chip esp32s3 --port ... write_flash 0x0 firmware.factory.bin`
   recupera el equipo aunque la app esté corrupta.
 - Guarda un backup del firmware original antes de la primera instalación.

@@ -27,7 +27,7 @@ segundos). Las siguientes son mucho más rápidas.
 | A+B | power (menú/dormir) |
 | Power clic | encender; en marcha, acción configurada (por defecto dormir/apagar) |
 | Power doble clic | apagar (hardware, si el PM1 lo mantiene) |
-| Power ~2 s | modo descarga (LED rojo) |
+| Power ~10 s | modo descarga (LED rojo; la pantalla puede congelarse) |
 
 El clic del power ya no hace reset de fábrica: el PM1 se lo entrega al
 firmware. Si prefieres el comportamiento original, compila con
@@ -93,7 +93,9 @@ antes de abrir el menú; es un compromiso de UX pendiente de decidir.
   configurada).
 - En batería, al dormir pide **apagado** al PM1: el equipo se apaga y un clic
   lo enciende de nuevo (la página queda en el panel).
-- Con USB conectado, hace **deep sleep** y despierta con A o B.
+- Con USB conectado, el PM1 también puede cortar la alimentación; en ese caso
+  solo power enciende. El fallback **deep sleep** con wake A/B solo ocurre si
+  el USB mantiene la placa viva.
 - Si vas a estar mucho tiempo sin usar el equipo, apágalo con doble clic.
 - La batería es de 140 mAh: la autonomía depende de dormir. Si lees con Wi-Fi
   encendida, baja mucho.
@@ -127,7 +129,7 @@ antes de abrir el menú; es un compromiso de UX pendiente de decidir.
 
 Si algo falla:
 
-1. Mantén power ~2 s hasta LED rojo → download mode.
+1. Mantén power ~10 s hasta LED rojo → download mode.
 2. Flashea `firmware.factory.bin` en `0x0`.
 3. Si no entra en download mode, prueba otro cable/USB; el ESP32-S3 nativo no
    necesita adaptador.

@@ -103,7 +103,22 @@ Probado con `paperdiy-test` sobre el firmware `308cd522`:
   `--settle`.
 - La biblioteca mostró un libro con nombre de archivo hash como título
   (`b090d610…`); parece un problema de metadatos del EPUB, no de la UI.
+- Energía: A+B con USB hace deep sleep y A despierta; el clic corto de power
+  apaga vía PM1 y solo power vuelve a encender; A+B con batería apaga y power
+  enciende. La página se conserva en todos los casos.
+- Download mode: requiere ~10 s, no 2 s. `esptool --before no-reset` confirma
+  que el chip está en bootloader. Tras el hard reset hay que pulsar power para
+  arrancar la app.
+- Recuperación: `firmware.factory.bin` en `0x0` verificado; arranca y conserva
+  la página.
+- SD en caliente: quitar/reinsertar en Home funciona. Quitarla **leyendo**
+  muestra “Insert SD card”; al reinsertar queda “SD card error” sin salida y
+  solo se recupera con power cycle. Es un fallo de robustez pendiente.
+- USB MSC: la SD aparece como volumen `DABI` (FAT32, 8 GB); al expulsar, la
+  placa vuelve sola a Home.
+- EPUB grande (7,3 MB): abre sin OOM; primera sección ~3,0 s y páginas
+  siguientes ~1,3 s.
+- Ghosting real: leve y legible con refresco cada 5 páginas.
 
-Pendiente de probar: power/A+B, sleep/wake, extracción de SD en caliente,
-ghosting real en el panel, consumo, OPDS/Calibre con contenido, BLE page
-turner, USB MSC y recuperación por download mode.
+Pendiente de probar: consumo/autonomía, OPDS/Calibre con contenido, BLE page
+turner, lectura muy larga y corrección del flujo de SD en caliente.

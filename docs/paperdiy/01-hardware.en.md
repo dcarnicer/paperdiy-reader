@@ -64,7 +64,7 @@ over SPI.
 |---|---:|---|
 | A | 4 | active low, external pull-up |
 | B | 3 | active low, external pull-up |
-| Power | — | M5PM1; single click on/reset, double click off, long press download |
+| Power | — | M5PM1; single click on/reset, double click off, long press ~10 s download |
 
 `InputStyle::DigitalTwoButton` maps:
 
@@ -118,8 +118,8 @@ PaperDIY because the PMIC/VCOM is different. See
 - Deep sleep: the ESP32-S3 drops to tens of µA, but the PM1 rails, SD and
   panel can add mA. The port cuts the PM1 EPD rail in
   `PowerManager::powerDownRailsForSleep()`; this needs measurement.
-- Wake: `ext1` on GPIO3/4 (S3 RTC GPIOs), active low. Either button wakes the
-  device.
+- Wake: `ext1` on GPIO3/4 (S3 RTC GPIOs) only for the deep-sleep fallback; in
+  the normal PM1 shutdown, only the power button turns the device back on.
 - Charging: the PM1's `CHG_EN` enables the LGS4056H. The K159 schematic uses
   `R11=2K`, which sets 500 mA; with the original 140 mAh cell that is ~3.6C,
   and with a ~2000 mAh 604050 it is ~0.25C.
@@ -170,7 +170,8 @@ PaperDIY Reader contributors for the remix). See
 
 ## Download mode and recovery
 
-- Hold power for ~2 s until the red LED blinks → download mode.
+- Hold power for ~10 s until the red LED blinks → download mode. The screen may
+  freeze; after flashing/reset, press power to start the app.
 - `esptool --chip esp32s3 --port ... write_flash 0x0 firmware.factory.bin`
   recovers the device even if the app is corrupted.
 - Keep a backup of the original firmware before the first install.
