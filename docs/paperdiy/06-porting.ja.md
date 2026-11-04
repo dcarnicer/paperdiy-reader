@@ -136,8 +136,8 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
   read_flash 0 0x1000000 paperdiy-original.bin
 ```
 
-2. ダウンロードモードに入る：電源を約 2 秒長押しし、赤 LED が点滅するまで
-   待ちます。
+2. ダウンロードモードに入る：電源を約 10 秒長押しし、赤 LED が点滅するまで
+   待ちます。画面が固まることがあります。
 
 3. 完全イメージ：
 

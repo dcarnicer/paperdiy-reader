@@ -63,7 +63,7 @@ SD 使用独立的 SPI。即便如此，SDK 仍通过 SPI 使用 `SdFat`。
 |---|---:|---|
 | A | 4 | 低电平有效，外部上拉 |
 | B | 3 | 低电平有效，外部上拉 |
-| Power | — | M5PM1；单击开机/复位，双击关机，长按下载模式 |
+| Power | — | M5PM1；单击开机/复位，双击关机，长按约 10 秒进入下载模式 |
 
 `InputStyle::DigitalTwoButton` 映射：
 
@@ -115,8 +115,8 @@ CrossPoint 使用 1 bpp 帧缓冲 + 灰度平面进行抗锯齿；`LgfxEpdDriver
 - 深度休眠：ESP32-S3 可降到几十 µA，但 PM1 电源轨、SD 和屏幕可能增加几
   mA。移植层在 `PowerManager::powerDownRailsForSleep()` 中切断 PM1 的 EPD
   电源轨；需要实测。
-- 唤醒：GPIO3/4 上的 `ext1`（S3 的 RTC GPIO），低电平有效。任意按键都能
-  唤醒。
+- 唤醒：GPIO3/4 上的 `ext1`（S3 的 RTC GPIO）仅用于深度休眠回退；PM1
+  正常关机时，只能用电源键重新开机。
 - 充电：PM1 的 `CHG_EN` 使能 LGS4056H。K159 原理图中 `R11=2K`，设定
   500 mA；原装 140 mAh 电池约为 3.6C，约 2000 mAh 的 604050 电池约为
   0.25C。
@@ -162,7 +162,8 @@ M5Stack；修改版 © 2026 PaperDIY Reader contributors）。见
 
 ## 下载模式与恢复
 
-- 长按电源约 2 秒，直到红色 LED 闪烁 → 下载模式。
+- 长按电源约 10 秒，直到红色 LED 闪烁 → 下载模式。屏幕可能冻结；烧录/
+  复位后需要按电源键启动应用。
 - `esptool --chip esp32s3 --port ... write_flash 0x0 firmware.factory.bin`
   可以在应用损坏时恢复设备。
 - 首次安装前请备份原始固件。

@@ -90,7 +90,7 @@ botones:
 | **A + B** | botón power (menú de energía / dormir) |
 | Power corto | acción configurada; por defecto dormir/apagar (el PM1 entrega el clic al firmware) |
 | Power doble clic | apagado hardware (si el PM1 lo mantiene habilitado) |
-| Power ~2 s | modo descarga (LED rojo) |
+| Power ~10 s | modo descarga (LED rojo; la pantalla puede congelarse) |
 | Power desde apagado | encender |
 
 El comportamiento del power cambia respecto a fábrica: con
@@ -146,7 +146,7 @@ aunque haya paquetes viejos. `.platformio-core/` y `.pio/` son cachés locales
 ## Flashear
 
 1. Conecta el PaperDIY por USB-C.
-2. Mantén el botón de power ~2 s hasta que el LED rojo parpadee (modo descarga).
+2. Mantén el botón de power ~10 s hasta que el LED rojo parpadee (modo descarga).
 3. Primera instalación (imagen completa, incluye bootloader y tabla de
    particiones):
 
@@ -222,9 +222,10 @@ disponibles en [English](docs/paperdiy/README.en.md),
 - Pendientes de medir: rotación, LUTs, ghosting tras muchas páginas, corriente
   de sueño y autonomía.
 - Sin táctil, frontlight, RTC, IMU ni audio. La UI debe funcionar con 2 botones.
-- Batería de 140 mAh: en batería el equipo pide apagado al PM1 al dormir; con
-  USB hace deep sleep y despierta con A/B. La autonomía sigue pendiente de
-  medir.
+- Batería de 140 mAh: al dormir, el firmware pide apagado al PM1. Si el PM1
+  corta la alimentación (lo habitual, también con USB), solo el botón power
+  vuelve a encender. Si el USB mantiene la placa viva, el fallback es deep
+  sleep con wake A/B. La autonomía sigue pendiente de medir.
 - El botón físico de power lo gestiona el M5PM1; el firmware lo recibe como
   evento I²C, no como GPIO.
 - La OTA apunta por defecto al repo oficial, pero no hay asset `-paperdiy`, así

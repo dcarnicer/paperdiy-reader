@@ -88,7 +88,7 @@ buttons:
 | **A + B** | power button (power menu / sleep) |
 | Power short | configured action; defaults to sleep/power off (the PM1 delivers the click to the firmware) |
 | Power double-click | hardware power off (if the PM1 keeps it enabled) |
-| Power ~2 s | download mode (red LED) |
+| Power ~10 s | download mode (red LED; screen may freeze) |
 | Power from off | power on |
 
 Power behavior differs from the factory firmware: with
@@ -143,7 +143,7 @@ can delete them and `make build` will recreate them.
 ## Flash
 
 1. Connect the PaperDIY over USB-C.
-2. Hold the power button for ~2 s until the red LED blinks (download mode).
+2. Hold the power button for ~10 s until the red LED blinks (download mode).
 3. First install (full image, includes bootloader and partition table):
 
 ```bash
@@ -219,9 +219,10 @@ The detailed documentation is in Spanish. The
 - Still to measure: rotation, LUTs, ghosting after many pages, sleep current
   and battery life.
 - No touch, frontlight, RTC, IMU or audio. The UI must work with 2 buttons.
-- 140 mAh battery: on battery the device asks the PM1 to power off when
-  sleeping; on USB it uses deep sleep and wakes with A/B. Battery life still
-  needs measuring.
+- 140 mAh battery: when sleeping, the firmware asks the PM1 to power off. If
+  the PM1 cuts power (the usual case, including over USB), only the power
+  button turns it back on. If USB keeps the board alive, the fallback is deep
+  sleep with A/B wake. Battery life still needs measuring.
 - The physical power button is managed by the M5PM1; the firmware receives it
   as an I²C event, not as a GPIO.
 - OTA points to the official repo by default, but there is no `-paperdiy`

@@ -27,7 +27,7 @@ takes a few seconds). Later opens are much faster.
 | A+B | power (menu/sleep) |
 | Power click | power on; while running, the configured action (default sleep/power off) |
 | Power double-click | power off (hardware, if the PM1 keeps it enabled) |
-| Power ~2 s | download mode (red LED) |
+| Power ~10 s | download mode (red LED; screen may freeze) |
 
 The power click no longer performs the factory reset: the PM1 delivers it to
 the firmware. If you prefer the original behavior, build with
@@ -93,7 +93,9 @@ opening the menu; it is a UX trade-off still to be decided.
   action).
 - On battery, when sleeping it asks the PM1 to **power off**: the device turns
   off and a click turns it back on (the page remains on the panel).
-- With USB connected, it uses **deep sleep** and wakes with A or B.
+- With USB connected, the PM1 may also cut power; in that case only the power
+  button turns it back on. The **deep sleep** fallback with A/B wake only
+  happens if USB keeps the board alive.
 - If you will not use the device for a long time, power it off with a double
   click.
 - The battery is 140 mAh: battery life depends on sleeping. Reading with Wi-Fi
@@ -128,7 +130,7 @@ opening the menu; it is a UX trade-off still to be decided.
 
 If something fails:
 
-1. Hold power for ~2 s until the red LED comes on → download mode.
+1. Hold power for ~10 s until the red LED comes on → download mode.
 2. Flash `firmware.factory.bin` at `0x0`.
 3. If it does not enter download mode, try another cable/USB port; the native
    ESP32-S3 does not need an adapter.

@@ -133,7 +133,7 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
   read_flash 0 0x1000000 paperdiy-original.bin
 ```
 
-2. 进入下载模式：长按电源约 2 秒，直到红色 LED 闪烁。
+2. 进入下载模式：长按电源约 10 秒，直到红色 LED 闪烁；屏幕可能冻结。
 
 3. 完整镜像：
 

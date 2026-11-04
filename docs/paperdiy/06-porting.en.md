@@ -137,7 +137,8 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
   read_flash 0 0x1000000 paperdiy-original.bin
 ```
 
-2. Enter download mode: hold power for ~2 s until the red LED blinks.
+2. Enter download mode: hold power for ~10 s until the red LED blinks; the
+   screen may freeze.
 
 3. Full image:
 
