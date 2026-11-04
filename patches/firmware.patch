@@ -222,10 +222,10 @@ index a8ada953..a53fd908 100644
    // the bus pads (no-op on SPI boards). Call only after all file users have
    // stopped; open HalFiles become invalid. A deep-sleep wake resets the MCU and
 diff --git a/platformio.ini b/platformio.ini
-index f96f6634..1bf112e1 100644
+index 53531bf7..9f909dc6 100644
 --- a/platformio.ini
 +++ b/platformio.ini
-@@ -622,6 +622,35 @@ build_flags =
+@@ -625,6 +625,35 @@ build_flags =
    -DLOG_LEVEL=1 ; Set log level to info for release candidate builds
    -DUSE_BLOCK_DEVICE_INTERFACE=1
  
