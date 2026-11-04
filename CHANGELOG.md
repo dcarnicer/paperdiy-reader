@@ -10,6 +10,8 @@
   el SDK vendorizado antes de inicializar el submódulo.
 - Añadida la carcasa 3D `hardware/3d/PaperDIY_kit_completo.3mf`, un remix del
   modelo oficial del M5Stack PaperDIY Complete Kit (MIT).
+- README principal traducido al inglés, chino simplificado y japonés
+  (`README.en.md`, `README.zh-CN.md`, `README.ja.md`).
 
 ## 2026-10-31 — refresco parcial y detección de SD
 

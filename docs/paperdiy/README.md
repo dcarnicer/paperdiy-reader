@@ -3,6 +3,10 @@
 Índice de la documentación propia del port (la documentación original de
 CrossPoint sigue en `docs/` y `docs/upstream/`).
 
+> El README principal está traducido al inglés, chino simplificado y japonés
+> (`README.en.md`, `README.zh-CN.md`, `README.ja.md`). Esta documentación
+> detallada está por ahora en español.
+
 1. [Investigación y estado actual](00-research.md)
 2. [Hardware y pines](01-hardware.md)
 3. [Análisis del POC y del ecosistema](02-current-state.md)
@@ -18,5 +22,7 @@ CrossPoint sigue en `docs/` y `docs/upstream/`).
 
 ## Estado en una frase
 
-El port **compila** y está listo para la primera validación en hardware; no
-está validado todavía en un PaperDIY real. Empieza por `06-porting.md`.
+El port **compila, arranca y se ha validado en un PaperDIY real** (pantalla,
+botones, SD, batería, Wi-Fi y lectura EPUB). Quedan pendientes OPDS/Calibre,
+ghosting tras muchas páginas, consumo en sleep, OTA y autonomía. Empieza por
+`06-porting.md`.

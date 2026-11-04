@@ -1,5 +1,7 @@
 # PaperDIY Reader
 
+**Idiomas:** **Español** · [English](README.en.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
+
 Firmware de lectura rico en funciones para la **M5Stack PaperDIY** (ESP32-S3 +
 panel E Ink ED047TC1 de 4,7", 960×540, 16 grises), construido sobre
 [CrossPoint Reader 2.0](https://github.com/crosspoint-reader/crosspoint-reader)
@@ -8,11 +10,11 @@ diccionario, sync, OPDS/Calibre y el resto de cosas que hacen usable el aparato
 a diario.
 
 > **Estado:** el firmware **compila, arranca y lee EPUB en un PaperDIY real**.
-> Primera validación (28/10/2026): pantalla/UI, botones A/B, batería, SD,
-> biblioteca, lectura EPUB, Wi-Fi, web UI y transferencia de libros OK; la UI
-> se ve correcta en vertical y el ghosting del menú del lector está corregido.
-> Pendiente: OPDS, Calibre/KOReader Sync, ghosting general tras muchas páginas,
-> consumo en sleep, botón power/shutdown, wake y OTA. Ver
+> Validación (04/11/2026): arranque, pantalla/UI, Home, wake, botones A/B,
+> batería, SD y navegación OK tras sincronizar con CrossPoint `308cd522`.
+> La lectura EPUB, Wi-Fi, web UI y transferencia de libros ya se validaron el
+> 28/10/2026. Pendiente: OPDS, Calibre/KOReader Sync, ghosting tras muchas
+> páginas, consumo en sleep, OTA y autonomía. Ver
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md).
 >
 > **Fork downstream:** `main` es un espejo de `upstream/develop`; `paperdiy`
@@ -211,8 +213,8 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 
 ## Limitaciones conocidas
 
-- Sin validación en hardware todavía: rotación, LUTs, ghosting, corriente de
-  sueño y autonomía son los primeros puntos a medir.
+- Pendientes de medir: rotación, LUTs, ghosting tras muchas páginas, corriente
+  de sueño y autonomía.
 - Sin táctil, frontlight, RTC, IMU ni audio. La UI debe funcionar con 2 botones.
 - Batería de 140 mAh: en batería el equipo pide apagado al PM1 al dormir; con
   USB hace deep sleep y despierta con A/B. La autonomía sigue pendiente de
