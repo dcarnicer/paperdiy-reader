@@ -139,6 +139,17 @@ La conclusión práctica: el lector debe dormir tras un timeout corto y entre
 sesiones; el botón de página despierta, pinta y vuelve a dormir. CrossPoint ya
 tiene auto-sleep; hay que ajustar el timeout y medir.
 
+## Carcasa 3D
+
+El modelo del kit completo está en
+[`hardware/3d/PaperDIY_kit_completo.3mf`](../../hardware/3d/PaperDIY_kit_completo.3mf).
+Es un remix del STL oficial del **PaperDIY Complete Kit (K159-B)** publicado por
+M5Stack en
+[`M5_Hardware/Products/K159-B_PaperDIY_Complete_Kit/Structures`](https://github.com/m5stack/M5_Hardware/tree/master/Products/K159-B_PaperDIY_Complete_Kit/Structures).
+Incluye carcasa trasera, marco frontal y botones; el proyecto está preparado
+para Bambu Studio. Licencia MIT (© 2021 M5Stack el original; © 2026 PaperDIY
+Reader contributors el remix). Ver [`hardware/README.md`](../../hardware/README.md).
+
 ## Mods de hardware (opcionales)
 
 - **Batería mayor**: el kit trae 140 mAh; una celda de 500–1000 mAh en el

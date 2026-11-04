@@ -22,6 +22,15 @@ Display / board support:
   https://github.com/m5stack/M5GFX
   License: MIT (LovyanGFX) / M5Stack
 
+3D hardware:
+  M5Stack PaperDIY Complete Kit structure (original)
+  https://github.com/m5stack/M5_Hardware/tree/master/Products/K159-B_PaperDIY_Complete_Kit/Structures
+  License: MIT
+  Copyright (c) 2021 M5Stack
+  Remix: hardware/3d/PaperDIY_kit_completo.3mf
+  Copyright (c) 2026 PaperDIY Reader contributors
+  License: MIT
+
 Other third-party libraries (SdFat, ArduinoJson, PNGdec, JPEGDEC,
 AnimatedGIF, WebSockets, wolfSSL, NimBLE-Arduino, QRCode, expat, FreeType,
 miniz, etc.) retain their own licenses; see `licenses/README.md`, the
