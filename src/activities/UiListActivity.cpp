@@ -261,5 +261,7 @@ void UiListActivity::render(RenderLock&&) {
     renderUi();
   }
   drawFooter();
-  renderer.displayBuffer();
+  const auto refreshMode = cleanFirstRender ? HalDisplay::HALF_REFRESH : HalDisplay::FAST_REFRESH;
+  cleanFirstRender = false;
+  renderer.displayBuffer(refreshMode);
 }
