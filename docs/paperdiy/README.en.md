@@ -5,17 +5,17 @@
 Index of the port's own documentation (the original CrossPoint documentation
 remains in `docs/` and `docs/upstream/`).
 
-> The main README and the user guide are translated into English, Simplified
-> Chinese and Japanese. The rest of the detailed documentation is currently in
-> Spanish.
+> The main README, the user guide and the hardware and port notes are translated
+> into English, Simplified Chinese and Japanese. The rest of the detailed
+> documentation is currently in Spanish.
 
 1. [Research and current state](00-research.md)
-2. [Hardware and pins](01-hardware.md)
+2. [Hardware and pins](01-hardware.en.md) — [Español](01-hardware.md) · [简体中文](01-hardware.zh-CN.md) · [日本語](01-hardware.ja.md)
 3. [POC and ecosystem analysis](02-current-state.md)
 4. [Feature matrix](03-feature-matrix.md)
 5. [Architecture](04-architecture.md)
 6. [Roadmap](05-roadmap.md)
-7. [Port notes and validation](06-porting.md)
+7. [Port notes and validation](06-porting.en.md) — [Español](06-porting.md) · [简体中文](06-porting.zh-CN.md) · [日本語](06-porting.ja.md)
 8. [User guide](07-user-guide.en.md) — [Español](07-user-guide.md) · [简体中文](07-user-guide.zh-CN.md) · [日本語](07-user-guide.ja.md)
 9. [Sources](08-sources.md)
 10. [Prior art: issue #4005 and PaperDIY PRs](09-prior-art.md)

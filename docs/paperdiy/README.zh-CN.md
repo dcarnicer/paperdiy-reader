@@ -5,16 +5,16 @@
 本仓库自有移植文档的索引（CrossPoint 原始文档仍位于 `docs/` 和
 `docs/upstream/`）。
 
-> 主 README 和用户指南已翻译为英语、简体中文和日语。其余详细文档目前仍为
-> 西班牙语。
+> 主 README、用户指南以及硬件与移植笔记已翻译为英语、简体中文和日语。
+> 其余详细文档目前仍为西班牙语。
 
 1. [研究与当前状态](00-research.md)
-2. [硬件与引脚](01-hardware.md)
+2. [硬件与引脚](01-hardware.zh-CN.md) — [Español](01-hardware.md) · [English](01-hardware.en.md) · [日本語](01-hardware.ja.md)
 3. [POC 与生态分析](02-current-state.md)
 4. [功能矩阵](03-feature-matrix.md)
 5. [架构](04-architecture.md)
 6. [路线图](05-roadmap.md)
-7. [移植笔记与验证](06-porting.md)
+7. [移植笔记与验证](06-porting.zh-CN.md) — [Español](06-porting.md) · [English](06-porting.en.md) · [日本語](06-porting.ja.md)
 8. [用户指南](07-user-guide.zh-CN.md) — [Español](07-user-guide.md) · [English](07-user-guide.en.md) · [日本語](07-user-guide.ja.md)
 9. [来源](08-sources.md)
 10. [先前工作：issue #4005 和 PaperDIY PR](09-prior-art.md)

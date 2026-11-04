@@ -186,8 +186,10 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 
 ## 文档
 
-详细文档目前为西班牙语。[文档索引](docs/paperdiy/README.zh-CN.md) 和
-[用户指南](docs/paperdiy/07-user-guide.zh-CN.md) 也提供中文版本。
+详细文档目前为西班牙语。[文档索引](docs/paperdiy/README.zh-CN.md)、
+[用户指南](docs/paperdiy/07-user-guide.zh-CN.md)、
+[硬件](docs/paperdiy/01-hardware.zh-CN.md) 和
+[移植笔记](docs/paperdiy/06-porting.zh-CN.md) 也提供中文版本。
 
 - [研究与当前状态](docs/paperdiy/00-research.md)
 - [硬件与引脚](docs/paperdiy/01-hardware.md)

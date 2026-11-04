@@ -199,9 +199,10 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 
 ## ドキュメント
 
-詳細ドキュメントはスペイン語です。[ドキュメント索引](docs/paperdiy/README.ja.md)
-と [ユーザーガイド](docs/paperdiy/07-user-guide.ja.md) は日本語でも利用
-できます。
+詳細ドキュメントはスペイン語です。[ドキュメント索引](docs/paperdiy/README.ja.md)、
+[ユーザーガイド](docs/paperdiy/07-user-guide.ja.md)、
+[ハードウェア](docs/paperdiy/01-hardware.ja.md)、
+[移植メモ](docs/paperdiy/06-porting.ja.md) は日本語でも利用できます。
 
 - [調査と現在の状態](docs/paperdiy/00-research.md)
 - [ハードウェアとピン](docs/paperdiy/01-hardware.md)
