@@ -50,7 +50,7 @@ pensada para crecer.
 ## 2. CrossPoint Reader 2.0
 
 Es el firmware custom de referencia para Xteink. En la rama `develop`
-(2.0.0, commit `31dc683`, 28/10/2026):
+(2.0.0, commit `308cd52`, 03/11/2026):
 
 ### Motor de lectura
 

@@ -3,8 +3,8 @@
 Este repo es un fork downstream de CrossPoint. La regla es simple: **el motor
 se sigue de upstream; el hardware y la UX PaperDIY viven en nuestro fork**.
 
-Última sincronización: CrossPoint `b6605a51` / FreeInk SDK `2d383f8`
-(31/10/2026).
+Última sincronización: CrossPoint `308cd522` / FreeInk SDK `5e94fe7`
+(04/11/2026).
 
 ## Ramas y remotos
 
@@ -93,20 +93,22 @@ Si el build y el smoke test de hardware pasan:
 
 ```bash
 git checkout paperdiy
-git merge --no-ff paperdiy-next
+git merge --no-ff -X theirs paperdiy-next
+git diff paperdiy-next   # debe quedar vacío
 ```
 
 `paperdiy-next` nace de `main` y lleva el port reaplicado como parche, no
 comparte los commits downstream de `paperdiy`; por eso el merge no puede ser
-`--ff-only`. Resuelve los conflictos que queden y conserva el árbol vendorizado
-del SDK.
+`--ff-only`. Como `paperdiy-next` ya contiene el árbol final (upstream + port +
+docs + SDK vendorizado), `-X theirs` resuelve los conflictos de SDK/parches a
+favor del árbol nuevo; `git diff paperdiy-next` debe quedar vacío.
 
 ## Patches
 
 | Patch | Base | Contenido |
 |---|---|---|
-| `patches/sdk.patch` | FreeInk SDK `2d383f8` | perfil, BoardPaperDiy, PM1, InputManager, PowerManager, driver LGFX |
-| `patches/firmware.patch` | CrossPoint `b6605a51` | env, settings, UI, board tag, OTA, HalGPIO, HalPowerManager, main |
+| `patches/sdk.patch` | FreeInk SDK `5e94fe7` | perfil, BoardPaperDiy, PM1, InputManager, PowerManager, driver LGFX |
+| `patches/firmware.patch` | CrossPoint `308cd522` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main |
 | `patches/paperdiy-support.patch` | ambos | concatenación de los dos anteriores |
 
 Orden de aplicación: `sdk.patch` y luego `firmware.patch`.

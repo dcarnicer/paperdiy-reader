@@ -109,7 +109,7 @@ index 0646a9f5..c80e9f83 100644
    // 16-gray path: the facade streams LSB/MSB 1-bpp planes (whole or in strips);
    // displayGray combines them with the B/W base into the panel's 8-bit gray canvas.
 diff --git a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
-index a90b4473..e6f16929 100644
+index 7b342baa..9e1bd2e3 100644
 --- a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
 +++ b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
 @@ -692,7 +692,7 @@ bool BatteryMonitor::hasGaugeBackend() const {
@@ -980,6 +980,53 @@ index 33b71279..9863a894 100644
  
    fakeSd::openFails = true;
    assert(!manager.readFileToStream("/test", unopened));
+diff --git a/lib/GfxRenderer/GfxRenderer.cpp b/lib/GfxRenderer/GfxRenderer.cpp
+index b00ee10c..8f66c8a9 100644
+--- a/lib/GfxRenderer/GfxRenderer.cpp
++++ b/lib/GfxRenderer/GfxRenderer.cpp
+@@ -1763,6 +1763,22 @@ void GfxRenderer::displayBuffer(HalDisplay::RefreshMode refreshMode) const {
+   display.displayBuffer(refreshMode, fadingFix);
+ }
+ 
++void GfxRenderer::displayWindow(int x, int y, int width, int height) const {
++  const AlignedMemRect rect =
++      screenRectToAlignedMemRect(orientation, x, y, width, height, display.getDisplayWidth(), display.getDisplayHeight());
++  if (!rect.valid) return;
++  LOG_DBG("GFX", "Window refresh %u,%u %ux%u", rect.x, rect.y, rect.w, rect.h);
++  display.displayWindow(rect.x, rect.y, rect.w, rect.h);
++}
++
++void GfxRenderer::displayWindowPortrait(int x, int y, int width, int height) const {
++  const AlignedMemRect rect =
++      screenRectToAlignedMemRect(Orientation::Portrait, x, y, width, height, panelWidth, panelHeight);
++  if (!rect.valid) return;
++  LOG_DBG("GFX", "Window refresh (portrait) %u,%u %ux%u", rect.x, rect.y, rect.w, rect.h);
++  display.displayWindow(rect.x, rect.y, rect.w, rect.h);
++}
++
+ void GfxRenderer::displayBufferAsync(HalDisplay::RefreshMode refreshMode) const {
+   refreshMode = applyPromotedRefresh(refreshMode);
+   // The async path has no turn-off-screen hook, which the sunlight fading fix
+diff --git a/lib/GfxRenderer/GfxRenderer.h b/lib/GfxRenderer/GfxRenderer.h
+index 93889dd9..536452d7 100644
+--- a/lib/GfxRenderer/GfxRenderer.h
++++ b/lib/GfxRenderer/GfxRenderer.h
+@@ -260,8 +260,13 @@ class GfxRenderer {
+       HalDisplay::GrayscaleMode mode = HalDisplay::GrayscaleMode::Overlay) const;
+   // Compatibility queries for Overlay mode.
+   bool supportsAsyncGrayscaleBase() const;
+-  // EXPERIMENTAL: Windowed update - display only a rectangular region
+-  // void displayWindow(int x, int y, int width, int height) const;
++  // Windowed update: display only a rectangular region in logical screen
++  // coordinates. The rectangle is rotated to panel memory and x is aligned to
++  // the panel's 8-pixel bus granularity before reaching the driver.
++  void displayWindow(int x, int y, int width, int height) const;
++  // Same, but the rectangle is in Portrait logical coordinates. Button hints
++  // are always drawn in Portrait even when the activity runs in landscape.
++  void displayWindowPortrait(int x, int y, int width, int height) const;
+   void invertScreen() const;
+   void clearScreen(uint8_t color = 0xFF) const;
+   void getOrientedViewableTRBL(int* outTop, int* outRight, int* outBottom, int* outLeft) const;
 diff --git a/lib/hal/HalDisplay.cpp b/lib/hal/HalDisplay.cpp
 index 2b3c8c6a..89ff7744 100644
 --- a/lib/hal/HalDisplay.cpp
@@ -1157,10 +1204,10 @@ index a8ada953..a53fd908 100644
    // the bus pads (no-op on SPI boards). Call only after all file users have
    // stopped; open HalFiles become invalid. A deep-sleep wake resets the MCU and
 diff --git a/platformio.ini b/platformio.ini
-index f96f6634..1bf112e1 100644
+index 53531bf7..9f909dc6 100644
 --- a/platformio.ini
 +++ b/platformio.ini
-@@ -622,6 +622,35 @@ build_flags =
+@@ -625,6 +625,35 @@ build_flags =
    -DLOG_LEVEL=1 ; Set log level to info for release candidate builds
    -DUSE_BLOCK_DEVICE_INTERFACE=1
  
