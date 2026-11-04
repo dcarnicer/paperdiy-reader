@@ -55,9 +55,23 @@
 
 ## 漫画
 
-- 固件不能直接打开 `.cbz`/`.cbr`，需要先转换为 EPUB。
-- 推荐使用 `scripts/comic_to_epub.py`，它会把每张图片生成一个 XHTML 页面
-  （可用 A/B 翻页）。支持 CBZ/ZIP 或 PDF：
+- 固件不能直接打开 `.cbz`/`.cbr`，需要先转换为每张图片对应一个 XHTML 页面
+  的 EPUB。
+- **最佳画质（推荐）：Kindle Comic Converter（KCC）**。使用 `Other` 配置，
+  宽度 540、高度 960，漫画模式，裁切页边距和页码，拆分双页，灰度，16 级
+  PNG。在桌面应用中开启专家模式，选择 `Other` 和自定义尺寸。KCC 12.1.3
+  命令行：
+
+  ```sh
+  kcc-c2e tome.pdf -p OTHER --customwidth 540 --customheight 960 \
+    -f EPUB --nokepub -c 2 -r 0 -m -q -u --forcepng \
+    -t "第 1 卷" -a "作者" -o tome.epub
+  ```
+
+  KCC 会裁掉页边距，把宽度调整到面板真实的 540 px，避免阅读器再次缩放。
+  在 TOMO2 上内容放大约 20%，文件从 23 MB 降到 13 MB。
+- **无 KCC 的替代方案**：`scripts/comic_to_epub.py`，为每张图片生成一个
+  XHTML 页面。支持 CBZ/ZIP 或 PDF：
 
   ```sh
   python3 scripts/comic_to_epub.py tome.cbz tome.epub
@@ -65,7 +79,7 @@
   ```
 
   PDF 需要 `pdftoppm`（macOS 上 `brew install poppler`）。
-- 也可以用 Calibre：添加 CBZ 并转换为 EPUB，会为每张图片生成一页。
+- Calibre 也可以把 CBZ 转换为 EPUB，但不会裁切或适配面板；没有 KCC 时再用。
 - 把 EPUB 复制到 SD 卡的 `/Comics/`。首次打开时阅读器会建立索引，可能需要
   几十秒，期间按键无响应。
 - EPUB 必须是一张图片对应一个 XHTML 页面。单个 HTML 的 PDF-reflow EPUB
