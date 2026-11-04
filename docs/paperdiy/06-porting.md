@@ -276,7 +276,8 @@ PaperDIY expone `CARD_DET` en GPIO48, activo bajo. `SdPins.detect` lo lleva al
 - En caliente, el bucle principal consulta el pin cada 500 ms; al insertar
   llama a `Storage.remount()`. Al quitarla no se desmonta a la fuerza para no
   invalidar archivos abiertos; el siguiente insert re-proba la tarjeta.
-- Pendiente: bloquear/avisar de forma segura si se quita durante una lectura.
+- Verificado (04/11/2026): al quitarla leyendo se muestra “Insert SD card”; al
+  reinsertar, el equipo reinicia, monta la tarjeta y vuelve a Home.
 
 ## Checklist de validación en hardware
 

@@ -1204,10 +1204,10 @@ index a8ada953..a53fd908 100644
    // the bus pads (no-op on SPI boards). Call only after all file users have
    // stopped; open HalFiles become invalid. A deep-sleep wake resets the MCU and
 diff --git a/platformio.ini b/platformio.ini
-index 53531bf7..9f909dc6 100644
+index 53531bf7..e74256fa 100644
 --- a/platformio.ini
 +++ b/platformio.ini
-@@ -625,6 +625,35 @@ build_flags =
+@@ -625,6 +625,44 @@ build_flags =
    -DLOG_LEVEL=1 ; Set log level to info for release candidate builds
    -DUSE_BLOCK_DEVICE_INTERFACE=1
  
@@ -1239,6 +1239,15 @@ index 53531bf7..9f909dc6 100644
 +  ${base.lib_deps}
 +  BoardPaperDiy=symlink://freeink-sdk/libs/hardware/BoardPaperDiy
 +  m5stack/M5GFX @ 0.2.33
++
++; --- PaperDIY test build — serial key injection for automated UI tests --------
++; Development only. Do not publish this environment's firmware as a release.
++;   make build ENV=paperdiy-test
++[env:paperdiy-test]
++extends = env:paperdiy
++build_flags =
++  ${env:paperdiy.build_flags}
++  -DPAPERDIY_SERIAL_TEST=1
 +
  ; --- EEGO Reader A4 — ESP32-S3 N16R8, UC8279C 768x552 + GSLX680 touch ---------
  ; UC8279C SPI panel, GSLX680 touch, PCF8563 RTC, dedicated HSPI MicroSD (SPI,
@@ -1538,26 +1547,52 @@ index 0854756b..834a089f 100644
    // strings only need to outlive the fui::header() call that consumes them.
    static char percentText[8];
 diff --git a/src/main.cpp b/src/main.cpp
-index 65b4aed3..71ab8b22 100644
+index 65b4aed3..5070563f 100644
 --- a/src/main.cpp
 +++ b/src/main.cpp
-@@ -638,6 +638,15 @@ void setup() {
-   if (!Storage.begin()) {
+@@ -634,10 +634,39 @@ void setup() {
+ #endif
+ 
+   // SD Card Initialization
+-  // We need 6 open files concurrently when parsing a new chapter
+-  if (!Storage.begin()) {
++  // We need 6 open files concurrently when parsing a new chapter. A card that
++  // was just reinserted can take a moment to answer, so retry the mount before
++  // declaring an error.
++  bool storageReady = Storage.begin();
++  if (!storageReady && BoardConfig::ACTIVE.sd.detect >= 0 && Storage.isCardPresent()) {
++    for (uint8_t attempt = 0; attempt < 4 && !storageReady; ++attempt) {
++      delay(200);
++      storageReady = Storage.remount();
++    }
++  }
++  if (!storageReady) {
      LOG_ERR("MAIN", "SD card initialization failed");
      setupDisplayAndFonts(isSilentReboot);
 +    // Boards with a card-detect switch can wait for a missing card instead of
-+    // ending in a dead error screen. A card that is present but fails to mount
-+    // still reports an error; reinsertion is handled by the running monitor.
++    // ending in a dead error screen.
 +    if (BoardConfig::ACTIVE.sd.detect >= 0 && !Storage.isCardPresent()) {
 +      activityManager.goToFullScreenMessage("Insert SD card", EpdFontFamily::BOLD);
 +      while (!Storage.isCardPresent()) delay(200);
++      delay(500);
++      ESP.restart();
++      return;
++    }
++    // A present but unmountable card is recoverable: ask for a reinsert and
++    // restart when the card has been cycled. This avoids a dead-end screen
++    // after a hot removal/insertion left the card in a bad state.
++    if (BoardConfig::ACTIVE.sd.detect >= 0) {
++      activityManager.goToFullScreenMessage("SD card error - reinsert", EpdFontFamily::BOLD);
++      while (Storage.isCardPresent()) delay(200);
++      while (!Storage.isCardPresent()) delay(200);
++      delay(500);
 +      ESP.restart();
 +      return;
 +    }
      activityManager.goToFullScreenMessage("SD card error", EpdFontFamily::BOLD);
      return;
    }
-@@ -717,8 +726,8 @@ void setup() {
+@@ -717,8 +746,8 @@ void setup() {
      case HalGPIO::WakeupReason::AfterUSBPower:
        // Most devices return to sleep after a USB-powered cold boot.
        LOG_DBG("MAIN", "Wakeup reason: After USB Power");
@@ -1568,7 +1603,7 @@ index 65b4aed3..71ab8b22 100644
        // X4 Pro must stay awake so USB Serial/JTAG remains available after leaving
        // USB Drive and reconnecting the cable. Paper Mono has no armable GPIO wake
        // (its button is behind the PMIC). Metalio also needs native USB available
-@@ -854,6 +863,10 @@ void loop() {
+@@ -854,6 +883,10 @@ void loop() {
    gpio.setSharedConfirmPowerShortPressEmitsPower(SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP);
    mappedInputManager.update();
  
@@ -1579,7 +1614,37 @@ index 65b4aed3..71ab8b22 100644
    // Bluetooth page turner, before the USB drive's early return: a card handed to USB stops the radio
    // before anything else.
    bleturner::Scene scene{};
-@@ -1008,7 +1021,15 @@ void loop() {
+@@ -925,6 +958,29 @@ void loop() {
+         logSerial.write(buf, bufferSize);
+         logSerial.printf("SCREENSHOT_END\n");
+       }
++#ifdef PAPERDIY_SERIAL_TEST
++      else if (cmd.startsWith("KEY:")) {
++        // Development-only input injection for automated UI tests. The test
++        // build defines PAPERDIY_SERIAL_TEST; release builds do not expose it.
++        String key = cmd.substring(4);
++        key.trim();
++        key.toUpperCase();
++
++        bool ok = false;
++        if (key == "B" || key == "NEXT" || key == "DOWN") {
++          ok = activityManager.isForegroundReader() ? activityManager.remoteTurn(true, false)
++                                                     : mappedInputManager.injectRemoteClick(RemoteButton::Next);
++        } else if (key == "A" || key == "PREV" || key == "UP") {
++          ok = activityManager.isForegroundReader() ? activityManager.remoteTurn(false, false)
++                                                     : mappedInputManager.injectRemoteClick(RemoteButton::Previous);
++        } else if (key == "B_LONG" || key == "CONFIRM" || key == "OK") {
++          ok = mappedInputManager.injectRemoteClick(RemoteButton::Confirm);
++        } else if (key == "A_LONG" || key == "BACK") {
++          ok = mappedInputManager.injectRemoteClick(RemoteButton::Back);
++        }
++        logSerial.printf("KEY:%s:%d\n", key.c_str(), ok ? 1 : 0);
++      }
++#endif
+     }
+   }
+ 
+@@ -1008,7 +1064,15 @@ void loop() {
    }
  
    const unsigned long sleepTimeoutMs = SETTINGS.getSleepTimeoutMs();
@@ -1596,7 +1661,7 @@ index 65b4aed3..71ab8b22 100644
      LOG_DBG("SLP", "Auto-sleep triggered after %lu ms of inactivity", sleepTimeoutMs);
      enterDeepSleep(true);
      // This should never be hit as `enterDeepSleep` calls esp_deep_sleep_start
-@@ -1040,10 +1061,10 @@ void loop() {
+@@ -1040,10 +1104,10 @@ void loop() {
      return;
    }
  
@@ -1611,7 +1676,7 @@ index 65b4aed3..71ab8b22 100644
    if ((SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP ||
         SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::IGNORE) &&
        millis() >= allowSleepAt && mappedInputManager.wasReleased(MappedInputManager::Button::Power)) {
-@@ -1066,6 +1087,27 @@ void loop() {
+@@ -1066,6 +1130,27 @@ void loop() {
      }
    }
  
