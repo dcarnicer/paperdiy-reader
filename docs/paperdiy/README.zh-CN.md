@@ -20,6 +20,7 @@
 10. [先前工作：issue #4005 和 PaperDIY PR](09-prior-art.md)
 11. [维护 fork 与更新上游](10-fork-maintenance.md)
 12. [issue #4005 评论草稿](11-upstream-note.md)
+13. [USB 测试](12-serial-testing.md)（西班牙语）
 
 ## 一句话状态
 
