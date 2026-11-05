@@ -26,6 +26,7 @@ CrossPoint sigue en `docs/` y `docs/upstream/`).
 ## Estado en una frase
 
 El port **compila, arranca y se ha validado en un PaperDIY real** (pantalla,
-botones, SD, batería, Wi-Fi y lectura EPUB). Quedan pendientes OPDS/Calibre,
-ghosting tras muchas páginas, consumo en sleep, OTA y autonomía. Empieza por
-`06-porting.md`.
+botones, SD, batería, Wi-Fi, lectura EPUB, OPDS y Calibre wireless). También
+se validaron auto-suspensión y sleep screen con portada. Quedan pendientes
+KOReader Sync con credenciales, ghosting visual tras muchas páginas, consumo
+en sleep y autonomía. Empieza por `06-porting.md`.

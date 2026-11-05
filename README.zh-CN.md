@@ -12,8 +12,9 @@ OPDS/Calibre 以及日常使用所需一切功能的电子书阅读器。
 > 验证（2026-11-04）：同步到 CrossPoint `308cd522` 后，启动、屏幕/界面、
 > 主页、唤醒、A/B 按键、电池、SD 和导航均正常。
 > EPUB 阅读、Wi-Fi、网页界面和图书传输已于 2026-10-28 验证。
-> Calibre 无线传输和 OTA 已于 2026-11-04 验证。待完成：OPDS、KOReader
-> Sync、多页后的残影、休眠电流和续航。见
+> Calibre 无线传输和 OTA 已于 2026-11-04 验证。OPDS（Project Gutenberg）
+> 已于 2026-11-05 验证。自动休眠和封面休眠画面也于 2026-11-05 验证。
+> 待完成：需要凭据的 KOReader Sync、多页后的可见残影、休眠电流和续航。见
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md)。
 >
 > **下游分支：** `main` 镜像 `upstream/develop`；`paperdiy` 是我们的工作
@@ -207,11 +208,12 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 
 ## 已知限制
 
-- 仍待测量：旋转、LUT、多页后的残影、休眠电流和续航。
+- 仍待测量：LUT、多页后的残影、休眠电流和续航。
 - 不支持触摸、前置灯、RTC、IMU 或音频。界面必须用两个按键操作。
 - 140 mAh 电池：休眠时固件会请求 PM1 关机。如果 PM1 切断电源（通常
-  如此，USB 连接时也一样），只能用电源键重新开机。如果 USB 保持主板
-  供电，则回退到深度休眠并用 A/B 唤醒。续航仍待测量。
+  如此，USB 连接时也一样），只能用电源键重新开机。2026-11-05 验证：
+  USB 连接时 A+B 通过 PM1 关机，A 无法唤醒。如果 USB 保持主板供电，
+  则回退到深度休眠并用 A/B 唤醒。续航仍待测量。
 - 物理电源键由 M5PM1 管理；固件通过 I²C 事件接收，而不是 GPIO。
 - OTA 默认指向官方仓库，但没有 `-paperdiy` 资源，因此不会安装其他固件。
   如需自己的 OTA，请配置 `CROSSPOINT_OTA_RELEASES_URL`。

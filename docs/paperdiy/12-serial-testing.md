@@ -103,9 +103,11 @@ Probado con `paperdiy-test` sobre el firmware `308cd522`:
   `--settle`.
 - La biblioteca mostró un libro con nombre de archivo hash como título
   (`b090d610…`); parece un problema de metadatos del EPUB, no de la UI.
-- Energía: A+B con USB hace deep sleep y A despierta; el clic corto de power
-  apaga vía PM1 y solo power vuelve a encender; A+B con batería apaga y power
-  enciende. La página se conserva en todos los casos.
+- Energía: en la pasada del 04/11/2026, A+B con USB hizo deep sleep y A
+  despertó; el clic corto de power apaga vía PM1 y solo power vuelve a
+  encender; A+B con batería apaga y power enciende. La página se conserva en
+  todos los casos. En la pasada del 05/11/2026 el mismo A+B con USB apagó vía
+  PM1 y A no despertó (ver más abajo).
 - Download mode: requiere ~10 s, no 2 s. `esptool --before no-reset` confirma
   que el chip está en bootloader. Tras el hard reset hay que pulsar power para
   arrancar la app.
@@ -124,5 +126,63 @@ Probado con `paperdiy-test` sobre el firmware `308cd522`:
   20–30 s. Los EPUB quedan en 9–15 MB por tomo.
 - Ghosting real: leve y legible con refresco cada 5 páginas.
 
-Pendiente de probar: consumo/autonomía, OPDS/Calibre con contenido, BLE page
-turner y lectura muy larga.
+## Segunda pasada (05/11/2026)
+
+Probado con `paperdiy-test` sobre `308cd522`, batería original de 140 mAh y USB
+conectado al Mac.
+
+- **Paginación**: 96 cambios de página (12 adelante / 12 atrás, repetido)
+  sin entradas perdidas, reinicios ni cuelgues. En este EPUB de texto la ruta
+  no ejecutó la pasada de grises; los tiempos son de la ruta B/W:
+  - página normal: render 668–725 ms, display 576–621 ms, total percibido
+    809–925 ms;
+  - refresco completo cada 5 páginas: render ~1,64 s, display ~1,54 s,
+    total ~1,77–1,85 s.
+- **Memoria**: el heap queda igual antes y después de la tanda: 121.552 B
+  libres, 110.732 B mínimo; PSRAM 6.367.560 B libres, 6.353.628 B mínimo.
+  No se observó fuga. Tras el cambio de fuente y el reflow, el mínimo de heap
+  bajó a 83.916 B durante la reconstrucción de la sección; el libre volvió a
+  120.708 B.
+- **OPDS**: se añadió Project Gutenberg por la API web
+  (`https://www.gutenberg.org/ebooks/search.opds/?sort_order=downloads`), se
+  navegó el catálogo, se descargó *Pride and Prejudice* a la raíz de la SD y
+  se abrió y paginó correctamente. Standard Ebooks devuelve 401 y requiere
+  credenciales.
+- **Calibre wireless**: el servidor arranca en `192.168.1.154` y la web UI
+  responde; la transferencia ya estaba validada el 04/11.
+- **Fuentes**: cambio de 14 a 16 pt y vuelta a 14 pt; el reflow se aplica y
+  el número de páginas de la sección cambia. Las pestañas
+  Fuente/Tamaño/Diseño/Estilo y la lista de tamaños son operables con
+  A/B/largos.
+- **BLE**: el escaneo encuentra dispositivos (auriculares, tiras LED, etc.);
+  no había un mando real para emparejar. El toggle se dejó desactivado.
+- **CrossPoint Sync**: la pantalla de configuración funciona; no hay
+  credenciales configuradas, así que no se probó el sync real.
+- **Energía**: A+B con USB en este Mac apagó vía PM1, no hizo deep sleep; A
+  no despertó. Power encendió y conservó la página (1/63). Esto corrige la
+  nota anterior de que A+B con USB siempre despertaba con A.
+- **Observación**: el puerto USB desapareció una vez tras abrir el EPUB
+  descargado y volvió al reconectar/encender. No se reprodujo.
+- **Ghosting**: la captura por serial devuelve el framebuffer, no la imagen
+  física del panel. Revisión visual tras 24 páginas (05/11): sin ghosting
+  apreciable con refresco cada 5 páginas. El contador pasó de 1/35 a 1/50 al
+  completarse la construcción de la sección; parece un conteo parcial
+  mientras se indexa. Falta lectura muy larga.
+
+## Auto-suspensión y sleep screen (05/11/2026)
+
+- `Pantalla > Auto suspensión` a 1 min. Con el USB desconectado, el equipo
+  suspendió tras ~1 minuto.
+- Con `Fondo de pantalla de suspensión = Oscuro` mostró el logo de CrossPoint
+  sobre fondo oscuro.
+- Con `Fondo = Portada` y `Modo = Ajustar` mostró la portada de *Pride and
+  Prejudice* al suspenderse.
+- Power despertó y volvió a la misma página (1/50) en ambos casos.
+- La batería pasó de 100 % a 90 % tras el primer ciclo y luego osciló entre
+  97–99 %; la curva de 140 mAh es gruesa y el consumo real sigue pendiente.
+- Al terminar, `Auto suspensión` se dejó en 10 min; `Fondo = Portada` y
+  `Modo = Ajustar` se mantuvieron.
+
+Pendiente de probar: consumo/autonomía, KOReader Sync con credenciales,
+emparejar un mando BLE real, ghosting visual tras lectura muy larga y la
+batería 604050.
