@@ -26,6 +26,7 @@ remains in `docs/` and `docs/upstream/`).
 ## One-line status
 
 The port **builds, boots and has been validated on a real PaperDIY** (screen,
-buttons, SD, battery, Wi-Fi and EPUB reading). Still pending: OPDS/Calibre,
-ghosting after many pages, sleep current, OTA and battery life. Start with
-`06-porting.md`.
+buttons, SD, battery, Wi-Fi, EPUB reading, OPDS and Calibre wireless).
+Auto-sleep and the cover sleep screen were also validated. Still pending:
+KOReader Sync with credentials, visible ghosting after many pages, sleep
+current and battery life. Start with `06-porting.md`.

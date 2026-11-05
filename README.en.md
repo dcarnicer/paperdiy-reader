@@ -13,8 +13,11 @@ usable every day.
 > Validation (2026-11-04): boot, screen/UI, Home, wake, A/B buttons, battery,
 > SD and navigation OK after syncing to CrossPoint `308cd522`.
 > EPUB reading, Wi-Fi, web UI and book transfer were validated on 2026-10-28.
-> Calibre wireless and OTA were validated on 2026-11-04. Pending: OPDS,
-> KOReader Sync, ghosting after many pages, sleep current and battery life. See
+> Calibre wireless and OTA were validated on 2026-11-04. OPDS (Project
+> Gutenberg) was validated on 2026-11-05. Auto-sleep and the cover sleep
+> screen were validated on 2026-11-05. Pending: KOReader Sync with
+> credentials, visible ghosting after many pages, sleep current and battery
+> life. See
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md).
 >
 > **Downstream fork:** `main` mirrors `upstream/develop`; `paperdiy` is our
@@ -216,13 +219,14 @@ The detailed documentation is in Spanish. The
 
 ## Known limitations
 
-- Still to measure: rotation, LUTs, ghosting after many pages, sleep current
-  and battery life.
+- Still to measure: LUTs/ghosting after many pages, sleep current and battery
+  life.
 - No touch, frontlight, RTC, IMU or audio. The UI must work with 2 buttons.
 - 140 mAh battery: when sleeping, the firmware asks the PM1 to power off. If
   the PM1 cuts power (the usual case, including over USB), only the power
-  button turns it back on. If USB keeps the board alive, the fallback is deep
-  sleep with A/B wake. Battery life still needs measuring.
+  button turns it back on. Verified on 2026-11-05: A+B over USB powered off
+  via the PM1 and A did not wake it. If USB keeps the board alive, the
+  fallback is deep sleep with A/B wake. Battery life still needs measuring.
 - The physical power button is managed by the M5PM1; the firmware receives it
   as an I²C event, not as a GPIO.
 - OTA points to the official repo by default, but there is no `-paperdiy`

@@ -12,26 +12,32 @@ Objetivo: demostrar que el port funciona en un PaperDIY real y recoger datos.
 - [x] Confirmar que el panel enciende y muestra el splash/UI.
 - [x] Rotación/orientación: UI correcta en vertical, sin cambios.
 - [ ] Medir tiempos de refresco: `epd_quality`, `epd_text`, `epd_fast`,
-      `epd_fastest`; página completa vs área.
-- [ ] Evaluar ghosting general y si hace falta `cleanBankNeedsFreshBackground`
-      o LUTs propias (comparar con PaperS3/LilyGo).
+      `epd_fastest`; página completa vs área. `fast` y refresco completo ya
+      medidos el 05/11 (~0,86 s y ~1,8 s); faltan `quality`/`text`.
+- [x] Evaluar ghosting general en tanda corta: sin ghosting apreciable tras
+      24 páginas con refresco cada 5 (05/11). Falta lectura muy larga y
+      comparar LUTs/`cleanBankNeedsFreshBackground`.
 - [x] Ghosting al abrir el menú del lector: corregido con `HALF_REFRESH` en la
       primera pintada; verificado en hardware.
 - [x] Ghosting al pasar páginas: default 15 -> 5 y prueba de LUT AA de
       ED047TC1 (LilyGo T5 S3) en `fast`/`fastest`; validar en lectura
       prolongada. `cleanBankNeedsFreshBackground` se probó y se revirtió.
-- [ ] Probar A/B: navegación, página, back, confirm, A+B. Cortos ya funcionan;
-      largos y A+B pendientes.
+- [x] Probar A/B: navegación, página, back, confirm y A+B. Cortos y atajos
+      back/confirm verificados; A+B con USB apaga vía PM1 (05/11). Falta
+      validar la pulsación larga física sostenida.
 - [x] Batería: curva PaperDIY (4,10 V = 100 %), LVP a 3,4 V, `About` con
       VBAT/estado de carga y rayo según `CHG_STAT`. Pendiente validar la nueva
       604050 y medir autonomía.
 - [x] SD: monta tras reiniciar, aparecen `Books/*.epub`, abre y lee.
-- [ ] Libro grande / caché / cambios de fuente.
+- [x] Libro grande / caché / cambios de fuente: EPUB de 7,3 MB y cambio de
+      tamaño 14/16 pt con reflow verificados.
 - [x] Wi-Fi + web UI + transferencia de archivos.
-- [ ] OPDS, Calibre/KOReader Sync y OTA.
+- [x] OPDS (Project Gutenberg), Calibre wireless y OTA.
+- [ ] KOReader Sync con credenciales.
 - [ ] Medir consumo: activo, idle, deep sleep; autonomía estimada.
 - [ ] Medir tiempo de wake y comprobar que el botón que despierta no pasa
-      página accidentalmente.
+      página accidentalmente. Power despierta y conserva la página; A+B con
+      USB apagó vía PM1 y A no despertó (05/11).
 - [ ] Probar recuperación: entrar en download mode y reflashear.
 
 **Criterio de salida:** se puede leer un EPUB completo, dormir/despertar, y la
@@ -56,8 +62,11 @@ autonomía es al menos "unas horas de lectura" con una carga.
 - [ ] Remapeo de botones y atajos contextuales.
 - [ ] Pantalla de ajustes rápida (fuente, tamaño, tema, refresco).
 - [ ] Español como idioma por defecto (o detectar/es-ES).
-- [ ] Arreglar el wake para que el primer press no haga page turn.
-- [ ] Auto-sleep agresivo + sleep screen con portada.
+- [ ] Arreglar el wake para que el primer press no haga page turn. Power
+      despertó sin cambiar de página (05/11); falta el deep sleep con wake A/B.
+- [x] Auto-sleep + sleep screen con portada: auto suspensión a 1 min, `Fondo
+      = Portada` + `Modo = Ajustar`, power despierta y conserva la página
+      (05/11).
 - [ ] Documentación de usuario y troubleshooting.
 - [ ] CI que compile `paperdiy` y publique artefactos.
 
@@ -73,10 +82,14 @@ tocar un cable ni leer documentación técnica.
 - [ ] Diccionario español (StarDict) + gestor de diccionarios; historial.
 - [ ] Búsqueda global de biblioteca y dentro del libro con índice en SD.
 - [ ] OPDS con catálogos curados (Project Gutenberg, Standard Ebooks,
-      Wikisource, Internet Archive).
-- [ ] Calibre wireless + web UI para gestionar metadatos/portadas.
-- [ ] BLE page turner probado con mandos/media buttons.
-- [ ] USB MSC probado (exponer SD).
+      Wikisource, Internet Archive). Project Gutenberg ya validado
+      (navegación, descarga y lectura); Standard Ebooks devuelve 401 y
+      requiere credenciales.
+- [x] Calibre wireless + web UI para transferencia; gestión de metadatos y
+      portadas pendiente.
+- [ ] BLE page turner probado con mandos/media buttons. El escaneo BLE
+      funciona; falta emparejar un mando real.
+- [x] USB MSC probado (exponer SD).
 - [ ] Screenshots y sleep screens personalizables.
 
 **Criterio de salida:** el PaperDIY compite con un Kindle básico en lectura,

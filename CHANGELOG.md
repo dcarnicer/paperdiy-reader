@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-11-05 — validación OPDS, fuentes y energía
+
+- OPDS validado con Project Gutenberg: alta del servidor por la API web,
+  navegación del catálogo, descarga de *Pride and Prejudice* a la raíz de la
+  SD y lectura posterior. Standard Ebooks devuelve 401 y requiere
+  credenciales.
+- Estrés de paginación: 96 cambios de página sin entradas perdidas, reinicios
+  ni fugas de heap/PSRAM. Página normal ~0,86 s; refresco completo cada 5
+  páginas ~1,8 s (EPUB de texto, ruta B/W).
+- Cambio de tamaño de fuente 14/16 pt y reflow verificados.
+- BLE: el escaneo de mandos funciona; falta emparejar un mando real.
+- CrossPoint Sync: pantalla de configuración correcta; falta probar el sync
+  con credenciales.
+- Auto-suspensión a 1 min con sleep screen de portada (`Fondo = Portada`,
+  `Modo = Ajustar`); power despierta y conserva la página.
+- Energía: A+B con USB en el equipo de prueba apagó vía PM1 y A no despertó;
+  power encendió conservando la página. Corregida la nota de testing.
+- La captura serial devuelve el framebuffer, no el ghosting físico del panel.
+  Revisión visual tras 24 páginas: sin ghosting apreciable; falta lectura
+  muy larga. El contador de páginas pasó de 1/35 a 1/50 al completarse la
+  construcción de la sección.
+
 ## 2026-11-04 — sincronización con upstream
 
 - CrossPoint actualizado a `308cd522` (18 commits): web/plugins, diccionario,

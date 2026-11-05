@@ -170,12 +170,21 @@ or `make flash PORT=/dev/cu.usbmodemXXXX`.
   reads correctly.
 - Wi-Fi and web UI work; books were uploaded through the web UI and opened from
   the reader.
-- Pending: OPDS, Calibre/KOReader Sync, general ghosting, sleep current, power
-  button/shutdown, wake and OTA.
+- Validated later: OPDS, Calibre wireless, OTA, power/shutdown and wake by
+  power. Pending: KOReader Sync with credentials, general ghosting, sleep
+  current, deep sleep with A/B wake and battery life.
 
 Update (2026-11-04): after syncing to upstream `308cd522`, boot, Home, wake,
-A/B navigation, battery and SD were validated again. Still pending:
-OPDS/Calibre, long-session ghosting, sleep current, OTA and battery life.
+A/B navigation, battery and SD were validated again.
+
+Update (2026-11-05): OPDS with Project Gutenberg (browse, download and read),
+font-size changes and 96 page turns without memory leaks. A+B over USB on the
+test device powered off via the PM1 and A did not wake it; power turned it on
+preserving the page. Physical ghosting cannot be evaluated from the serial
+capture; visual review after 24 pages showed no appreciable ghosting. The
+page counter went from 1/35 to 1/50 when the section build completed.
+Auto-sleep at 1 min with `Fondo = Portada` and `Modo = Ajustar` showed the
+cover, and power woke it preserving the page.
 
 ![First boot](images/first-boot.png)
 
@@ -296,16 +305,16 @@ consider the port "stable".
 | 11 | TTF font on SD | can be selected | |
 | 12 | Dictionary | indexes and looks up | |
 | 13 | Wi-Fi | scan/join; web UI | |
-| 14 | OPDS/Calibre | downloads a book | |
-| 15 | Deep sleep | sleeps and wakes with A/B | |
-| 16 | Sleep current | ideally < 0.5 mA | |
-| 17 | Wake | no accidental page turn | |
-| 18 | OTA | updates without bricking | |
-| 19 | Recovery | download mode + factory bin | |
-| 20 | Battery life | hours of real reading | |
-| 21 | PM1 short power | delivers `BTN_POWER` and sleeps/powers off | |
-| 22 | Shutdown on battery | PM1 cuts power; a click turns it on | |
-| 23 | USB fallback | with USB, deep sleep and A/B wake | |
+| 14 | OPDS/Calibre | downloads a book | OPDS Gutenberg and Calibre OK (04–05/11) |
+| 15 | Deep sleep | sleeps and wakes with A/B | A+B over USB powered off via PM1; A did not wake (05/11) |
+| 16 | Sleep current | ideally < 0.5 mA | Pending |
+| 17 | Wake | no accidental page turn | Power wakes and preserves the page; A does not wake after A+B (05/11) |
+| 18 | OTA | updates without bricking | OK (04/11) |
+| 19 | Recovery | download mode + factory bin | OK (04/11) |
+| 20 | Battery life | hours of real reading | Pending |
+| 21 | PM1 short power | delivers `BTN_POWER` and sleeps/powers off | OK (04/11) |
+| 22 | Shutdown on battery | PM1 cuts power; a click turns it on | OK (04/11) |
+| 23 | USB fallback | with USB, deep sleep and A/B wake | N/A: PM1 powered off over USB (05/11) |
 | 24 | Fork OTA | does not install official firmware; own URL if published | |
 
 ## Risks and mitigations
@@ -347,6 +356,8 @@ process are in [`10-fork-maintenance.md`](10-fork-maintenance.md).
 - [x] Reproducible build and `main`/`paperdiy` fork.
 - [x] Configurable OTA and `paperdiy` tag.
 - [x] Basic hardware validation (2026-11-04).
+- [x] OPDS, Calibre wireless and OTA (04–05/11/2026).
+- [ ] KOReader Sync with credentials.
 - [ ] Rotation/LUT/ghosting tuning.
 - [ ] Current/battery-life measurement.
 - [ ] Polished 2-button UX.

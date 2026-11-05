@@ -24,6 +24,7 @@
 
 ## 一句话状态
 
-移植已**编译、启动并在真实 PaperDIY 上验证**（屏幕、按键、SD、电池、Wi-Fi
-和 EPUB 阅读）。仍待完成：OPDS/Calibre、多页后的残影、休眠电流、OTA 和
-续航。请从 `06-porting.md` 开始。
+移植已**编译、启动并在真实 PaperDIY 上验证**（屏幕、按键、SD、电池、Wi-Fi、
+EPUB 阅读、OPDS 和 Calibre 无线传输）。自动休眠和封面休眠画面也已验证。
+仍待完成：需要凭据的 KOReader Sync、多页后的可见残影、休眠电流和续航。
+请从 `06-porting.md` 开始。

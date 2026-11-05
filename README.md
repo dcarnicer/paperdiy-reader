@@ -13,8 +13,10 @@ a diario.
 > Validación (04/11/2026): arranque, pantalla/UI, Home, wake, botones A/B,
 > batería, SD y navegación OK tras sincronizar con CrossPoint `308cd522`.
 > La lectura EPUB, Wi-Fi, web UI y transferencia de libros ya se validaron el
-> 28/10/2026. Calibre wireless y OTA verificados el 04/11/2026. Pendiente:
-> OPDS, KOReader Sync, ghosting tras muchas páginas, consumo en sleep y
+> 28/10/2026. Calibre wireless y OTA verificados el 04/11/2026. OPDS
+> (Project Gutenberg) verificado el 05/11/2026. Auto-suspensión y sleep screen
+> con portada verificadas el 05/11/2026. Pendiente: KOReader Sync con
+> credenciales, ghosting visual tras muchas páginas, consumo en sleep y
 > autonomía. Ver
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md).
 >
@@ -220,13 +222,14 @@ disponibles en [English](docs/paperdiy/README.en.md),
 
 ## Limitaciones conocidas
 
-- Pendientes de medir: rotación, LUTs, ghosting tras muchas páginas, corriente
-  de sueño y autonomía.
+- Pendientes de medir: LUTs/ghosting tras muchas páginas, corriente de sueño
+  y autonomía.
 - Sin táctil, frontlight, RTC, IMU ni audio. La UI debe funcionar con 2 botones.
 - Batería de 140 mAh: al dormir, el firmware pide apagado al PM1. Si el PM1
   corta la alimentación (lo habitual, también con USB), solo el botón power
-  vuelve a encender. Si el USB mantiene la placa viva, el fallback es deep
-  sleep con wake A/B. La autonomía sigue pendiente de medir.
+  vuelve a encender. Verificado el 05/11/2026: A+B con USB apagó vía PM1 y A
+  no despertó. Si el USB mantiene la placa viva, el fallback es deep sleep
+  con wake A/B. La autonomía sigue pendiente de medir.
 - El botón físico de power lo gestiona el M5PM1; el firmware lo recibe como
   evento I²C, no como GPIO.
 - La OTA apunta por defecto al repo oficial, pero no hay asset `-paperdiy`, así

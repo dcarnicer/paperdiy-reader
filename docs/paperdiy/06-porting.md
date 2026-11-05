@@ -169,13 +169,21 @@ o `make flash PORT=/dev/cu.usbmodemXXXX`.
   se lee correctamente.
 - Wi-Fi y web UI funcionan; se han subido libros por la interfaz web y se han
   abierto desde el lector.
-- Pendiente: OPDS, Calibre/KOReader Sync, ghosting general, consumo en sleep,
-  botón power/shutdown, wake y OTA.
+- Validado después: OPDS, Calibre wireless, OTA, power/shutdown y wake por
+  power. Pendiente: KOReader Sync con credenciales, ghosting general, consumo
+  en sleep, deep sleep con wake A/B y autonomía.
 
 Actualización (04/11/2026): tras sincronizar con upstream `308cd522`, se
-validaron de nuevo arranque, Home, wake, navegación A/B, batería y SD. Siguen
-pendientes OPDS/Calibre, ghosting tras sesiones largas, consumo en sleep, OTA y
-autonomía.
+validaron de nuevo arranque, Home, wake, navegación A/B, batería y SD.
+
+Actualización (05/11/2026): OPDS con Project Gutenberg (navegación, descarga
+y lectura), cambio de tamaño de fuente y 96 cambios de página sin fugas de
+memoria. A+B con USB en el equipo de prueba apagó vía PM1 y A no despertó;
+power encendió conservando la página. La revisión visual tras 24 páginas no
+mostró ghosting apreciable; el contador pasó de 1/35 a 1/50 al completarse la
+construcción de la sección (conteo parcial mientras indexa). Auto-suspensión a
+1 min con `Fondo = Portada` y `Modo = Ajustar`: mostró la portada y power
+despertó conservando la página.
 
 ![Primer arranque](images/first-boot.png)
 
@@ -286,30 +294,30 @@ considerar el port "estable".
 
 | # | Prueba | Esperado | Resultado |
 |---|---|---|---|
-| 1 | Arranque | splash/UI en pantalla | |
-| 2 | Rotación | UI en horizontal, no invertida | |
-| 3 | Texto | página EPUB legible, sin ghosting grave | |
-| 4 | Refresco quality/text/fast/fastest | tiempos y calidad aceptables | |
-| 5 | A/B cortos | mover selección / página | |
-| 6 | A/B largos | back / confirm | |
-| 7 | A+B | evento power / dormir | |
-| 8 | Batería | % y mV coherentes; carga detectada | |
-| 9 | SD | monta, lista libros, caché | |
-| 10 | EPUB grande | abre y pagina sin OOM | |
-| 11 | Fuente TTF en SD | se puede seleccionar | |
-| 12 | Diccionario | indexa y busca | |
-| 13 | Wi-Fi | scan/join; web UI | |
-| 14 | OPDS/Calibre | descarga un libro | |
-| 15 | Deep sleep | duerme y despierta con A/B | |
-| 16 | Consumo sleep | < 0,5 mA idealmente | |
-| 17 | Wake | no hace page turn accidental | |
-| 18 | OTA | actualiza sin brick | |
-| 19 | Recuperación | download mode + factory bin | |
-| 20 | Autonomía | horas de lectura reales | |
-| 21 | Power PM1 corto | entrega `BTN_POWER` y duerme/apaga | |
-| 22 | Shutdown en batería | el PM1 corta y un clic enciende | |
-| 23 | Fallback USB | con USB, deep sleep y wake A/B | |
-| 24 | OTA fork | no instala firmware oficial; URL propia si se publica | |
+| 1 | Arranque | splash/UI en pantalla | OK (28/10) |
+| 2 | Rotación | UI en horizontal, no invertida | Vertical OK (28/10); horizontal validado (04/11) |
+| 3 | Texto | página EPUB legible, sin ghosting grave | OK (28/10); sin ghosting apreciable tras 24 páginas (05/11) |
+| 4 | Refresco quality/text/fast/fastest | tiempos y calidad aceptables | `fast` y completo medidos (05/11); faltan `quality`/`text` |
+| 5 | A/B cortos | mover selección / página | OK (28/10) |
+| 6 | A/B largos | back / confirm | Back/confirm por inyección (05/11); falta hold físico |
+| 7 | A+B | evento power / dormir | Apaga vía PM1 con USB (05/11) |
+| 8 | Batería | % y mV coherentes; carga detectada | OK (31/10) |
+| 9 | SD | monta, lista libros, caché | OK (04/11) |
+| 10 | EPUB grande | abre y pagina sin OOM | 7,3 MB OK (04/11) |
+| 11 | Fuente TTF en SD | se puede seleccionar | N/T |
+| 12 | Diccionario | indexa y busca | N/T |
+| 13 | Wi-Fi | scan/join; web UI | OK (28/10) |
+| 14 | OPDS/Calibre | descarga un libro | OPDS Gutenberg y Calibre OK (04–05/11) |
+| 15 | Deep sleep | duerme y despierta con A/B | A+B con USB apagó vía PM1; A no despertó (05/11) |
+| 16 | Consumo sleep | < 0,5 mA idealmente | Pendiente |
+| 17 | Wake | no hace page turn accidental | Power despierta y conserva página; auto-sleep 1 min con portada OK; A no despierta tras A+B (05/11) |
+| 18 | OTA | actualiza sin brick | OK (04/11) |
+| 19 | Recuperación | download mode + factory bin | OK (04/11) |
+| 20 | Autonomía | horas de lectura reales | Pendiente |
+| 21 | Power PM1 corto | entrega `BTN_POWER` y duerme/apaga | OK (04/11) |
+| 22 | Shutdown en batería | el PM1 corta y un clic enciende | OK (04/11) |
+| 23 | Fallback USB | con USB, deep sleep y wake A/B | No aplica: PM1 apagó con USB (05/11) |
+| 24 | OTA fork | no instala firmware oficial; URL propia si se publica | No instala firmware oficial (04/11) |
 
 ## Riesgos y mitigaciones
 
@@ -351,6 +359,8 @@ proceso de sync están en
 - [x] Build reproducible y fork `main`/`paperdiy`.
 - [x] OTA configurable y tag `paperdiy`.
 - [x] Validación básica en hardware (04/11/2026).
+- [x] OPDS, Calibre wireless y OTA (04–05/11/2026).
+- [ ] KOReader Sync con credenciales.
 - [ ] Ajuste de rotación/LUT/ghosting.
 - [ ] Medición de consumo/autonomía.
 - [ ] UX de 2 botones pulida.
