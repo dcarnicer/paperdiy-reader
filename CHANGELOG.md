@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-11-06 — lectura larga y tiempos de refresco
+
+- Lectura larga automatizada por USB: 250+ cambios de página (spines 10→24,
+  varios capítulos) sin reinicios, errores de render ni fugas. Heap libre
+  120,6–120,8 KB y PSRAM ~6,36 MB; mínimo transitorio de heap 81,7 KB.
+- Tiempos medidos con los logs `ERS` (página completa, una sola base B/W porque
+  el log no muestra pasada de grises): `fast` 569–620 ms de display (total
+  651–726 ms); `text` limpio 1538–1542 ms (total 1637–1651 ms). Prewarm
+  38–58 ms; render B/W 49–59 ms.
+- `quality` no lo usa el port (`Full/Half` van a `epd_text`). Con un mapeo
+  temporal `Half→quality` el refresco limpio midió 1538 ms, prácticamente igual
+  que `text`; el código se restauró después de medir.
+- La inyección `CMD:KEY` no reinicia el temporizador de actividad: a los 10 min
+  el equipo se auto-suspendió en plena prueba y el USB desapareció. Power
+  despertó conservando la página. Para pruebas largas hay que poner
+  `Auto suspensión = Nunca` o hacer que el comando cuente como actividad; el
+  ajuste se restauró a 10 min.
+- La captura por serial devuelve el framebuffer: la estabilidad está validada,
+  pero el ghosting físico tras la lectura larga sigue pendiente de revisión
+  visual.
+
 ## 2026-11-05 — validación OPDS, fuentes y energía
 
 - OPDS validado con Project Gutenberg: alta del servidor por la API web,

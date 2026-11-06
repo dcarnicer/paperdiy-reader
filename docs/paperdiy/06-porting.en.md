@@ -186,6 +186,17 @@ page counter went from 1/35 to 1/50 when the section build completed.
 Auto-sleep at 1 min with `Fondo = Portada` and `Modo = Ajustar` showed the
 cover, and power woke it preserving the page.
 
+Update (2026-11-06): automated long read over USB with 250+ page turns (spines
+10→24, several chapters) without reboots or leaks. Free heap 120.6–120.8 KB and
+PSRAM ~6.36 MB; transient heap low 81.7 KB. Full-page timings: `fast`
+569–620 ms display (651–726 ms total) and clean `text` 1538–1542 ms
+(1637–1651 ms total); prewarm 38–58 ms and B/W render 49–59 ms. `quality` is
+unused by the port; a temporary `Half→quality` mapping measured 1538 ms, the
+same as `text`, and the code was restored. `CMD:KEY` does not renew activity:
+after 10 min the device auto-slept and USB disappeared; power woke it
+preserving the page. For long tests set `Auto suspend = Never` or renew
+activity. Physical ghosting review after the long read is still pending.
+
 ![First boot](images/first-boot.png)
 
 ![First read](images/first-read.png)
@@ -294,8 +305,8 @@ consider the port "stable".
 |---|---|---|---|
 | 1 | Boot | splash/UI on screen | |
 | 2 | Rotation | landscape UI, not inverted | |
-| 3 | Text | readable EPUB page, no severe ghosting | |
-| 4 | quality/text/fast/fastest refresh | acceptable times and quality | |
+| 3 | Text | readable EPUB page, no severe ghosting | OK (28/10); no appreciable ghosting after 24 pages (05/11); 250+ pages without errors, physical review pending (06/11) |
+| 4 | quality/text/fast/fastest refresh | acceptable times and quality | `fast` 569–620 ms, `text` 1538–1542 ms; `quality` ≈1538 ms with temporary mapping; `fastest` unused (06/11) |
 | 5 | A/B short | move selection / page | |
 | 6 | A/B long | back / confirm | |
 | 7 | A+B | power event / sleep | |

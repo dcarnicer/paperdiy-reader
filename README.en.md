@@ -15,9 +15,10 @@ usable every day.
 > EPUB reading, Wi-Fi, web UI and book transfer were validated on 2026-10-28.
 > Calibre wireless and OTA were validated on 2026-11-04. OPDS (Project
 > Gutenberg) was validated on 2026-11-05. Auto-sleep and the cover sleep
-> screen were validated on 2026-11-05. Pending: KOReader Sync with
-> credentials, visible ghosting after many pages, sleep current and battery
-> life. See
+> screen were validated on 2026-11-05. Long reading: 250+ page turns without
+> errors or leaks on 2026-11-06. Pending: KOReader Sync with credentials,
+> pairing a BLE remote, sleep current/battery life, the 604050 battery and a
+> physical visual review of ghosting. See
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md).
 >
 > **Downstream fork:** `main` mirrors `upstream/develop`; `paperdiy` is our

@@ -14,7 +14,9 @@ OPDS/Calibre 以及日常使用所需一切功能的电子书阅读器。
 > EPUB 阅读、Wi-Fi、网页界面和图书传输已于 2026-10-28 验证。
 > Calibre 无线传输和 OTA 已于 2026-11-04 验证。OPDS（Project Gutenberg）
 > 已于 2026-11-05 验证。自动休眠和封面休眠画面也于 2026-11-05 验证。
-> 待完成：需要凭据的 KOReader Sync、多页后的可见残影、休眠电流和续航。见
+> 长时间阅读：2026-11-06 完成 250+ 次翻页，无错误、无泄漏。待完成：需要
+> 凭据的 KOReader Sync、配对 BLE 遥控器、休眠电流/续航、604050 电池，
+> 以及残影的实机目视检查。见
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md)。
 >
 > **下游分支：** `main` 镜像 `upstream/develop`；`paperdiy` 是我们的工作

@@ -185,6 +185,18 @@ construcción de la sección (conteo parcial mientras indexa). Auto-suspensión 
 1 min con `Fondo = Portada` y `Modo = Ajustar`: mostró la portada y power
 despertó conservando la página.
 
+Actualización (06/11/2026): lectura larga automatizada por USB con 250+ cambios
+de página (spines 10→24, varios capítulos) sin reinicios ni fugas. Heap libre
+120,6–120,8 KB y PSRAM ~6,36 MB; mínimo transitorio de heap 81,7 KB. Tiempos
+de página completa: `fast` 569–620 ms de display (total 651–726 ms) y `text`
+limpio 1538–1542 ms (total 1637–1651 ms); prewarm 38–58 ms y render B/W
+49–59 ms. `quality` no lo usa el port; con un mapeo temporal `Half→quality`
+midió 1538 ms, igual que `text`, y se restauró el código. La inyección
+`CMD:KEY` no renueva la actividad: a los 10 min se auto-suspendió y el USB
+desapareció; power despertó conservando la página. Para pruebas largas hay que
+poner `Auto suspensión = Nunca` o renovar la actividad. La revisión visual
+física del ghosting tras esa lectura sigue pendiente.
+
 ![Primer arranque](images/first-boot.png)
 
 ![Primera lectura](images/first-read.png)
@@ -296,8 +308,8 @@ considerar el port "estable".
 |---|---|---|---|
 | 1 | Arranque | splash/UI en pantalla | OK (28/10) |
 | 2 | Rotación | UI en horizontal, no invertida | Vertical OK (28/10); horizontal validado (04/11) |
-| 3 | Texto | página EPUB legible, sin ghosting grave | OK (28/10); sin ghosting apreciable tras 24 páginas (05/11) |
-| 4 | Refresco quality/text/fast/fastest | tiempos y calidad aceptables | `fast` y completo medidos (05/11); faltan `quality`/`text` |
+| 3 | Texto | página EPUB legible, sin ghosting grave | OK (28/10); sin ghosting apreciable tras 24 páginas (05/11); 250+ páginas sin errores, falta revisión visual física (06/11) |
+| 4 | Refresco quality/text/fast/fastest | tiempos y calidad aceptables | `fast` 569–620 ms, `text` 1538–1542 ms; `quality` ≈1538 ms con mapeo temporal; `fastest` no se usa (06/11) |
 | 5 | A/B cortos | mover selección / página | OK (28/10) |
 | 6 | A/B largos | back / confirm | Back/confirm por inyección (05/11); falta hold físico |
 | 7 | A+B | evento power / dormir | Apaga vía PM1 con USB (05/11) |
