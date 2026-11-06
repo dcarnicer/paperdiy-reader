@@ -5,7 +5,7 @@
 ## CrossPoint 2.0 からの変更
 
 ベースコミット：`5d731041325bc871e99439d5e6db647695e6c733`（develop、2.0.0、
-2026-11-03）。`main` は上流のミラーで、`paperdiy` がフォークです。
+2026-11-06）。`main` は上流のミラーで、`paperdiy` がフォークです。
 `freeink-sdk` はビルドを自己完結させるため同梱しています。移植内容は
 `patches/sdk.patch` + `patches/firmware.patch` にあります。
 

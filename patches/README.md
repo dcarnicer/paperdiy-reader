@@ -29,8 +29,8 @@ Generación:
 # sdk.patch: diff entre el SDK pristine vendorizado y el SDK de paperdiy
 git diff sdk-baseline..paperdiy -- freeink-sdk > patches/sdk.patch
 
-# firmware.patch: diff de todo el código no-SDK propio
-git diff main..paperdiy -- platformio.ini src lib/GfxRenderer lib/hal > patches/firmware.patch
+# firmware.patch: diff de todo el código no-SDK propio (incluye traducciones)
+git diff main..paperdiy -- platformio.ini src lib/GfxRenderer lib/hal lib/I18n/translations > patches/firmware.patch
 
 cat patches/sdk.patch patches/firmware.patch > patches/paperdiy-support.patch
 ```

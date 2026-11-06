@@ -156,6 +156,9 @@ opening the menu; it is a UX trade-off still to be decided.
 └── .crosspoint/           # reader cache (do not touch unless resetting)
 ```
 
+`Settings > About` shows the SD card's total, used and free space. The first
+look can take a few seconds because it walks the FAT.
+
 ## Common problems
 
 | Symptom | What to try |

@@ -11,7 +11,9 @@ usable every day.
 
 > **Status:** the firmware **builds, boots and reads EPUB on a real PaperDIY**.
 > Validation (2026-11-04): boot, screen/UI, Home, wake, A/B buttons, battery,
-> SD and navigation OK after syncing to CrossPoint `5d731041`.
+> SD and navigation OK after syncing to CrossPoint `308cd522`.
+> `5d731041` sync smoke (2026-11-06): boot, Home, A/B and About with SD
+> size/used/free and battery.
 > EPUB reading, Wi-Fi, web UI and book transfer were validated on 2026-10-28.
 > Calibre wireless and OTA were validated on 2026-11-04. OPDS (Project
 > Gutenberg) was validated on 2026-11-05. Auto-sleep and the cover sleep

@@ -85,7 +85,7 @@ git apply --3way patches/firmware.patch
 # docs/infra
 git checkout paperdiy -- README.md README.en.md README.ja.md README.zh-CN.md \
   CHANGELOG.md Makefile NOTICE LICENSE .gitignore .gitattributes hardware \
-  lib/I18n/translations docs/paperdiy docs/README.md docs/upstream scripts patches .github
+  docs/paperdiy docs/README.md docs/upstream scripts patches .github
 rm -f ROADMAP.md SCOPE.md GOVERNANCE.md AGENTS.md USER_GUIDE.md CLAUDE.md .gitmodules
 rm -rf .github && git checkout paperdiy -- .github
 
@@ -118,7 +118,7 @@ Después del merge hay que regenerar los parches contra las bases nuevas. El
 ```bash
 # sdk-baseline debe tener el SDK pristine del pin actual, sin cambios del port.
 git diff sdk-baseline..paperdiy -- freeink-sdk > patches/sdk.patch
-git diff main..paperdiy -- platformio.ini src lib/GfxRenderer lib/hal > patches/firmware.patch
+git diff main..paperdiy -- platformio.ini src lib/GfxRenderer lib/hal lib/I18n/translations > patches/firmware.patch
 cat patches/sdk.patch patches/firmware.patch > patches/paperdiy-support.patch
 git apply --check patches/sdk.patch   # sobre un worktree de sdk-baseline
 git apply --check patches/firmware.patch  # sobre un worktree de main
