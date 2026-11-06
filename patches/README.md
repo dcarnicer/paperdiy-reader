@@ -36,5 +36,7 @@ cat patches/sdk.patch patches/firmware.patch > patches/paperdiy-support.patch
 ```
 
 `sdk-baseline` es una rama local con el SDK pristine vendorizado; ver
-`docs/paperdiy/10-fork-maintenance.md`. Al sincronizar upstream hay que
-actualizarla al SDK pristine del nuevo pin antes de regenerar `sdk.patch`.
+`docs/paperdiy/10-fork-maintenance.md`. No se publica y no la mantiene
+`scripts/sync-upstream.sh`: antes de regenerar `sdk.patch` hay que recrearla
+desde el pin actual del submódulo. Si la rama remota `fork/sdk-baseline` existe
+y apunta a un pin antiguo, no debe usarse como base.

@@ -4,8 +4,8 @@
 
 ## Cambios respecto a CrossPoint 2.0
 
-Commit base: `308cd522155ec11c3f62e346a1a961facd3dad80` (develop, 2.0.0,
-2026-11-03). `main` es el espejo de upstream; `paperdiy` es el fork. El SDK
+Commit base: `bb93a462cca968be7606cde39833dc20c7a9b48c` (develop, 2.0.0,
+2026-11-05). `main` es el espejo de upstream; `paperdiy` es el fork. El SDK
 `freeink-sdk` está vendorizado para que el build sea autocontenido. El port se
 mantiene en `patches/sdk.patch` + `patches/firmware.patch`.
 
@@ -170,8 +170,8 @@ o `make flash PORT=/dev/cu.usbmodemXXXX`.
 - Wi-Fi y web UI funcionan; se han subido libros por la interfaz web y se han
   abierto desde el lector.
 - Validado después: OPDS, Calibre wireless, OTA, power/shutdown y wake por
-  power. Pendiente: KOReader Sync con credenciales, ghosting general, consumo
-  en sleep, deep sleep con wake A/B y autonomía.
+  power. Pendiente entonces: KOReader Sync con credenciales, ghosting general,
+  consumo en sleep, deep sleep con wake A/B y autonomía.
 
 Actualización (04/11/2026): tras sincronizar con upstream `308cd522`, se
 validaron de nuevo arranque, Home, wake, navegación A/B, batería y SD.
@@ -357,7 +357,7 @@ El soporte se puede proponer a CrossPoint:
    buen candidato a PR.
 
 El port está separado en `patches/sdk.patch` (base SDK `5e94fe7`) y
-`patches/firmware.patch` (base CrossPoint `308cd522`). La generación y el
+`patches/firmware.patch` (base CrossPoint `bb93a462`). La generación y el
 proceso de sync están en
 [`10-fork-maintenance.md`](10-fork-maintenance.md).
 
@@ -372,7 +372,7 @@ proceso de sync están en
 - [x] OTA configurable y tag `paperdiy`.
 - [x] Validación básica en hardware (04/11/2026).
 - [x] OPDS, Calibre wireless y OTA (04–05/11/2026).
-- [ ] KOReader Sync con credenciales.
+- [x] KOReader Sync con credenciales (servidor KOSync local, 06/11/2026).
 - [ ] Ajuste de rotación/LUT/ghosting.
 - [ ] Medición de consumo/autonomía.
 - [ ] UX de 2 botones pulida.

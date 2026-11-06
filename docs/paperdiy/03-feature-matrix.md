@@ -43,7 +43,7 @@ aplica al hardware.
 | PDF por conversión externa | ❌ | ❌ | ❌ | ❌ | 🟡 (roadmap) |
 | OPDS | ❌ | ✅ | 🟡 | ✅ | 🧪 |
 | Calibre wireless | ❌ | ✅ | 🟡 | ✅ | 🧪 |
-| KOReader Sync | ❌ | ✅ | ❌ | ✅ | 🧪 |
+| KOReader Sync | ❌ | ✅ | ❌ | ✅ | ✅ (KOSync local, 06/11) |
 | WebDAV | ❌ | ✅ | ❌ | 🟡 | 🧪 |
 | Web UI | ❌ | ✅ | 🟡 | ❌ | 🧪 |
 | OTA | ❌ | ✅ | ❌ | ✅ | 🧪 |

@@ -12,6 +12,8 @@ se sigue de upstream; el hardware y la UX PaperDIY viven en nuestro fork**.
 |---|---|
 | `main` | Espejo de `upstream/develop` (sin cambios nuestros) |
 | `paperdiy` | Nuestro fork: `main` + FreeInk SDK vendorizado + port + docs |
+| `paperdiy-next` | Árbol de staging para el siguiente sync; no se publica |
+| `sdk-baseline` | Rama local con el SDK pristine del pin, solo para generar `sdk.patch` |
 | `backup/2026-10-28` | Historial anterior a la reestructuración (seguro) |
 | `master` | Historia antigua, conservada por si acaso |
 
@@ -81,10 +83,16 @@ git apply --3way patches/sdk.patch
 git apply --3way patches/firmware.patch
 
 # docs/infra
-git checkout paperdiy -- README.md Makefile NOTICE LICENSE .gitignore \
+git checkout paperdiy -- README.md README.en.md README.ja.md README.zh-CN.md \
+  CHANGELOG.md Makefile NOTICE LICENSE .gitignore .gitattributes hardware \
   docs/paperdiy docs/README.md docs/upstream scripts patches .github
 rm -f ROADMAP.md SCOPE.md GOVERNANCE.md AGENTS.md USER_GUIDE.md CLAUDE.md .gitmodules
 rm -rf .github && git checkout paperdiy -- .github
+
+# Refrescar el snapshot de docs de upstream
+for doc in README AGENTS GOVERNANCE ROADMAP USER_GUIDE; do
+  git show main:"${doc}.md" > "docs/upstream/${doc}-crosspoint.md"
+done
 
 make build
 ```
@@ -92,9 +100,10 @@ make build
 Si el build y el smoke test de hardware pasan:
 
 ```bash
+git diff paperdiy-next   # debe quedar vacío antes de regenerar parches
 git checkout paperdiy
 git merge --no-ff -X theirs paperdiy-next
-git diff paperdiy-next   # debe quedar vacío
+git diff paperdiy-next   # debe quedar vacío tras el merge
 ```
 
 `paperdiy-next` nace de `main` y lleva el port reaplicado como parche, no
@@ -102,6 +111,30 @@ comparte los commits downstream de `paperdiy`; por eso el merge no puede ser
 `--ff-only`. Como `paperdiy-next` ya contiene el árbol final (upstream + port +
 docs + SDK vendorizado), `-X theirs` resuelve los conflictos de SDK/parches a
 favor del árbol nuevo; `git diff paperdiy-next` debe quedar vacío.
+
+Después del merge hay que regenerar los parches contra las bases nuevas. El
+`paperdiy-next` deja de coincidir con `paperdiy` solo por estos artefactos:
+
+```bash
+# sdk-baseline debe tener el SDK pristine del pin actual, sin cambios del port.
+git diff sdk-baseline..paperdiy -- freeink-sdk > patches/sdk.patch
+git diff main..paperdiy -- platformio.ini src lib/GfxRenderer lib/hal > patches/firmware.patch
+cat patches/sdk.patch patches/firmware.patch > patches/paperdiy-support.patch
+git apply --check patches/sdk.patch   # sobre un worktree de sdk-baseline
+git apply --check patches/firmware.patch  # sobre un worktree de main
+```
+
+Si `sdk-baseline` está desactualizada, recrearla desde el pin del submódulo
+antes de generar el patch:
+
+```bash
+git checkout -B sdk-baseline main
+git submodule update --init --recursive freeink-sdk
+rm -rf /tmp/sdk-pristine && cp -R freeink-sdk /tmp/sdk-pristine
+git rm -rf -q freeink-sdk
+mkdir -p freeink-sdk && rsync -a --exclude='.git' /tmp/sdk-pristine/ freeink-sdk/
+git add freeink-sdk && git commit -m "chore: vendor pristine SDK for patch baseline"
+```
 
 ## Patches
 

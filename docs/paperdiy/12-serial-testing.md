@@ -183,9 +183,20 @@ conectado al Mac.
 - Al terminar, `Auto suspensión` se dejó en 10 min; `Fondo = Portada` y
   `Modo = Ajustar` se mantuvieron.
 
-Pendiente de probar: consumo/autonomía, KOReader Sync con credenciales,
-emparejar un mando BLE real, ghosting visual tras lectura muy larga y la
-batería 604050.
+Pendiente de probar: consumo/autonomía, emparejar un mando BLE real, ghosting
+visual tras lectura muy larga y la batería 604050.
+
+## KOReader Sync local (06/11/2026)
+
+- Se levantó un servidor KOSync mínimo en el Mac (`192.168.1.148:7200`) y se
+  configuraron credenciales de prueba desde `/api/settings` de la web UI.
+- Validado: autenticación, `GET /syncs/progress` sin progreso remoto, subida
+  (`PUT`) con metadatos y locator, comparación remoto/local y aplicación del
+  progreso remoto (salto de página 13→17 en *Reconciliación*).
+- Las credenciales de prueba se borraron al terminar; el lector queda sin
+  servidor configurado.
+- No se probó contra un servidor oficial/remoto; el mock implementa los
+  endpoints KOSync estándar.
 
 ## Lectura larga y tiempos de refresco (06/11/2026)
 

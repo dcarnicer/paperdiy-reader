@@ -4,7 +4,7 @@
 
 ## 相对 CrossPoint 2.0 的改动
 
-基础提交：`308cd522155ec11c3f62e346a1a961facd3dad80`（develop，2.0.0，
+基础提交：`bb93a462cca968be7606cde39833dc20c7a9b48c`（develop，2.0.0，
 2026-11-03）。`main` 是上游镜像；`paperdiy` 是分支。`freeink-sdk` 已内置，
 使构建自包含。移植修改保存在 `patches/sdk.patch` + `patches/firmware.patch`。
 
@@ -164,7 +164,7 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
   并正常阅读。
 - Wi-Fi 和网页界面正常；已通过网页界面上传图书并从阅读器打开。
 - 后续已验证：OPDS、Calibre 无线传输、OTA、电源键/关机和电源键唤醒。
-  仍待完成：需要凭据的 KOReader Sync、一般残影、休眠电流、A/B 唤醒的
+  当时待完成：需要凭据的 KOReader Sync、一般残影、休眠电流、A/B 唤醒的
   深度休眠和续航。
 
 更新（2026-11-04）：同步到上游 `308cd522` 后，再次验证了启动、主页、唤醒、
@@ -328,7 +328,7 @@ PaperDIY 在 GPIO48 上提供 `CARD_DET`，低电平有效。`SdPins.detect` 将
 3. PaperDIY 配置很小，符合现有架构，是很好的 PR 候选。
 
 移植分为 `patches/sdk.patch`（SDK 基础 `5e94fe7`）和
-`patches/firmware.patch`（CrossPoint 基础 `308cd522`）。生成和同步流程见
+`patches/firmware.patch`（CrossPoint 基础 `bb93a462`）。生成和同步流程见
 [`10-fork-maintenance.md`](10-fork-maintenance.md)。
 
 ## 状态
@@ -342,7 +342,7 @@ PaperDIY 在 GPIO48 上提供 `CARD_DET`，低电平有效。`SdPins.detect` 将
 - [x] 可配置 OTA 和 `paperdiy` 标签。
 - [x] 基础硬件验证（2026-11-04）。
 - [x] OPDS、Calibre 无线传输和 OTA（2026-11-04～05）。
-- [ ] 需要凭据的 KOReader Sync。
+- [x] 需要凭据的 KOReader Sync（本地 KOSync 服务器，2026-11-06）。
 - [ ] 旋转/LUT/残影调整。
 - [ ] 电流/续航测量。
 - [ ] 两键 UX 打磨。

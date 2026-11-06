@@ -11,14 +11,14 @@ a diario.
 
 > **Estado:** el firmware **compila, arranca y lee EPUB en un PaperDIY real**.
 > Validación (04/11/2026): arranque, pantalla/UI, Home, wake, botones A/B,
-> batería, SD y navegación OK tras sincronizar con CrossPoint `308cd522`.
+> batería, SD y navegación OK tras sincronizar con CrossPoint `bb93a462`.
 > La lectura EPUB, Wi-Fi, web UI y transferencia de libros ya se validaron el
 > 28/10/2026. Calibre wireless y OTA verificados el 04/11/2026. OPDS
 > (Project Gutenberg) verificado el 05/11/2026. Auto-suspensión y sleep screen
 > con portada verificadas el 05/11/2026. Lectura larga: 250+ cambios de página
-> sin errores ni fugas el 06/11/2026. Pendiente: KOReader Sync con
-> credenciales, emparejar un mando BLE, consumo en sleep/autonomía, batería
-> 604050 y revisión visual física del ghosting. Ver
+> sin errores ni fugas el 06/11/2026. KOReader Sync validado contra un servidor
+> KOSync local el 06/11/2026. Pendiente: emparejar un mando BLE, consumo en
+> sleep/autonomía, batería 604050 y revisión visual física del ghosting. Ver
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md).
 >
 > **Fork downstream:** `main` es un espejo de `upstream/develop`; `paperdiy`

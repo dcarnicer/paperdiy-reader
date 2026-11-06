@@ -36,6 +36,10 @@ the firmware. If you prefer the original behavior, build with
 In the reader, A/B turn pages. In lists, they move the selection; long B opens
 the item; long A goes back.
 
+In `Settings > Controls > Orient Side Buttons` you can make A/B reverse
+direction in landscape; in upside-down portrait they always reverse. It is off
+by default, including when upgrading from an older version.
+
 Short clicks are registered **on release**, not on press: that is what makes
 it possible to tell a click from a long press with only two buttons. If it were
 changed to "page on press", a long press could trigger a page/movement before
@@ -122,7 +126,8 @@ opening the menu; it is a UX trade-off still to be decided.
   the flow.
 - **OPDS**: add catalogs (Project Gutenberg, Standard Ebooks, etc.) and browse
   them from the reader.
-- **KOReader Sync**: configure credentials and sync progress.
+- **KOReader Sync**: configure credentials and sync progress against the
+  official server or a self-hosted one (KOSync).
 - **OTA**: check for updates from Settings; you can also flash over USB.
 
 ## Power and sleep
