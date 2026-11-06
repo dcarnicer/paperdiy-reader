@@ -183,7 +183,7 @@ index 2889e769..e04b2ac2 100644
    if (wakeOnHeldButton) {
      freeink::PowerManager::armPowerButtonWakeup();
 diff --git a/lib/hal/HalStorage.cpp b/lib/hal/HalStorage.cpp
-index e4d76c93..005c65e0 100644
+index 29c083b8..e3e9eb15 100644
 --- a/lib/hal/HalStorage.cpp
 +++ b/lib/hal/HalStorage.cpp
 @@ -37,6 +37,8 @@ bool HalStorage::begin() { return SDCard.begin(); }
@@ -208,7 +208,7 @@ index e4d76c93..005c65e0 100644
    StorageLock lock;
    SDCard.shutdown();
 diff --git a/lib/hal/HalStorage.h b/lib/hal/HalStorage.h
-index a8ada953..a53fd908 100644
+index bee6736b..692a5584 100644
 --- a/lib/hal/HalStorage.h
 +++ b/lib/hal/HalStorage.h
 @@ -24,6 +24,9 @@ class HalStorage {
@@ -417,7 +417,7 @@ index 06ecd724..9498d0a9 100644
    UiListActivity::render(std::move(lock));
  }
 diff --git a/src/activities/settings/AboutActivity.cpp b/src/activities/settings/AboutActivity.cpp
-index fdb0c2ae..d4426183 100644
+index 953a815e..9c155ef3 100644
 --- a/src/activities/settings/AboutActivity.cpp
 +++ b/src/activities/settings/AboutActivity.cpp
 @@ -1,5 +1,6 @@
@@ -427,26 +427,38 @@ index fdb0c2ae..d4426183 100644
  #include <BoardConfig.h>
  #include <GfxRenderer.h>
  #include <HalClock.h>
-@@ -20,6 +21,7 @@ enum MenuItem {
-   ITEM_FIRMWARE,
-   ITEM_CHIP,
-   ITEM_FLASH,
+@@ -26,6 +27,7 @@ enum MenuItem {
+   ITEM_SD_SIZE,
+   ITEM_SD_USED,
+   ITEM_SD_FREE,
 +  ITEM_BATTERY,
    ITEM_DISPLAY,
    ITEM_RESOLUTION,
    ITEM_TOUCH,
-@@ -33,8 +35,8 @@ enum MenuItem {
+@@ -39,20 +41,8 @@ enum MenuItem {
  // these screenshots across every device language, so the labels must be
  // identical on every unit.
  const char* const menuNames[AboutActivity::ITEM_COUNT] = {
--    "Device", "Firmware",          "Chip",        "Flash", "Display Controller", "Resolution", "Touch", "Frontlight",
--    "RTC",    "Tilt Sensor (IMU)", "MAC Address",
-+    "Device",     "Firmware", "Chip",       "Flash", "Battery",           "Display Controller",
-+    "Resolution", "Touch",    "Frontlight", "RTC",   "Tilt Sensor (IMU)", "MAC Address",
+-    "Device",
+-    "Firmware",
+-    "Chip",
+-    "Flash",
+-    "SD Size",
+-    "SD Used",
+-    "SD Free",
+-    "Display Controller",
+-    "Resolution",
+-    "Touch",
+-    "Frontlight",
+-    "RTC",
+-    "Tilt Sensor (IMU)",
+-    "MAC Address",
++    "Device",    "Firmware",           "Chip",        "Flash",   "SD Size", "SD Used", "SD Free", "Battery",
++    "Display Controller", "Resolution", "Touch",       "Frontlight", "RTC",  "Tilt Sensor (IMU)", "MAC Address",
  };
  
- // Chip part numbers, not user prose — deliberately untranslated.
-@@ -107,6 +109,22 @@ void AboutActivity::onEnter() {
+ // "14.5 GB" / "35 MB": GiB with one decimal, MiB below 1 GiB.
+@@ -139,6 +129,22 @@ void AboutActivity::onEnter() {
    const char* liveController = display.controllerName();
    rowValues_[ITEM_DISPLAY] =
        liveController ? liveController : displayControllerName(BoardConfig::ACTIVE.displayController);
@@ -470,15 +482,15 @@ index fdb0c2ae..d4426183 100644
             static_cast<unsigned>(BoardConfig::ACTIVE.displayHeight));
    rowValues_[ITEM_RESOLUTION] = buf;
 diff --git a/src/activities/settings/AboutActivity.h b/src/activities/settings/AboutActivity.h
-index ec4dc70c..417bed3c 100644
+index 79245351..4d2f2f6b 100644
 --- a/src/activities/settings/AboutActivity.h
 +++ b/src/activities/settings/AboutActivity.h
 @@ -10,7 +10,7 @@ class AboutActivity final : public UiListActivity {
   public:
    explicit AboutActivity(GfxRenderer& renderer, MappedInputManager& mappedInput);
  
--  static constexpr int ITEM_COUNT = 11;
-+  static constexpr int ITEM_COUNT = 12;
+-  static constexpr int ITEM_COUNT = 14;
++  static constexpr int ITEM_COUNT = 15;
  
    void onEnter() override;
  
