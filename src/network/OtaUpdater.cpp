@@ -19,7 +19,12 @@
 #include "FirmwareFlasher.h"
 
 namespace {
-constexpr char latestReleaseUrl[] = "https://api.github.com/repos/crosspoint-reader/crosspoint-reader/releases/latest";
+// Override in the fork's release environment so OTA checks our releases, not
+// the official CrossPoint ones. The board tag still rejects a wrong asset.
+#ifndef CROSSPOINT_OTA_RELEASES_URL
+#define CROSSPOINT_OTA_RELEASES_URL "https://api.github.com/repos/crosspoint-reader/crosspoint-reader/releases/latest"
+#endif
+constexpr char latestReleaseUrl[] = CROSSPOINT_OTA_RELEASES_URL;
 }  // namespace
 
 OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
@@ -101,8 +106,12 @@ bool OtaUpdater::isUpdateNewer() const {
 
   const auto currentVersion = CROSSPOINT_VERSION;
 
+  // GitHub tags are commonly vX.Y.Z; the version parser only wants X.Y.Z.
+  const char* latest = latestVersion.c_str();
+  if (*latest == 'v' || *latest == 'V') ++latest;
+
   // semantic version check (only match on 3 segments)
-  sscanf(latestVersion.c_str(), "%d.%d.%d", &latestMajor, &latestMinor, &latestPatch);
+  sscanf(latest, "%d.%d.%d", &latestMajor, &latestMinor, &latestPatch);
   sscanf(currentVersion, "%d.%d.%d", &currentMajor, &currentMinor, &currentPatch);
 
   /*
