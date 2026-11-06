@@ -1,0 +1,770 @@
+diff --git a/lib/GfxRenderer/GfxRenderer.cpp b/lib/GfxRenderer/GfxRenderer.cpp
+index b00ee10c..8f66c8a9 100644
+--- a/lib/GfxRenderer/GfxRenderer.cpp
++++ b/lib/GfxRenderer/GfxRenderer.cpp
+@@ -1763,6 +1763,22 @@ void GfxRenderer::displayBuffer(HalDisplay::RefreshMode refreshMode) const {
+   display.displayBuffer(refreshMode, fadingFix);
+ }
+ 
++void GfxRenderer::displayWindow(int x, int y, int width, int height) const {
++  const AlignedMemRect rect =
++      screenRectToAlignedMemRect(orientation, x, y, width, height, display.getDisplayWidth(), display.getDisplayHeight());
++  if (!rect.valid) return;
++  LOG_DBG("GFX", "Window refresh %u,%u %ux%u", rect.x, rect.y, rect.w, rect.h);
++  display.displayWindow(rect.x, rect.y, rect.w, rect.h);
++}
++
++void GfxRenderer::displayWindowPortrait(int x, int y, int width, int height) const {
++  const AlignedMemRect rect =
++      screenRectToAlignedMemRect(Orientation::Portrait, x, y, width, height, panelWidth, panelHeight);
++  if (!rect.valid) return;
++  LOG_DBG("GFX", "Window refresh (portrait) %u,%u %ux%u", rect.x, rect.y, rect.w, rect.h);
++  display.displayWindow(rect.x, rect.y, rect.w, rect.h);
++}
++
+ void GfxRenderer::displayBufferAsync(HalDisplay::RefreshMode refreshMode) const {
+   refreshMode = applyPromotedRefresh(refreshMode);
+   // The async path has no turn-off-screen hook, which the sunlight fading fix
+diff --git a/lib/GfxRenderer/GfxRenderer.h b/lib/GfxRenderer/GfxRenderer.h
+index 93889dd9..536452d7 100644
+--- a/lib/GfxRenderer/GfxRenderer.h
++++ b/lib/GfxRenderer/GfxRenderer.h
+@@ -260,8 +260,13 @@ class GfxRenderer {
+       HalDisplay::GrayscaleMode mode = HalDisplay::GrayscaleMode::Overlay) const;
+   // Compatibility queries for Overlay mode.
+   bool supportsAsyncGrayscaleBase() const;
+-  // EXPERIMENTAL: Windowed update - display only a rectangular region
+-  // void displayWindow(int x, int y, int width, int height) const;
++  // Windowed update: display only a rectangular region in logical screen
++  // coordinates. The rectangle is rotated to panel memory and x is aligned to
++  // the panel's 8-pixel bus granularity before reaching the driver.
++  void displayWindow(int x, int y, int width, int height) const;
++  // Same, but the rectangle is in Portrait logical coordinates. Button hints
++  // are always drawn in Portrait even when the activity runs in landscape.
++  void displayWindowPortrait(int x, int y, int width, int height) const;
+   void invertScreen() const;
+   void clearScreen(uint8_t color = 0xFF) const;
+   void getOrientedViewableTRBL(int* outTop, int* outRight, int* outBottom, int* outLeft) const;
+diff --git a/lib/hal/HalDisplay.cpp b/lib/hal/HalDisplay.cpp
+index 2b3c8c6a..89ff7744 100644
+--- a/lib/hal/HalDisplay.cpp
++++ b/lib/hal/HalDisplay.cpp
+@@ -67,6 +67,10 @@ void HalDisplay::displayBuffer(HalDisplay::RefreshMode mode, bool turnOffScreen)
+   einkDisplay.displayBuffer(convertRefreshMode(mode), turnOffScreen);
+ }
+ 
++void HalDisplay::displayWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
++  einkDisplay.displayWindow(x, y, w, h);
++}
++
+ void HalDisplay::displayBufferAsync(HalDisplay::RefreshMode mode) {
+   if (gpio.deviceIsX3() && mode == RefreshMode::HALF_REFRESH) {
+     einkDisplay.requestResync(1);
+diff --git a/lib/hal/HalDisplay.h b/lib/hal/HalDisplay.h
+index ce97ac49..1acddb1e 100644
+--- a/lib/hal/HalDisplay.h
++++ b/lib/hal/HalDisplay.h
+@@ -52,6 +52,10 @@ class HalDisplay {
+                             bool fromProgmem = false) const;
+ 
+   void displayBuffer(RefreshMode mode = RefreshMode::FAST_REFRESH, bool turnOffScreen = false);
++  // Refresh only a panel-memory rectangle. Coordinates are physical panel
++  // coordinates (already rotation/alignment adjusted by the caller). Drivers
++  // without a regional path fall back to a full refresh.
++  void displayWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+   // Non-blocking refresh (shadow-free): starts the panel waveform and returns
+   // while the panel refreshes on its own. The framebuffer must stay untouched
+   // until waitRefreshComplete(), and the caller must rebuild the differential
+diff --git a/lib/hal/HalGPIO.cpp b/lib/hal/HalGPIO.cpp
+index e2254133..e6ae9af3 100644
+--- a/lib/hal/HalGPIO.cpp
++++ b/lib/hal/HalGPIO.cpp
+@@ -256,6 +256,11 @@ bool HalGPIO::isUsbConnected() const {
+   return battery.isCharging();
+ }
+ 
++bool HalGPIO::isCharging() const {
++  static const BatteryMonitor battery;
++  return battery.isCharging();
++}
++
+ bool HalGPIO::coldBootImpliesPowerButton() const {
+   // Xteink-style power topology: the power button energizes the rail until
+   // firmware latches it, so a no-USB POWERON can only be a still-held button
+@@ -266,7 +271,8 @@ bool HalGPIO::coldBootImpliesPowerButton() const {
+   // EEGO A4 misread them the same way once the charger terminates at 100%
+   // (STAT inactive reads as "no USB").
+   // The Metalio sleeps powered off and only its button turns it back on.
+-  return isXteinkDevice() || BoardConfig::isPaperMono() || BoardConfig::isSticky() || BoardConfig::isMetalioEInk4();
++  return isXteinkDevice() || BoardConfig::isPaperDiy() || BoardConfig::isPaperMono() || BoardConfig::isSticky() ||
++         BoardConfig::isMetalioEInk4();
+ }
+ 
+ HalGPIO::WakeupReason HalGPIO::getWakeupReason() const {
+diff --git a/lib/hal/HalGPIO.h b/lib/hal/HalGPIO.h
+index 3f817092..96f25c46 100644
+--- a/lib/hal/HalGPIO.h
++++ b/lib/hal/HalGPIO.h
+@@ -129,6 +129,9 @@ class HalGPIO {
+   // Check if USB is connected
+   bool isUsbConnected() const;
+ 
++  // Whether the charger is actively charging (not merely USB-present).
++  bool isCharging() const;
++
+   // Whether a cold boot with no USB detected can be trusted to mean a held
+   // power button (Xteink-style button-energized rail with reliable USB
+   // detection). When false, cold boots always proceed to a normal boot.
+diff --git a/lib/hal/HalPowerManager.cpp b/lib/hal/HalPowerManager.cpp
+index 2889e769..e04b2ac2 100644
+--- a/lib/hal/HalPowerManager.cpp
++++ b/lib/hal/HalPowerManager.cpp
+@@ -19,9 +19,12 @@
+ #include <driver/gpio.h>
+ #endif
+ 
+-#if FREEINK_DEVICE_PAPERMONO
++#if FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY
+ #include <M5Pm1.h>
+ #endif
++#if FREEINK_DEVICE_PAPERDIY
++#include <BoardPaperDiy.h>
++#endif
+ 
+ HalPowerManager powerManager;  // Singleton instance
+ 
+@@ -37,6 +40,22 @@ void HalPowerManager::begin() {
+   // Board charger setup (Picco SGM41562: stock charge voltage and limits); a
+   // no-op on boards without a configurable charger.
+   if (BatteryMonitor::configureCharger()) LOG_INF("PWR", "Charger configured");
++#if FREEINK_DEVICE_PAPERDIY
++  // PaperDIY's PM1 exposes only voltage, not a coulomb counter. Log the raw
++  // rails once at boot so a percentage that looks stuck can be compared with
++  // the actual cell voltage and charge source.
++  if (BoardConfig::isPaperDiy()) {
++    const BatteryMonitor battery;
++    const auto status = battery.readStatus();
++    uint8_t pwrCfg = 0;
++    uint8_t gpioIn = 0;
++    freeink::m5pm1::readReg(freeink::m5pm1::REG_PWR_CFG, &pwrCfg);
++    freeink::m5pm1::readReg(freeink::m5pm1::REG_GPIO_IN, &gpioIn);
++    LOG_INF("PWR", "Battery: VBAT=%dmV VIN=%dmV 5VOUT=%dmV PWR_SRC=%d pct=%d chg=%d ext=%d cfg=%02x gpio=%02x",
++            status.millivolts, status.pm1VinMv, status.pm1VinOutMv, status.pm1PowerSource, status.percentage,
++            status.charging, status.externalPower, pwrCfg, gpioIn);
++  }
++#endif
+   normalFreq = getCpuFrequencyMhz();
+   modeMutex = xSemaphoreCreateMutex();
+   assert(modeMutex != nullptr);
+@@ -140,7 +159,7 @@ void HalPowerManager::startDeepSleep(HalGPIO& gpio, const bool wakeOnHeldButton)
+   // guarantees that ordering).
+   freeink::PowerManager::powerDownRailsForSleep();
+ 
+-#if FREEINK_DEVICE_PAPERMONO
++#if FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY
+   // Its power button is behind the M5PM1 PMIC rather than an ESP GPIO, so
+   // normal GPIO deep sleep would have no wake source. Ask the PMIC to shut the
+   // device down; a button click then restarts it through a cold boot.
+@@ -153,6 +172,16 @@ void HalPowerManager::startDeepSleep(HalGPIO& gpio, const bool wakeOnHeldButton)
+   // power instead; the button cold-boots it. Returns only on USB power.
+   freeink::metalio::powerOff();
+ #endif
++#if FREEINK_DEVICE_PAPERDIY
++  // If USB keeps the board powered after the PMIC shutdown request, fall back
++  // to deep sleep. Either navigation key wakes it (the PM1 power button is not
++  // an ESP32 GPIO).
++  BoardPaperDiy::powerDownEpdPower();
++  const auto& keys = BoardConfig::ACTIVE.input;
++  while (digitalRead(keys.up) == LOW || digitalRead(keys.down) == LOW) delay(10);
++  freeink::PowerManager::armWakeOnPins((1ULL << keys.up) | (1ULL << keys.down));
++  freeink::PowerManager::deepSleep();
++#endif
+ 
+   if (wakeOnHeldButton) {
+     freeink::PowerManager::armPowerButtonWakeup();
+diff --git a/lib/hal/HalStorage.cpp b/lib/hal/HalStorage.cpp
+index e4d76c93..005c65e0 100644
+--- a/lib/hal/HalStorage.cpp
++++ b/lib/hal/HalStorage.cpp
+@@ -37,6 +37,8 @@ bool HalStorage::begin() { return SDCard.begin(); }
+ 
+ bool HalStorage::ready() const { return SDCard.ready(); }
+ 
++bool HalStorage::isCardPresent() const { return SDCard.isCardPresent(); }
++
+ // For the rest of the methods, we acquire the mutex to ensure thread safety
+ 
+ class HalStorage::StorageLock {
+@@ -45,6 +47,11 @@ class HalStorage::StorageLock {
+   ~StorageLock() { xSemaphoreGiveRecursive(HalStorage::getInstance().storageMutex); }
+ };
+ 
++bool HalStorage::remount() {
++  StorageLock lock;
++  return SDCard.remount();
++}
++
+ void HalStorage::prepareForDeepSleep() {
+   StorageLock lock;
+   SDCard.shutdown();
+diff --git a/lib/hal/HalStorage.h b/lib/hal/HalStorage.h
+index a8ada953..a53fd908 100644
+--- a/lib/hal/HalStorage.h
++++ b/lib/hal/HalStorage.h
+@@ -24,6 +24,9 @@ class HalStorage {
+   HalStorage();
+   bool begin();
+   bool ready() const;
++  bool isCardPresent() const;
++  // Unmount and probe again after a card is inserted.
++  bool remount();
+   // Stop the SD card for deep sleep: unmount, stop the SDMMC host, and release
+   // the bus pads (no-op on SPI boards). Call only after all file users have
+   // stopped; open HalFiles become invalid. A deep-sleep wake resets the MCU and
+diff --git a/platformio.ini b/platformio.ini
+index 53531bf7..e74256fa 100644
+--- a/platformio.ini
++++ b/platformio.ini
+@@ -625,6 +625,44 @@ build_flags =
+   -DLOG_LEVEL=1 ; Set log level to info for release candidate builds
+   -DUSE_BLOCK_DEVICE_INTERFACE=1
+ 
++; --- M5Stack PaperDIY — ESP32-S3 N16R8, ED047TC1 raw parallel, 2 buttons ------
++; Same panel/bus as PaperS3 but no touch/RTC/IMU, two GPIO buttons and an M5PM1
++; PMIC. Board support lives in freeink-sdk/libs/hardware/BoardPaperDiy.
++;   pio run -e paperdiy -t upload
++[env:paperdiy]
++extends = base
++board = esp32-s3-devkitc1-n16r8
++board_build.mcu = esp32s3
++board_build.flash_mode = qio
++board_build.arduino.memory_type = qio_opi
++build_flags =
++  ${base.build_flags}
++  -DFREEINK_DEVICE_PAPERDIY=1
++  -DBOARD_HAS_PSRAM
++  -DFREEINK_CAP_USB_MSC=1
++  -DFREEINK_CAP_BLE_HID_HOST=1
++  -DUSB_PRODUCT=\"CrossPoint_PaperDIY\"
++  -DUSB_MANUFACTURER=\"CrossPoint\"
++  -DCROSSPOINT_VERSION=\"${crosspoint.version}-paperdiy\"
++  -DENABLE_SERIAL_LOG
++  -DLOG_LEVEL=2
++  ; Fork OTA: uncomment and point at THIS fork before publishing releases.
++  ; The default (official CrossPoint) is safe because no -paperdiy asset exists.
++  ; -DCROSSPOINT_OTA_RELEASES_URL=\"https://api.github.com/repos/YOURUSER/paperdiy-reader/releases/latest\"
++lib_deps =
++  ${base.lib_deps}
++  BoardPaperDiy=symlink://freeink-sdk/libs/hardware/BoardPaperDiy
++  m5stack/M5GFX @ 0.2.33
++
++; --- PaperDIY test build — serial key injection for automated UI tests --------
++; Development only. Do not publish this environment's firmware as a release.
++;   make build ENV=paperdiy-test
++[env:paperdiy-test]
++extends = env:paperdiy
++build_flags =
++  ${env:paperdiy.build_flags}
++  -DPAPERDIY_SERIAL_TEST=1
++
+ ; --- EEGO Reader A4 — ESP32-S3 N16R8, UC8279C 768x552 + GSLX680 touch ---------
+ ; UC8279C SPI panel, GSLX680 touch, PCF8563 RTC, dedicated HSPI MicroSD (SPI,
+ ; not SDMMC). 16MB DIO flash + 8MB OPI PSRAM. One binary serves the frontlit
+diff --git a/src/CrossPointSettings.cpp b/src/CrossPointSettings.cpp
+index fb30a5ab..bab677e3 100644
+--- a/src/CrossPointSettings.cpp
++++ b/src/CrossPointSettings.cpp
+@@ -120,6 +120,12 @@ void CrossPointSettings::toJson(JsonDocument& doc) const {
+     doc["keyboardLayouts"] = keyboardLayouts;
+   }
+ 
++#if FREEINK_DEVICE_PAPERDIY
++  // Marks a file written after the PaperDIY refresh defaults were tuned. Old
++  // settings files lack it and are migrated once in fromJson(); see there.
++  doc["paperdiyRefreshDefaults"] = 2;
++#endif
++
+   bleturner::writeJson(ble, doc);
+ }
+ 
+@@ -304,6 +310,22 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
+     keyboardLayouts = doc["keyboardLayouts"].as<uint16_t>();
+   }
+ 
++#if FREEINK_DEVICE_PAPERDIY
++  // The first PaperDIY builds inherited CrossPoint's 15-page default, which
++  // ghosts visibly on this panel. A later trial moved the 1-page setting to 5
++  // to exercise the ED047TC1 fast LUT. Both are one-time upgrades; a file
++  // written at version 2 keeps whatever the reader chose afterwards.
++  const uint8_t refreshDefaults = doc["paperdiyRefreshDefaults"] | 0;
++  if (refreshDefaults < 2) {
++    if (refreshFrequency == REFRESH_15 || refreshFrequency == REFRESH_1) {
++      refreshFrequency = REFRESH_5;
++      LOG_INF("CPS", "PaperDIY: refresh interval -> 5 pages for the fast-LUT trial");
++    }
++    needsResave = true;
++  }
++  LOG_DBG("CPS", "PaperDIY refresh interval: %u pages", static_cast<unsigned>(refreshFrequency));
++#endif
++
+   if (!bleturner::readJson(ble, doc)) {
+     needsResave = true;
+   }
+diff --git a/src/CrossPointSettings.h b/src/CrossPointSettings.h
+index 513a2747..d7bc0659 100644
+--- a/src/CrossPointSettings.h
++++ b/src/CrossPointSettings.h
+@@ -2,6 +2,7 @@
+ 
+ #include <ArduinoJson.h>
+ #include <BlePageTurner.h>
++#include <BoardConfig.h>
+ #include <Epub/ReaderRenderSpec.h>
+ #include <PersistableStore.h>
+ 
+@@ -328,8 +329,15 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
+   uint8_t paragraphAlignment = JUSTIFIED;
+   // Auto-sleep timeout setting (default 10 minutes). Legacy sleepTimeout enum values are migration-only.
+   uint8_t sleepTimeoutMinutes = 10;
+-  // E-ink refresh frequency (default 15 pages)
++  // E-ink refresh frequency. Raw-parallel ED047TC1 panels (PaperDIY/PaperS3)
++  // accumulate ghosting faster than the SPI controllers CrossPoint was tuned
++  // for: every AA page turn already sends a B/W base plus a gray overlay, so
++  // 15 pages means ~30 fast waveforms before the next clean pass.
++#if FREEINK_DEVICE_PAPERDIY
++  uint8_t refreshFrequency = REFRESH_5;
++#else
+   uint8_t refreshFrequency = REFRESH_15;
++#endif
+   uint8_t hyphenationEnabled = 0;
+ 
+   // Reader screen margin settings
+diff --git a/src/activities/UiListActivity.cpp b/src/activities/UiListActivity.cpp
+index f58f2c42..1fcbfdac 100644
+--- a/src/activities/UiListActivity.cpp
++++ b/src/activities/UiListActivity.cpp
+@@ -261,5 +261,7 @@ void UiListActivity::render(RenderLock&&) {
+     renderUi();
+   }
+   drawFooter();
+-  renderer.displayBuffer();
++  const auto refreshMode = cleanFirstRender ? HalDisplay::HALF_REFRESH : HalDisplay::FAST_REFRESH;
++  cleanFirstRender = false;
++  renderer.displayBuffer(refreshMode);
+ }
+diff --git a/src/activities/UiListActivity.h b/src/activities/UiListActivity.h
+index 2f8e3705..b3293acb 100644
+--- a/src/activities/UiListActivity.h
++++ b/src/activities/UiListActivity.h
+@@ -92,6 +92,10 @@ class UiListActivity : public Activity, protected UiAppHost {
+   freeink::ui::ListNav nav;
+   ButtonNavigator buttonNavigator;
+ 
++  // Set by a screen that replaces a reader page and must scrub the previous
++  // ink on its first paint (the reader menu). Subsequent paints stay FAST.
++  bool cleanFirstRender = false;
++
+  private:
+   static void screenTrampoline(UiScreen& screen, void* user);
+   static void rowActionTrampoline(const freeink::ui::ActionEvent& event, void* user);
+diff --git a/src/activities/home/FileBrowserActivity.cpp b/src/activities/home/FileBrowserActivity.cpp
+index 271d9ce6..1dab9aa2 100644
+--- a/src/activities/home/FileBrowserActivity.cpp
++++ b/src/activities/home/FileBrowserActivity.cpp
+@@ -588,7 +588,7 @@ bool FileBrowserActivity::handleButtons() {
+ }
+ 
+ void FileBrowserActivity::render(RenderLock&& lock) {
+-  if (optionPopup.processRender(renderer, mappedInput)) return;
++  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
+   UiListActivity::render(std::move(lock));
+ }
+ 
+diff --git a/src/activities/library/LibraryListActivity.cpp b/src/activities/library/LibraryListActivity.cpp
+index c5c0535f..8e71089f 100644
+--- a/src/activities/library/LibraryListActivity.cpp
++++ b/src/activities/library/LibraryListActivity.cpp
+@@ -1065,7 +1065,7 @@ void LibraryListActivity::drawHoldHelp() const {
+ // OptionPopup is a self-contained modal: it owns the whole frame (hints
+ // included) whenever it is up, mirroring the FileBrowser pattern.
+ void LibraryListActivity::render(RenderLock&& lock) {
+-  if (optionPopup.processRender(renderer, mappedInput)) return;
++  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
+   UiTabListActivity::render(std::move(lock));
+ }
+ 
+diff --git a/src/activities/reader/EpubReaderMenuActivity.cpp b/src/activities/reader/EpubReaderMenuActivity.cpp
+index 06ecd724..9498d0a9 100644
+--- a/src/activities/reader/EpubReaderMenuActivity.cpp
++++ b/src/activities/reader/EpubReaderMenuActivity.cpp
+@@ -33,6 +33,9 @@ EpubReaderMenuActivity::EpubReaderMenuActivity(GfxRenderer& renderer, MappedInpu
+ 
+ void EpubReaderMenuActivity::onEnter() {
+   RenderLock lock;
++  // The reader page is still on the glass. A FAST full-screen replacement
++  // leaves its text faintly visible behind the menu; scrub it once.
++  cleanFirstRender = true;
+   UiListActivity::onEnter();
+   for (size_t i = 0; i < menuItems.size(); ++i) {
+     if (menuItems[i].action == selectedAction) {
+@@ -264,7 +267,7 @@ void EpubReaderMenuActivity::drawChrome() {
+ }
+ 
+ void EpubReaderMenuActivity::render(RenderLock&& lock) {
+-  if (optionPopup.processRender(renderer, mappedInput)) return;
++  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
+ 
+   UiListActivity::render(std::move(lock));
+ }
+diff --git a/src/activities/settings/AboutActivity.cpp b/src/activities/settings/AboutActivity.cpp
+index fdb0c2ae..d4426183 100644
+--- a/src/activities/settings/AboutActivity.cpp
++++ b/src/activities/settings/AboutActivity.cpp
+@@ -1,5 +1,6 @@
+ #include "AboutActivity.h"
+ 
++#include <BatteryMonitor.h>
+ #include <BoardConfig.h>
+ #include <GfxRenderer.h>
+ #include <HalClock.h>
+@@ -20,6 +21,7 @@ enum MenuItem {
+   ITEM_FIRMWARE,
+   ITEM_CHIP,
+   ITEM_FLASH,
++  ITEM_BATTERY,
+   ITEM_DISPLAY,
+   ITEM_RESOLUTION,
+   ITEM_TOUCH,
+@@ -33,8 +35,8 @@ enum MenuItem {
+ // these screenshots across every device language, so the labels must be
+ // identical on every unit.
+ const char* const menuNames[AboutActivity::ITEM_COUNT] = {
+-    "Device", "Firmware",          "Chip",        "Flash", "Display Controller", "Resolution", "Touch", "Frontlight",
+-    "RTC",    "Tilt Sensor (IMU)", "MAC Address",
++    "Device",     "Firmware", "Chip",       "Flash", "Battery",           "Display Controller",
++    "Resolution", "Touch",    "Frontlight", "RTC",   "Tilt Sensor (IMU)", "MAC Address",
+ };
+ 
+ // Chip part numbers, not user prose — deliberately untranslated.
+@@ -107,6 +109,22 @@ void AboutActivity::onEnter() {
+   const char* liveController = display.controllerName();
+   rowValues_[ITEM_DISPLAY] =
+       liveController ? liveController : displayControllerName(BoardConfig::ACTIVE.displayController);
++
++  // The PM1 has no coulomb counter, so show the raw rails next to the percentage.
++  // This is also the quickest way to tell a full pack from a charger that has
++  // already terminated. Fields are -1 when the board has no PM1 backend.
++  const BatteryMonitor battery;
++  const auto batteryStatus = battery.readStatus();
++  if (batteryStatus.millivoltsKnown) {
++    const char* state =
++        batteryStatus.chargingKnown
++            ? (batteryStatus.charging ? "charging" : "idle")
++            : (batteryStatus.externalPowerKnown ? (batteryStatus.externalPower ? "USB" : "battery") : "?");
++    snprintf(buf, sizeof(buf), "%.2fV %u%% %s", batteryStatus.millivolts / 1000.0f, batteryStatus.percentage, state);
++    rowValues_[ITEM_BATTERY] = buf;
++  } else {
++    rowValues_[ITEM_BATTERY] = "n/a";
++  }
+   snprintf(buf, sizeof(buf), "%ux%u", static_cast<unsigned>(BoardConfig::ACTIVE.displayWidth),
+            static_cast<unsigned>(BoardConfig::ACTIVE.displayHeight));
+   rowValues_[ITEM_RESOLUTION] = buf;
+diff --git a/src/activities/settings/AboutActivity.h b/src/activities/settings/AboutActivity.h
+index ec4dc70c..417bed3c 100644
+--- a/src/activities/settings/AboutActivity.h
++++ b/src/activities/settings/AboutActivity.h
+@@ -10,7 +10,7 @@ class AboutActivity final : public UiListActivity {
+  public:
+   explicit AboutActivity(GfxRenderer& renderer, MappedInputManager& mappedInput);
+ 
+-  static constexpr int ITEM_COUNT = 11;
++  static constexpr int ITEM_COUNT = 12;
+ 
+   void onEnter() override;
+ 
+diff --git a/src/activities/settings/SettingsActivity.cpp b/src/activities/settings/SettingsActivity.cpp
+index 8938844b..319a6507 100644
+--- a/src/activities/settings/SettingsActivity.cpp
++++ b/src/activities/settings/SettingsActivity.cpp
+@@ -550,6 +550,6 @@ void SettingsActivity::drawFooter() {
+ }
+ 
+ void SettingsActivity::render(RenderLock&& lock) {
+-  if (optionPopup.processRender(renderer, mappedInput)) return;
++  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
+   UiListActivity::render(std::move(lock));
+ }
+diff --git a/src/components/OptionPopup.h b/src/components/OptionPopup.h
+index 550584bc..cf4f19e5 100644
+--- a/src/components/OptionPopup.h
++++ b/src/components/OptionPopup.h
+@@ -149,12 +149,27 @@ class OptionPopup {
+     return true;
+   }
+ 
+-  bool processRender(GfxRenderer& renderer, const MappedInputManager& input) const {
++  // `partial` refreshes only the dialog and the button-hint strip, leaving the
++  // screen under the popup on the glass. Callers must have rendered that screen
++  // first; standalone activities that clear the framebuffer keep the default
++  // full refresh.
++  bool processRender(GfxRenderer& renderer, const MappedInputManager& input, bool partial = false) const {
+     if (!active) return false;
+     const auto popupLabels = input.mapLabels(tr(STR_BACK), tr(STR_SELECT), tr(STR_DIR_UP), tr(STR_DIR_DOWN));
+     GUI.drawButtonHints(renderer, popupLabels.btn1, popupLabels.btn2, popupLabels.btn3, popupLabels.btn4);
+     render(renderer);
+-    renderer.displayBuffer();
++    if (partial && lastDialogRect_.width > 0) {
++      renderer.displayWindow(lastDialogRect_.x, lastDialogRect_.y, lastDialogRect_.width, lastDialogRect_.height);
++      constexpr int hintHeight = BaseMetrics::values.buttonHintsHeight;
++      if (!input.hasTouch() && hintHeight > 0) {
++        // drawButtonHints() draws in Portrait regardless of the activity's
++        // orientation, so refresh the same physical strip.
++        renderer.displayWindowPortrait(0, renderer.getDisplayWidth() - hintHeight, renderer.getDisplayHeight(),
++                                       hintHeight);
++      }
++    } else {
++      renderer.displayBuffer();
++    }
+     return true;
+   }
+ 
+@@ -247,6 +262,7 @@ class OptionPopup {
+         fui::clampI16(std::min<int>(screen.width * 3 / 4, screen.width - metrics.optionPopupDialogSideMargin * 2));
+     const int16_t height = fui::clampI16(fui::optionDialogHeight(target, props, width), 0, screen.height);
+     const fui::Rect dialogRect = fui::centeredRect(screen, fui::Size{width, height});
++    lastDialogRect_ = dialogRect;
+ 
+     // Chrome guard first, options after: route() scans newest-first, so the
+     // option buttons win inside the dialog and the guard absorbs the rest.
+@@ -295,5 +311,6 @@ class OptionPopup {
+   // Written by the render task (frame registration), routed by the loop task;
+   // uiReady closes the rebuild window exactly like UiListActivity::uiReady.
+   mutable freeink::ui::InteractionBuffer<INTERACTION_CAPACITY> interactions;
++  mutable freeink::ui::Rect lastDialogRect_{};
+   mutable std::atomic<bool> uiReady{false};
+ };
+diff --git a/src/components/themes/BaseTheme.cpp b/src/components/themes/BaseTheme.cpp
+index 0854756b..834a089f 100644
+--- a/src/components/themes/BaseTheme.cpp
++++ b/src/components/themes/BaseTheme.cpp
+@@ -82,7 +82,7 @@ void BaseTheme::drawBatteryLightningBolt(const GfxRenderer& renderer, int boltX,
+ }
+ 
+ void BaseTheme::fillBatteryIcon(const GfxRenderer& renderer, Rect rect, uint16_t percentage) const {
+-  const bool charging = gpio.isUsbConnected();
++  const bool charging = gpio.isCharging();
+ 
+   const int maxFillWidth = rect.width - 5;
+   const int fillHeight = rect.height - 4;
+@@ -335,7 +335,7 @@ void BaseTheme::applyHeaderStatus(const GfxRenderer& renderer, freeink::ui::Head
+   status.showBattery = true;
+   const uint16_t percentage = powerManager.getBatteryPercentage();
+   status.battery.percent = static_cast<uint8_t>(percentage > 100 ? 100 : percentage);
+-  status.battery.charging = gpio.isUsbConnected();
++  status.battery.charging = gpio.isCharging();
+   // Static label buffers: headers draw on the single render task, and the
+   // strings only need to outlive the fui::header() call that consumes them.
+   static char percentText[8];
+diff --git a/src/main.cpp b/src/main.cpp
+index 65b4aed3..5070563f 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -634,10 +634,39 @@ void setup() {
+ #endif
+ 
+   // SD Card Initialization
+-  // We need 6 open files concurrently when parsing a new chapter
+-  if (!Storage.begin()) {
++  // We need 6 open files concurrently when parsing a new chapter. A card that
++  // was just reinserted can take a moment to answer, so retry the mount before
++  // declaring an error.
++  bool storageReady = Storage.begin();
++  if (!storageReady && BoardConfig::ACTIVE.sd.detect >= 0 && Storage.isCardPresent()) {
++    for (uint8_t attempt = 0; attempt < 4 && !storageReady; ++attempt) {
++      delay(200);
++      storageReady = Storage.remount();
++    }
++  }
++  if (!storageReady) {
+     LOG_ERR("MAIN", "SD card initialization failed");
+     setupDisplayAndFonts(isSilentReboot);
++    // Boards with a card-detect switch can wait for a missing card instead of
++    // ending in a dead error screen.
++    if (BoardConfig::ACTIVE.sd.detect >= 0 && !Storage.isCardPresent()) {
++      activityManager.goToFullScreenMessage("Insert SD card", EpdFontFamily::BOLD);
++      while (!Storage.isCardPresent()) delay(200);
++      delay(500);
++      ESP.restart();
++      return;
++    }
++    // A present but unmountable card is recoverable: ask for a reinsert and
++    // restart when the card has been cycled. This avoids a dead-end screen
++    // after a hot removal/insertion left the card in a bad state.
++    if (BoardConfig::ACTIVE.sd.detect >= 0) {
++      activityManager.goToFullScreenMessage("SD card error - reinsert", EpdFontFamily::BOLD);
++      while (Storage.isCardPresent()) delay(200);
++      while (!Storage.isCardPresent()) delay(200);
++      delay(500);
++      ESP.restart();
++      return;
++    }
+     activityManager.goToFullScreenMessage("SD card error", EpdFontFamily::BOLD);
+     return;
+   }
+@@ -717,8 +746,8 @@ void setup() {
+     case HalGPIO::WakeupReason::AfterUSBPower:
+       // Most devices return to sleep after a USB-powered cold boot.
+       LOG_DBG("MAIN", "Wakeup reason: After USB Power");
+-#if FREEINK_DEVICE_X4PRO || FREEINK_DEVICE_X4CLASSIC || FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_EEGO_A4 || \
+-    FREEINK_DEVICE_METALIO_EINK4 || FREEINK_DEVICE_PICCO
++#if FREEINK_DEVICE_X4PRO || FREEINK_DEVICE_X4CLASSIC || FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY || \
++    FREEINK_DEVICE_EEGO_A4 || FREEINK_DEVICE_METALIO_EINK4 || FREEINK_DEVICE_PICCO
+       // X4 Pro must stay awake so USB Serial/JTAG remains available after leaving
+       // USB Drive and reconnecting the cable. Paper Mono has no armable GPIO wake
+       // (its button is behind the PMIC). Metalio also needs native USB available
+@@ -854,6 +883,10 @@ void loop() {
+   gpio.setSharedConfirmPowerShortPressEmitsPower(SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP);
+   mappedInputManager.update();
+ 
++
++
++
++
+   // Bluetooth page turner, before the USB drive's early return: a card handed to USB stops the radio
+   // before anything else.
+   bleturner::Scene scene{};
+@@ -925,6 +958,29 @@ void loop() {
+         logSerial.write(buf, bufferSize);
+         logSerial.printf("SCREENSHOT_END\n");
+       }
++#ifdef PAPERDIY_SERIAL_TEST
++      else if (cmd.startsWith("KEY:")) {
++        // Development-only input injection for automated UI tests. The test
++        // build defines PAPERDIY_SERIAL_TEST; release builds do not expose it.
++        String key = cmd.substring(4);
++        key.trim();
++        key.toUpperCase();
++
++        bool ok = false;
++        if (key == "B" || key == "NEXT" || key == "DOWN") {
++          ok = activityManager.isForegroundReader() ? activityManager.remoteTurn(true, false)
++                                                     : mappedInputManager.injectRemoteClick(RemoteButton::Next);
++        } else if (key == "A" || key == "PREV" || key == "UP") {
++          ok = activityManager.isForegroundReader() ? activityManager.remoteTurn(false, false)
++                                                     : mappedInputManager.injectRemoteClick(RemoteButton::Previous);
++        } else if (key == "B_LONG" || key == "CONFIRM" || key == "OK") {
++          ok = mappedInputManager.injectRemoteClick(RemoteButton::Confirm);
++        } else if (key == "A_LONG" || key == "BACK") {
++          ok = mappedInputManager.injectRemoteClick(RemoteButton::Back);
++        }
++        logSerial.printf("KEY:%s:%d\n", key.c_str(), ok ? 1 : 0);
++      }
++#endif
+     }
+   }
+ 
+@@ -1008,7 +1064,15 @@ void loop() {
+   }
+ 
+   const unsigned long sleepTimeoutMs = SETTINGS.getSleepTimeoutMs();
+-  if (sleepTimeoutMs > 0 && millis() - lastActivityTime >= sleepTimeoutMs) {
++#if defined(ENABLE_SERIAL_LOG)
++  // A USB CDC host (serial monitor/flasher) is a development session, not a
++  // battery-powered reader. Keep the board awake so a flash/reset does not race
++  // the auto-sleep timer; a dumb USB charger has no CDC host and still sleeps.
++  const bool serialHostConnected = static_cast<bool>(Serial);
++#else
++  const bool serialHostConnected = false;
++#endif
++  if (!serialHostConnected && sleepTimeoutMs > 0 && millis() - lastActivityTime >= sleepTimeoutMs) {
+     LOG_DBG("SLP", "Auto-sleep triggered after %lu ms of inactivity", sleepTimeoutMs);
+     enterDeepSleep(true);
+     // This should never be hit as `enterDeepSleep` calls esp_deep_sleep_start
+@@ -1040,10 +1104,10 @@ void loop() {
+     return;
+   }
+ 
+-#if FREEINK_DEVICE_PAPERMONO
+-  // Paper Mono reports the PMIC power button as a one-tick click, so the held
+-  // path above cannot fire. With the default Ignore action, retain the normal
+-  // power-button meaning and shut down; explicit alternate bindings still win.
++#if FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY
++  // Paper Mono/PaperDIY report the PMIC power button as a one-tick click, so
++  // the held path above cannot fire. With the default Ignore action, retain the
++  // normal power-button meaning and shut down; explicit alternate bindings win.
+   if ((SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP ||
+        SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::IGNORE) &&
+       millis() >= allowSleepAt && mappedInputManager.wasReleased(MappedInputManager::Button::Power)) {
+@@ -1066,6 +1130,27 @@ void loop() {
+     }
+   }
+ 
++  // Card-detect hot-plug. The board profile may leave detect unassigned; in
++  // that case isCardPresent() stays true and this is a no-op. Do not unmount on
++  // removal: open files/activities may still hold handles, and the next insert
++  // re-probes the card through remount().
++  static bool lastCardPresent = Storage.isCardPresent();
++  static unsigned long lastCardPollMs = 0;
++  if (millis() - lastCardPollMs >= 500) {
++    lastCardPollMs = millis();
++    const bool cardPresent = Storage.isCardPresent();
++    if (cardPresent != lastCardPresent) {
++      lastCardPresent = cardPresent;
++      if (cardPresent) {
++        LOG_INF("SD", "Card inserted, remounting");
++        if (Storage.remount()) activityManager.requestUpdate();
++      } else {
++        LOG_INF("SD", "Card removed");
++        activityManager.requestUpdate();
++      }
++    }
++  }
++
+   // Refresh the battery icon when USB is plugged or unplugged.
+   // Placed after sleep guards so we never queue a render that won't be processed.
+   // Not while reading: there a repaint is a full page re-render (visible
+diff --git a/src/network/FirmwareBoardTag.cpp b/src/network/FirmwareBoardTag.cpp
+index 7109854a..7e0ddadc 100644
+--- a/src/network/FirmwareBoardTag.cpp
++++ b/src/network/FirmwareBoardTag.cpp
+@@ -17,6 +17,8 @@
+ #define CROSSPOINT_BOARD_NAME "x4"
+ #elif FREEINK_DEVICE_PAPERMONO
+ #define CROSSPOINT_BOARD_NAME "papermono"
++#elif FREEINK_DEVICE_PAPERDIY
++#define CROSSPOINT_BOARD_NAME "paperdiy"
+ #elif FREEINK_DEVICE_STICKY
+ #define CROSSPOINT_BOARD_NAME "sticky"
+ #elif FREEINK_DEVICE_M5PAPER
+diff --git a/src/network/OtaUpdater.cpp b/src/network/OtaUpdater.cpp
+index 1f64b229..03c6a6e6 100644
+--- a/src/network/OtaUpdater.cpp
++++ b/src/network/OtaUpdater.cpp
+@@ -19,7 +19,12 @@
+ #include "FirmwareFlasher.h"
+ 
+ namespace {
+-constexpr char latestReleaseUrl[] = "https://api.github.com/repos/crosspoint-reader/crosspoint-reader/releases/latest";
++// Override in the fork's release environment so OTA checks our releases, not
++// the official CrossPoint ones. The board tag still rejects a wrong asset.
++#ifndef CROSSPOINT_OTA_RELEASES_URL
++#define CROSSPOINT_OTA_RELEASES_URL "https://api.github.com/repos/crosspoint-reader/crosspoint-reader/releases/latest"
++#endif
++constexpr char latestReleaseUrl[] = CROSSPOINT_OTA_RELEASES_URL;
+ }  // namespace
+ 
+ OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
+@@ -101,8 +106,12 @@ bool OtaUpdater::isUpdateNewer() const {
+ 
+   const auto currentVersion = CROSSPOINT_VERSION;
+ 
++  // GitHub tags are commonly vX.Y.Z; the version parser only wants X.Y.Z.
++  const char* latest = latestVersion.c_str();
++  if (*latest == 'v' || *latest == 'V') ++latest;
++
+   // semantic version check (only match on 3 segments)
+-  sscanf(latestVersion.c_str(), "%d.%d.%d", &latestMajor, &latestMinor, &latestPatch);
++  sscanf(latest, "%d.%d.%d", &latestMajor, &latestMinor, &latestPatch);
+   sscanf(currentVersion, "%d.%d.%d", &currentMajor, &currentMinor, &currentPatch);
+ 
+   /*
