@@ -156,6 +156,9 @@ antes de abrir el menú; es un compromiso de UX pendiente de decidir.
 └── .crosspoint/           # caché del lector (no tocar salvo reset)
 ```
 
+`Ajustes > Acerca de` muestra el tamaño total, usado y libre de la SD. La
+primera consulta puede tardar unos segundos porque recorre la FAT.
+
 ## Problemas comunes
 
 | Síntoma | Qué probar |

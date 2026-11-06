@@ -63,7 +63,7 @@ echo "Overlaying docs, Makefile, scripts and workflows..."
 rm -rf .github
 git checkout paperdiy -- README.md README.en.md README.ja.md README.zh-CN.md \
   CHANGELOG.md Makefile NOTICE LICENSE .gitignore .gitattributes hardware \
-  lib/I18n/translations docs/paperdiy docs/README.md docs/upstream scripts patches .github
+  docs/paperdiy docs/README.md docs/upstream scripts patches .github
 rm -f ROADMAP.md SCOPE.md GOVERNANCE.md AGENTS.md USER_GUIDE.md CLAUDE.md .gitmodules
 
 echo "Refreshing the vendored upstream docs snapshot..."

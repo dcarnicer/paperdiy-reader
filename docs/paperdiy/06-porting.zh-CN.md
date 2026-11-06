@@ -5,7 +5,7 @@
 ## 相对 CrossPoint 2.0 的改动
 
 基础提交：`5d731041325bc871e99439d5e6db647695e6c733`（develop，2.0.0，
-2026-11-03）。`main` 是上游镜像；`paperdiy` 是分支。`freeink-sdk` 已内置，
+2026-11-06）。`main` 是上游镜像；`paperdiy` 是分支。`freeink-sdk` 已内置，
 使构建自包含。移植修改保存在 `patches/sdk.patch` + `patches/firmware.patch`。
 
 ### `freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h`
