@@ -11,7 +11,7 @@ a diario.
 
 > **Estado:** el firmware **compila, arranca y lee EPUB en un PaperDIY real**.
 > Validación (04/11/2026): arranque, pantalla/UI, Home, wake, botones A/B,
-> batería, SD y navegación OK tras sincronizar con CrossPoint `bb93a462`.
+> batería, SD y navegación OK tras sincronizar con CrossPoint `5d731041`.
 > La lectura EPUB, Wi-Fi, web UI y transferencia de libros ya se validaron el
 > 28/10/2026. Calibre wireless y OTA verificados el 04/11/2026. OPDS
 > (Project Gutenberg) verificado el 05/11/2026. Auto-suspensión y sleep screen
