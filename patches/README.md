@@ -6,7 +6,7 @@ versiones de upstream:
 | Archivo | Base | Contenido |
 |---|---|---|
 | `sdk.patch` | FreeInk SDK `5e94fe7` | Perfil PaperDIY, `BoardPaperDiy`, PM1, InputManager, PowerManager, driver LGFX |
-| `firmware.patch` | CrossPoint `308cd522` | Env `paperdiy`, settings, UI, board tag, OTA, `GfxRenderer`, `HalGPIO`, `HalPowerManager`, `main` |
+| `firmware.patch` | CrossPoint `bb93a462` | Env `paperdiy`, settings, UI, board tag, OTA, `GfxRenderer`, `HalGPIO`, `HalPowerManager`, `main` |
 | `paperdiy-support.patch` | ambos | Concatenación de `sdk.patch` + `firmware.patch` |
 
 Orden de aplicación:

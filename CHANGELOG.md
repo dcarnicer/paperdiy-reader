@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-11-06 — sincronización con upstream `bb93a462`
+
+- CrossPoint actualizado de `308cd522` a `bb93a462` (6 commits): remapeo de
+  botones al soltar, `HalDisplay::controllerName()`, navegación/previsualización
+  rotada, ajuste “Orient Side Buttons” y captura en EEGO A4.
+- SDK FreeInk sin cambios de pin (`5e94fe7`); `sdk.patch` se reaplicó limpio.
+- `firmware.patch` aplicó con un conflicto en `AboutActivity`: se combinó el
+  nombre de controlador en vivo de upstream con la lectura de VBAT/estado del
+  PM1 del fork.
+- `paperdiy` y `paperdiy-test` compilan. Tests de remapeo y orientación pasan.
+  Smoke test en hardware: arranque, Home, A/B, lectura y `About`
+  (VBAT 4,08 V, 90 %, `LovyanGFX EPD`).
+- KOReader Sync validado antes del sync contra un servidor KOSync local:
+  autenticación, pull sin progreso, subida, comparación y aplicación de
+  progreso remoto (página 13→17). Credenciales de prueba eliminadas después.
+
 ## 2026-11-06 — lectura larga y tiempos de refresco
 
 - Lectura larga automatizada por USB: 250+ cambios de página (spines 10→24,
