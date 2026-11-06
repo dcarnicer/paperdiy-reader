@@ -12,7 +12,10 @@
 - `paperdiy` y `paperdiy-test` compilan; tests host de BLE, SD e InputManager
   pasan; About muestra SD 7,4 GB / 550 MB / 6,9 GB y batería 4,10 V / 100 %.
 - `sdk.patch` y `firmware.patch` regenerados contra `fb7e926` y `5d731041`, y
-  verificados con `git apply --check` sobre árboles limpios.
+  verificados aplicándolos sobre árboles limpios (pre y post-imagen).
+- Las traducciones propias pasan a `firmware.patch`; el overlay ya no pisa
+  `lib/I18n/translations` de upstream.
+- `FirmwareBoardTag` reconoce el nuevo flag `FREEINK_DEVICE_SILKSCREEN`.
 
 ## 2026-11-06 — bring-up BLE
 

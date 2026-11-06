@@ -45,6 +45,78 @@ index 93889dd9..536452d7 100644
    void invertScreen() const;
    void clearScreen(uint8_t color = 0xFF) const;
    void getOrientedViewableTRBL(int* outTop, int* outRight, int* outBottom, int* outLeft) const;
+diff --git a/lib/I18n/translations/catalan.yaml b/lib/I18n/translations/catalan.yaml
+index 7640f1df..d417b345 100644
+--- a/lib/I18n/translations/catalan.yaml
++++ b/lib/I18n/translations/catalan.yaml
+@@ -121,6 +121,7 @@ STR_HAPTIC_MEDIUM: "Mitjana"
+ STR_HAPTIC_HIGH: "Alta"
+ STR_SHOW_READER_MENU: "Mostra el menú de lectura"
+ STR_FRONT_BTN_FOLLOW_ORIENTATION: "Orientar botons frontals"
++STR_SIDE_BTN_FOLLOW_ORIENTATION: "Orientar botons laterals"
+ STR_LONG_PRESS_BEHAVIOR: "Acció en mantenir premut un botó"
+ STR_LONG_PRESS_BEHAVIOR_OFF: "Desactivat"
+ STR_LONG_PRESS_BEHAVIOR_SKIP: "Saltar capítols"
+diff --git a/lib/I18n/translations/portuguese-BR.yaml b/lib/I18n/translations/portuguese-BR.yaml
+index 0c4bd985..0e858add 100644
+--- a/lib/I18n/translations/portuguese-BR.yaml
++++ b/lib/I18n/translations/portuguese-BR.yaml
+@@ -112,6 +112,7 @@ STR_SIDE_BTN_LAYOUT: "Disposição botões laterais"
+ STR_TOUCH_READER_CONTROLS: "Controles táteis do leitor"
+ STR_SHOW_READER_MENU: "Mostrar menu do leitor"
+ STR_FRONT_BTN_FOLLOW_ORIENTATION: "Orientar botões frontais"
++STR_SIDE_BTN_FOLLOW_ORIENTATION: "Orientar botões laterais"
+ STR_LONG_PRESS_BEHAVIOR: "Comportamento de Pressionar e segurar"
+ STR_LONG_PRESS_BEHAVIOR_OFF: "DESL."
+ STR_LONG_PRESS_BEHAVIOR_SKIP: "Pular capítulo"
+diff --git a/lib/I18n/translations/portuguese-PT.yaml b/lib/I18n/translations/portuguese-PT.yaml
+index 805c9997..bf1a00dc 100644
+--- a/lib/I18n/translations/portuguese-PT.yaml
++++ b/lib/I18n/translations/portuguese-PT.yaml
+@@ -112,6 +112,7 @@ STR_SIDE_BTN_LAYOUT: "Disposição dos botões laterais (leitor)"
+ STR_TOUCH_READER_CONTROLS: "Controlos táteis do leitor"
+ STR_SHOW_READER_MENU: "Mostrar menu do leitor"
+ STR_FRONT_BTN_FOLLOW_ORIENTATION: "Orientar botões frontais"
++STR_SIDE_BTN_FOLLOW_ORIENTATION: "Orientar botões laterais"
+ STR_LONG_PRESS_BEHAVIOR: "Comportamento de toque longo"
+ STR_LONG_PRESS_BEHAVIOR_OFF: "DESL."
+ STR_LONG_PRESS_BEHAVIOR_SKIP: "Saltar capítulo"
+diff --git a/lib/I18n/translations/romanian.yaml b/lib/I18n/translations/romanian.yaml
+index 62fc34c9..609b6a09 100644
+--- a/lib/I18n/translations/romanian.yaml
++++ b/lib/I18n/translations/romanian.yaml
+@@ -84,6 +84,7 @@ STR_ORIENTATION: "Orientare lectură"
+ STR_SIDE_BTN_LAYOUT: "Aspect butoane laterale (lectură)"
+ STR_TOUCH_READER_CONTROLS: "Comenzi tactile cititor"
+ STR_FRONT_BTN_FOLLOW_ORIENTATION: "Orientare butoane frontale"
++STR_SIDE_BTN_FOLLOW_ORIENTATION: "Orientare butoane laterale"
+ STR_LONG_PRESS_BEHAVIOR: "Comportament buton apăsat lung"
+ STR_LONG_PRESS_BEHAVIOR_OFF: "Dezactivat"
+ STR_LONG_PRESS_BEHAVIOR_SKIP: "Sărire capitol"
+diff --git a/lib/I18n/translations/spanish.yaml b/lib/I18n/translations/spanish.yaml
+index 215e8fec..de0ea337 100644
+--- a/lib/I18n/translations/spanish.yaml
++++ b/lib/I18n/translations/spanish.yaml
+@@ -121,6 +121,7 @@ STR_HAPTIC_MEDIUM: "Media"
+ STR_HAPTIC_HIGH: "Alta"
+ STR_SHOW_READER_MENU: "Mostrar menú de lectura"
+ STR_FRONT_BTN_FOLLOW_ORIENTATION: "Orientar botones frontales"
++STR_SIDE_BTN_FOLLOW_ORIENTATION: "Orientar botones laterales"
+ STR_LONG_PRESS_BEHAVIOR: "Al mantener pulsado un botón"
+ STR_LONG_PRESS_BEHAVIOR_OFF: "No hacer nada"
+ STR_LONG_PRESS_BEHAVIOR_SKIP: "Saltar capítulo"
+diff --git a/lib/I18n/translations/valencian.yaml b/lib/I18n/translations/valencian.yaml
+index 65db2fde..49862530 100644
+--- a/lib/I18n/translations/valencian.yaml
++++ b/lib/I18n/translations/valencian.yaml
+@@ -122,6 +122,7 @@ STR_HAPTIC_MEDIUM: "Mitjana"
+ STR_HAPTIC_HIGH: "Alta"
+ STR_SHOW_READER_MENU: "Mostra el menú de lectura"
+ STR_FRONT_BTN_FOLLOW_ORIENTATION: "Orientar botons frontals"
++STR_SIDE_BTN_FOLLOW_ORIENTATION: "Orientar botons laterals"
+ STR_LONG_PRESS_BEHAVIOR: "Acció en mantindre premut un botó"
+ STR_LONG_PRESS_BEHAVIOR_OFF: "Desactivat"
+ STR_LONG_PRESS_BEHAVIOR_SKIP: "Saltar capítols"
 diff --git a/lib/hal/HalDisplay.cpp b/lib/hal/HalDisplay.cpp
 index 2b3c8c6a..89ff7744 100644
 --- a/lib/hal/HalDisplay.cpp
@@ -417,7 +489,7 @@ index 06ecd724..9498d0a9 100644
    UiListActivity::render(std::move(lock));
  }
 diff --git a/src/activities/settings/AboutActivity.cpp b/src/activities/settings/AboutActivity.cpp
-index 953a815e..9c155ef3 100644
+index 953a815e..b4a9660c 100644
 --- a/src/activities/settings/AboutActivity.cpp
 +++ b/src/activities/settings/AboutActivity.cpp
 @@ -1,5 +1,6 @@
@@ -435,7 +507,7 @@ index 953a815e..9c155ef3 100644
    ITEM_DISPLAY,
    ITEM_RESOLUTION,
    ITEM_TOUCH,
-@@ -39,20 +41,8 @@ enum MenuItem {
+@@ -39,19 +41,8 @@ enum MenuItem {
  // these screenshots across every device language, so the labels must be
  // identical on every unit.
  const char* const menuNames[AboutActivity::ITEM_COUNT] = {
@@ -452,13 +524,12 @@ index 953a815e..9c155ef3 100644
 -    "Frontlight",
 -    "RTC",
 -    "Tilt Sensor (IMU)",
--    "MAC Address",
-+    "Device",    "Firmware",           "Chip",        "Flash",   "SD Size", "SD Used", "SD Free", "Battery",
-+    "Display Controller", "Resolution", "Touch",       "Frontlight", "RTC",  "Tilt Sensor (IMU)", "MAC Address",
++    "Device",      "Firmware",           "Chip",       "Flash", "SD Size",    "SD Used", "SD Free",
++    "Battery",     "Display Controller", "Resolution", "Touch", "Frontlight", "RTC",     "Tilt Sensor (IMU)",
+     "MAC Address",
  };
  
- // "14.5 GB" / "35 MB": GiB with one decimal, MiB below 1 GiB.
-@@ -139,6 +129,22 @@ void AboutActivity::onEnter() {
+@@ -139,6 +130,22 @@ void AboutActivity::onEnter() {
    const char* liveController = display.controllerName();
    rowValues_[ITEM_DISPLAY] =
        liveController ? liveController : displayControllerName(BoardConfig::ACTIVE.displayController);
@@ -736,7 +807,7 @@ index 65b4aed3..5070563f 100644
    // Placed after sleep guards so we never queue a render that won't be processed.
    // Not while reading: there a repaint is a full page re-render (visible
 diff --git a/src/network/FirmwareBoardTag.cpp b/src/network/FirmwareBoardTag.cpp
-index 7109854a..7e0ddadc 100644
+index 7109854a..3f7a8c96 100644
 --- a/src/network/FirmwareBoardTag.cpp
 +++ b/src/network/FirmwareBoardTag.cpp
 @@ -17,6 +17,8 @@
@@ -748,6 +819,15 @@ index 7109854a..7e0ddadc 100644
  #elif FREEINK_DEVICE_STICKY
  #define CROSSPOINT_BOARD_NAME "sticky"
  #elif FREEINK_DEVICE_M5PAPER
+@@ -33,6 +35,8 @@
+ #define CROSSPOINT_BOARD_NAME "m5"
+ #elif FREEINK_DEVICE_MURPHY
+ #define CROSSPOINT_BOARD_NAME "murphy"
++#elif FREEINK_DEVICE_SILKSCREEN
++#define CROSSPOINT_BOARD_NAME "silkscreen"
+ #elif FREEINK_DEVICE_DELINK
+ #define CROSSPOINT_BOARD_NAME "delink"
+ #else
 diff --git a/src/network/OtaUpdater.cpp b/src/network/OtaUpdater.cpp
 index 1f64b229..03c6a6e6 100644
 --- a/src/network/OtaUpdater.cpp
