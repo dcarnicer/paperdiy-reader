@@ -97,7 +97,9 @@ tocar un cable ni leer documentación técnica.
 - [x] Calibre wireless + web UI para transferencia; gestión de metadatos y
       portadas pendiente.
 - [ ] BLE page turner probado con mandos/media buttons. El escaneo BLE
-      funciona; falta emparejar un mando real.
+      funciona; el Keychron Q1 Pro es Bluetooth Classic (no vale para el
+      ESP32-S3) y el teclado HID BLE emulado desde macOS se ve pero falla al
+      emparejar. Falta un mando BLE real.
 - [x] USB MSC probado (exponer SD).
 - [ ] Screenshots y sleep screens personalizables.
 
