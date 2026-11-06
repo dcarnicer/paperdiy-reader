@@ -3,8 +3,9 @@
 ## 2026-11-06 — paquete M5Burner
 
 - Añadido `m5burner/m5burner.json`, README de publicación y
-  `scripts/make_m5burner_package.py`: genera un ZIP con `m5burner.json`,
-  `firmware/PaperDIYReader_0x0.bin`, portada, README y `LICENSE`.
+  `scripts/make_m5burner_package.py`: genera un `.bin` para el diálogo Publish
+  de M5Burner y un ZIP (`m5burner.json`, `firmware/`, portada, README y
+  `LICENSE`) para la ruta de repositorio/PR.
 - El paquete usa solo el build `paperdiy`; no incluye `paperdiy-test` ni
   credenciales NVS.
 - `scripts/build_release_license.py` entiende el SDK vendorizado (no submódulo)
