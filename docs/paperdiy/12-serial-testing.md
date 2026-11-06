@@ -186,3 +186,26 @@ conectado al Mac.
 Pendiente de probar: consumo/autonomía, KOReader Sync con credenciales,
 emparejar un mando BLE real, ghosting visual tras lectura muy larga y la
 batería 604050.
+
+## Lectura larga y tiempos de refresco (06/11/2026)
+
+- **Lectura larga**: 250+ cambios de página por inyección USB (spines 10→24,
+  varios capítulos) sin reinicios, errores de render ni fugas. Heap libre
+  120,6–120,8 KB y PSRAM ~6,36 MB; mínimo transitorio de heap 81,7 KB.
+- **Tiempos** con los logs `ERS` `Page render: ... display=... total=...` y
+  `Rendered page in ...` (página completa, una sola base B/W porque el log no
+  muestra pasada de grises):
+  - `fast`: display 569–620 ms, total 651–726 ms.
+  - `text` limpio: display 1538–1542 ms, total 1637–1651 ms.
+  - `quality`: el port mapea `Full/Half` a `epd_text`, así que no se usa. Con
+    un mapeo temporal `Half→quality` midió 1538 ms, igual que `text`; el
+    código se restauró después.
+  - Prewarm 38–58 ms; render B/W 49–59 ms.
+- **Auto-suspensión**: `CMD:KEY` no reinicia el temporizador de actividad. A
+  los 10 min el equipo se durmió en plena prueba y el USB desapareció; power
+  despertó conservando la página. Para pruebas largas, poner
+  `Pantalla > Auto suspensión = Nunca` (y restaurarlo al terminar) o hacer que
+  la inyección cuente como actividad.
+- **Ghosting**: la captura devuelve el framebuffer. La estabilidad está
+  validada, pero el ghosting físico tras la lectura larga requiere revisión
+  visual del panel.

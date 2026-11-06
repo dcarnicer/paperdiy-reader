@@ -176,6 +176,16 @@ A/B 导航、电池和 SD。
 检查没有明显残影。章节构建完成时页码从 1/35 变为 1/50。自动休眠 1 分钟、
 `Fondo = Portada` + `Modo = Ajustar` 显示封面，电源键唤醒并保留页面。
 
+更新（2026-11-06）：通过 USB 自动长时间阅读，250+ 次翻页（spine 10→24，
+多个章节）无重启、无泄漏。空闲堆 120.6–120.8 KB，PSRAM 约 6.36 MB；堆瞬时
+最低 81.7 KB。整页刷新：`fast` display 569–620 ms（总计 651–726 ms），
+干净 `text` 1538–1542 ms（总计 1637–1651 ms）；prewarm 38–58 ms，B/W
+渲染 49–59 ms。移植未使用 `quality`；临时将 `Half→quality` 映射后测得
+1538 ms，与 `text` 相同，之后已恢复代码。`CMD:KEY` 不会刷新活动计时：
+10 分钟后设备自动休眠且 USB 消失；电源键唤醒并保留页面。长时间测试请设置
+`Auto suspensión = Nunca` 或刷新活动。长时间阅读后的物理残影目视检查仍待
+完成。
+
 ![首次启动](images/first-boot.png)
 
 ![首次阅读](images/first-read.png)
@@ -271,8 +281,8 @@ PaperDIY 在 GPIO48 上提供 `CARD_DET`，低电平有效。`SdPins.detect` 将
 |---|---|---|---|
 | 1 | 启动 | 屏幕显示 splash/UI | |
 | 2 | 旋转 | 横屏 UI，未倒置 | |
-| 3 | 文字 | EPUB 页面可读，无明显残影 | |
-| 4 | quality/text/fast/fastest 刷新 | 时间和质量可接受 | |
+| 3 | 文字 | EPUB 页面可读，无明显残影 | OK (28/10)；24 页后无明显残影 (05/11)；250+ 页无错误，物理检查待完成 (06/11) |
+| 4 | quality/text/fast/fastest 刷新 | 时间和质量可接受 | `fast` 569–620 ms，`text` 1538–1542 ms；临时映射下 `quality` ≈1538 ms；未使用 `fastest` (06/11) |
 | 5 | A/B 短按 | 移动选择 / 翻页 | |
 | 6 | A/B 长按 | 返回 / 确认 | |
 | 7 | A+B | 电源事件 / 休眠 | |

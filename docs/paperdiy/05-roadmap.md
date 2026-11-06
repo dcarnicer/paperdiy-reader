@@ -11,12 +11,17 @@ Objetivo: demostrar que el port funciona en un PaperDIY real y recoger datos.
 - [x] Flashear `firmware.factory.bin` (28/10/2026; sin backup, a petición).
 - [x] Confirmar que el panel enciende y muestra el splash/UI.
 - [x] Rotación/orientación: UI correcta en vertical, sin cambios.
-- [ ] Medir tiempos de refresco: `epd_quality`, `epd_text`, `epd_fast`,
-      `epd_fastest`; página completa vs área. `fast` y refresco completo ya
-      medidos el 05/11 (~0,86 s y ~1,8 s); faltan `quality`/`text`.
+- [x] Medir tiempos de refresco: `epd_fast`, `epd_text` y `epd_quality`
+      (06/11). Página completa: `fast` 569–620 ms de display (total 651–726 ms),
+      `text` limpio 1538–1542 ms (total 1637–1651 ms). `quality` no lo usa el
+      port; con un mapeo temporal midió 1538 ms, igual que `text`. Prewarm
+      38–58 ms y render B/W 49–59 ms. `epd_fastest` no se usa en la lectura.
 - [x] Evaluar ghosting general en tanda corta: sin ghosting apreciable tras
-      24 páginas con refresco cada 5 (05/11). Falta lectura muy larga y
-      comparar LUTs/`cleanBankNeedsFreshBackground`.
+      24 páginas con refresco cada 5 (05/11).
+- [x] Lectura muy larga funcional: 250+ cambios de página y varios capítulos sin
+      reinicios, errores ni fugas de heap/PSRAM (06/11).
+- [ ] Revisión visual física del ghosting tras la lectura larga: las capturas
+      por serial son el framebuffer, no el estado del panel.
 - [x] Ghosting al abrir el menú del lector: corregido con `HALF_REFRESH` en la
       primera pintada; verificado en hardware.
 - [x] Ghosting al pasar páginas: default 15 -> 5 y prueba de LUT AA de
