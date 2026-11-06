@@ -4,7 +4,7 @@
 
 ## CrossPoint 2.0 からの変更
 
-ベースコミット：`bb93a462cca968be7606cde39833dc20c7a9b48c`（develop、2.0.0、
+ベースコミット：`5d731041325bc871e99439d5e6db647695e6c733`（develop、2.0.0、
 2026-11-03）。`main` は上流のミラーで、`paperdiy` がフォークです。
 `freeink-sdk` はビルドを自己完結させるため同梱しています。移植内容は
 `patches/sdk.patch` + `patches/firmware.patch` にあります。
@@ -351,8 +351,8 @@ CrossPoint へサポートを提案できます：
 3. PaperDIY プロファイルは小さく、既存アーキテクチャに合うため、PR の
    良い候補です。
 
-移植は `patches/sdk.patch`（SDK ベース `5e94fe7`）と
-`patches/firmware.patch`（CrossPoint ベース `bb93a462`）に分かれています。
+移植は `patches/sdk.patch`（SDK ベース `fb7e926`）と
+`patches/firmware.patch`（CrossPoint ベース `5d731041`）に分かれています。
 生成と同期の手順は [`10-fork-maintenance.md`](10-fork-maintenance.md) を
 参照してください。
 

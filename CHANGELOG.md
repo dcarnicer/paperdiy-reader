@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-11-06 — upstream `5d731041` y SDK `fb7e926`
+
+- CrossPoint actualizado de `bb93a462` a `5d731041` (About con tamaño/usado/libre
+  de la SD).
+- FreeInk SDK actualizado de `5e94fe7` a `fb7e926` (38 commits): mejoras de
+  BLE HID, SD, táctil EEGO/Picco, waveforms Murphy y varios fixes.
+- Conflictos resueltos en `BoardConfig.h` (renombrado de-link → Silkscreen
+  conviviendo con PaperDIY) y en `AboutActivity` (filas SD + batería PM1 +
+  controlador en vivo; 15 filas).
+- `paperdiy` y `paperdiy-test` compilan; tests host de BLE, SD e InputManager
+  pasan; About muestra SD 7,4 GB / 550 MB / 6,9 GB y batería 4,10 V / 100 %.
+
 ## 2026-11-06 — bring-up BLE
 
 - El Keychron Q1 Pro no es un periférico BLE HID: no aparece en un escaneo
