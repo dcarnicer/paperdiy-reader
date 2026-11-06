@@ -21,6 +21,7 @@ build
 **/__pycache__/
 /compile_commands.json
 /.cache
+/dist/
 .history/
 /.venv
 *.local*

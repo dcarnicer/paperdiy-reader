@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-11-06 — paquete M5Burner
+
+- Añadido `m5burner/m5burner.json`, README de publicación y
+  `scripts/make_m5burner_package.py`: genera un ZIP con `m5burner.json`,
+  `firmware/PaperDIYReader_0x0.bin`, portada, README y `LICENSE`.
+- El paquete usa solo el build `paperdiy`; no incluye `paperdiy-test` ni
+  credenciales NVS.
+- `scripts/build_release_license.py` entiende el SDK vendorizado (no submódulo)
+  y toma la revisión de `NOTICE`, necesario para el `LICENSE` GPLv3 del paquete.
+- Checklist legal/publicación en `m5burner/README.md`: fuente por tag, avisos,
+  LPPL pendiente y revisión de M5Stack.
+
 ## 2026-11-06 — upstream `5d731041` y SDK `fb7e926`
 
 - CrossPoint actualizado de `bb93a462` a `5d731041` (About con tamaño/usado/libre
