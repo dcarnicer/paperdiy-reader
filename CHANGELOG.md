@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-11-06 — bring-up BLE
+
+- El Keychron Q1 Pro no es un periférico BLE HID: no aparece en un escaneo
+  CoreBluetooth del Mac y tampoco en el del PaperDIY; usa Bluetooth Classic,
+  que el ESP32-S3 no soporta.
+- Se levantó un teclado HID BLE de prueba en macOS con CoreBluetooth
+  (`PaperDIY Test Keyboard`). El PaperDIY lo ve en el escaneo, pero el
+  emparejamiento falla con `Pairing failed` (NimBLE `0x508`) incluso probando
+  Secure Connections y sin cifrado. Falta un mando BLE real para cerrar la
+  validación.
+- El build de diagnóstico usó `FREEINK_BLE_HID_SHOW_UNNAMED_DEVICES`,
+  `CONFIG_BT_NIMBLE_EXT_ADV` y `FREEINK_BLE_HID_SCAN_DEBUG`; se revirtió. El
+  equipo queda con `paperdiy-test` normal y BLE desactivado.
+
 ## 2026-11-06 — sincronización con upstream `bb93a462`
 
 - CrossPoint actualizado de `308cd522` a `bb93a462` (6 commits): remapeo de

@@ -186,6 +186,20 @@ conectado al Mac.
 Pendiente de probar: consumo/autonomía, emparejar un mando BLE real, ghosting
 visual tras lectura muy larga y la batería 604050.
 
+## BLE bring-up (06/11/2026)
+
+- El Keychron Q1 Pro no aparece en un escaneo BLE del Mac (sí en Bluetooth
+  Classic) ni en el del PaperDIY. Es un teclado Classic; el ESP32-S3 no tiene
+  radio BR/EDR.
+- Se emuló un teclado HID BLE en macOS con CoreBluetooth (BTHIDKit):
+  `PaperDIY Test Keyboard`. El PaperDIY lo lista, pero el emparejamiento falla
+  con `Pairing failed` (NimBLE `0x508`), también con Secure Connections y sin
+  cifrado. Hace falta un mando BLE real para validar el flujo completo.
+- El build de diagnóstico usó `FREEINK_BLE_HID_SHOW_UNNAMED_DEVICES`,
+  `CONFIG_BT_NIMBLE_EXT_ADV` y `FREEINK_BLE_HID_SCAN_DEBUG` en un
+  `platformio.local.ini` temporal; se revirtió y se volvió a flashear
+  `paperdiy-test`.
+
 ## KOReader Sync local (06/11/2026)
 
 - Se levantó un servidor KOSync mínimo en el Mac (`192.168.1.148:7200`) y se
