@@ -25,6 +25,7 @@ DEFAULT_BUILD = PROJECT_DIR / ".pio" / "build" / "paperdiy"
 DEFAULT_OUTPUT = PROJECT_DIR / "dist" / "m5burner"
 DEFAULT_COVER = PROJECT_DIR / "docs" / "paperdiy" / "images" / "first-read.png"
 TEMPLATE = PROJECT_DIR / "m5burner" / "m5burner.json"
+FIRMWARE_SLUG = "PaperDIYReader"
 
 
 def sha256(path: Path) -> str:
@@ -54,7 +55,7 @@ def build_license(output: Path, repository: str) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--version", default="2.0.0-paperdiy.1")
+    parser.add_argument("--version", default="2.0.0")
     parser.add_argument("--build-dir", type=Path, default=DEFAULT_BUILD)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--cover", type=Path, default=DEFAULT_COVER)
@@ -83,7 +84,7 @@ def main() -> int:
         json.dumps(metadata, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
 
-    firmware_name = f"{metadata['name'].replace(' ', '')}_0x0.bin"
+    firmware_name = f"{FIRMWARE_SLUG}_0x0.bin"
     shutil.copy2(factory, package_dir / "firmware" / firmware_name)
     shutil.copy2(args.cover, package_dir / "cover.png")
 
@@ -100,7 +101,7 @@ def main() -> int:
 
     # The desktop M5Burner publish dialog takes a single .bin; the zip is for
     # the M5Stack-Firmware repository/PR route.
-    binary = args.output_dir / f"PaperDIYReader-{args.version}.bin"
+    binary = args.output_dir / f"{FIRMWARE_SLUG}-{args.version}.bin"
     shutil.copy2(factory, binary)
 
     print(f"package: {package_dir}")
