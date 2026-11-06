@@ -13,18 +13,23 @@ python3 scripts/make_m5burner_package.py --version 2.0.0-paperdiy.1
 The script produces:
 
 ```
-dist/m5burner/paperdiy-reader-<version>/
-├── m5burner.json
-├── LICENSE
-├── README.md
-├── cover.png
-└── firmware/
-    └── PaperDIYReader_0x0.bin
+dist/m5burner/
+├── PaperDIYReader-<version>.bin       # for the desktop Publish dialog
+├── paperdiy-reader-<version>.zip      # for the repo/PR route
+└── paperdiy-reader-<version>/
+    ├── m5burner.json
+    ├── LICENSE
+    ├── README.md
+    ├── cover.png
+    └── firmware/
+        └── PaperDIYReader_0x0.bin
 ```
 
-`PaperDIYReader_0x0.bin` is the combined `firmware.factory.bin` (bootloader +
-partition table + app). Do not use the `paperdiy-test` build: it exposes serial
-key injection.
+The `.bin` and `firmware/PaperDIYReader_0x0.bin` are the combined
+`firmware.factory.bin` (bootloader + partition table + app). Use the `.bin` in
+the M5Burner desktop **Publish** dialog; use the `.zip` only for the
+`M5Stack-Firmware` repository/PR route. Do not use the `paperdiy-test` build:
+it exposes serial key injection.
 
 ## Test before publishing
 
@@ -39,7 +44,7 @@ key injection.
 Use your own M5Stack account. There are two supported routes:
 
 1. **M5Burner desktop app**: `USER CUSTOM` → `Publish`, fill name, version,
-   description, device type, GitHub URL, firmware zip/package and cover.
+   description, device type, GitHub URL, the `.bin` firmware and cover.
 2. **M5Stack-Firmware PR**: fork `m5stack/M5Stack-Firmware`, add this
    repository to `firmware-repo.list`, and include `m5burner.json` plus the
    `firmware/` folder in this repository. M5Stack reviews the first submission.

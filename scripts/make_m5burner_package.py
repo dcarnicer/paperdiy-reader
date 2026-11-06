@@ -98,10 +98,17 @@ def main() -> int:
             if path.is_file():
                 zf.write(path, path.relative_to(package_dir))
 
+    # The desktop M5Burner publish dialog takes a single .bin; the zip is for
+    # the M5Stack-Firmware repository/PR route.
+    binary = args.output_dir / f"PaperDIYReader-{args.version}.bin"
+    shutil.copy2(factory, binary)
+
     print(f"package: {package_dir}")
-    print(f"archive: {archive}")
+    print(f"archive (repo/PR route): {archive}")
+    print(f"binary (desktop Publish dialog): {binary}")
     print(f"firmware: {firmware_name} ({factory.stat().st_size} bytes)")
-    print(f"SHA256: {sha256(archive)}")
+    print(f"binary SHA256: {sha256(binary)}")
+    print(f"archive SHA256: {sha256(archive)}")
     print("Next: test with M5Burner on a clean PaperDIY, then publish via USER CUSTOM.")
     return 0
 
