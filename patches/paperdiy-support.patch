@@ -1043,10 +1043,10 @@ index 2b3c8c6a..89ff7744 100644
    if (gpio.deviceIsX3() && mode == RefreshMode::HALF_REFRESH) {
      einkDisplay.requestResync(1);
 diff --git a/lib/hal/HalDisplay.h b/lib/hal/HalDisplay.h
-index e6ed0190..e01f970c 100644
+index ce97ac49..1acddb1e 100644
 --- a/lib/hal/HalDisplay.h
 +++ b/lib/hal/HalDisplay.h
-@@ -50,6 +50,10 @@ class HalDisplay {
+@@ -52,6 +52,10 @@ class HalDisplay {
                              bool fromProgmem = false) const;
  
    void displayBuffer(RefreshMode mode = RefreshMode::FAST_REFRESH, bool turnOffScreen = false);
@@ -1253,7 +1253,7 @@ index 53531bf7..e74256fa 100644
  ; UC8279C SPI panel, GSLX680 touch, PCF8563 RTC, dedicated HSPI MicroSD (SPI,
  ; not SDMMC). 16MB DIO flash + 8MB OPI PSRAM. One binary serves the frontlit
 diff --git a/src/CrossPointSettings.cpp b/src/CrossPointSettings.cpp
-index 56d612c6..4afda30f 100644
+index fb30a5ab..bab677e3 100644
 --- a/src/CrossPointSettings.cpp
 +++ b/src/CrossPointSettings.cpp
 @@ -120,6 +120,12 @@ void CrossPointSettings::toJson(JsonDocument& doc) const {
@@ -1269,7 +1269,7 @@ index 56d612c6..4afda30f 100644
    bleturner::writeJson(ble, doc);
  }
  
-@@ -298,6 +304,22 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
+@@ -304,6 +310,22 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
      keyboardLayouts = doc["keyboardLayouts"].as<uint16_t>();
    }
  
@@ -1293,7 +1293,7 @@ index 56d612c6..4afda30f 100644
      needsResave = true;
    }
 diff --git a/src/CrossPointSettings.h b/src/CrossPointSettings.h
-index f7a9d49e..c7320d6f 100644
+index 513a2747..d7bc0659 100644
 --- a/src/CrossPointSettings.h
 +++ b/src/CrossPointSettings.h
 @@ -2,6 +2,7 @@
@@ -1304,7 +1304,7 @@ index f7a9d49e..c7320d6f 100644
  #include <Epub/ReaderRenderSpec.h>
  #include <PersistableStore.h>
  
-@@ -327,8 +328,15 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
+@@ -328,8 +329,15 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
    uint8_t paragraphAlignment = JUSTIFIED;
    // Auto-sleep timeout setting (default 10 minutes). Legacy sleepTimeout enum values are migration-only.
    uint8_t sleepTimeoutMinutes = 10;
@@ -1399,7 +1399,7 @@ index 06ecd724..9498d0a9 100644
    UiListActivity::render(std::move(lock));
  }
 diff --git a/src/activities/settings/AboutActivity.cpp b/src/activities/settings/AboutActivity.cpp
-index c01e3842..4b66fc3a 100644
+index fdb0c2ae..d4426183 100644
 --- a/src/activities/settings/AboutActivity.cpp
 +++ b/src/activities/settings/AboutActivity.cpp
 @@ -1,5 +1,6 @@
@@ -1428,10 +1428,11 @@ index c01e3842..4b66fc3a 100644
  };
  
  // Chip part numbers, not user prose — deliberately untranslated.
-@@ -102,6 +104,21 @@ void AboutActivity::onEnter() {
-   rowValues_[ITEM_CHIP] = buf;
-   snprintf(buf, sizeof(buf), "%u MB", static_cast<unsigned>(ESP.getFlashChipSize() / (1024u * 1024u)));
-   rowValues_[ITEM_FLASH] = buf;
+@@ -107,6 +109,22 @@ void AboutActivity::onEnter() {
+   const char* liveController = display.controllerName();
+   rowValues_[ITEM_DISPLAY] =
+       liveController ? liveController : displayControllerName(BoardConfig::ACTIVE.displayController);
++
 +  // The PM1 has no coulomb counter, so show the raw rails next to the percentage.
 +  // This is also the quickest way to tell a full pack from a charger that has
 +  // already terminated. Fields are -1 when the board has no PM1 backend.
@@ -1447,9 +1448,9 @@ index c01e3842..4b66fc3a 100644
 +  } else {
 +    rowValues_[ITEM_BATTERY] = "n/a";
 +  }
-   rowValues_[ITEM_DISPLAY] = displayControllerName(BoardConfig::ACTIVE.displayController);
    snprintf(buf, sizeof(buf), "%ux%u", static_cast<unsigned>(BoardConfig::ACTIVE.displayWidth),
             static_cast<unsigned>(BoardConfig::ACTIVE.displayHeight));
+   rowValues_[ITEM_RESOLUTION] = buf;
 diff --git a/src/activities/settings/AboutActivity.h b/src/activities/settings/AboutActivity.h
 index ec4dc70c..417bed3c 100644
 --- a/src/activities/settings/AboutActivity.h

@@ -12,6 +12,8 @@
 - `paperdiy` y `paperdiy-test` compilan. Tests de remapeo y orientación pasan.
   Smoke test en hardware: arranque, Home, A/B, lectura y `About`
   (VBAT 4,08 V, 90 %, `LovyanGFX EPD`).
+- `sdk.patch` y `firmware.patch` regenerados contra las bases nuevas y
+  verificados con `git apply --check` sobre árboles limpios.
 - KOReader Sync validado antes del sync contra un servidor KOSync local:
   autenticación, pull sin progreso, subida, comparación y aplicación de
   progreso remoto (página 13→17). Credenciales de prueba eliminadas después.
