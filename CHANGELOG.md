@@ -12,6 +12,8 @@
   y toma la revisión de `NOTICE`, necesario para el `LICENSE` GPLv3 del paquete.
 - Checklist legal/publicación en `m5burner/README.md`: fuente por tag, avisos,
   LPPL pendiente y revisión de M5Stack.
+- M5Burner usa versionado propio independiente de CrossPoint: primera
+  publicación `0.1.0`; la base upstream va en la descripción.
 
 ## 2026-11-06 — upstream `5d731041` y SDK `fb7e926`
 

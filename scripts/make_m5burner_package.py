@@ -55,7 +55,7 @@ def build_license(output: Path, repository: str) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--version", default="2.0.0")
+    parser.add_argument("--version", default="0.1.0")
     parser.add_argument("--build-dir", type=Path, default=DEFAULT_BUILD)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--cover", type=Path, default=DEFAULT_COVER)
