@@ -1,0 +1,54 @@
+name: release-paperdiy
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "[0-9]*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Cache PlatformIO core + build
+        uses: actions/cache@v4
+        with:
+          path: |
+            .platformio-core
+            .pio
+          key: paperdiy-release-${{ hashFiles('platformio.ini') }}-${{ github.sha }}
+          restore-keys: |
+            paperdiy-release-${{ hashFiles('platformio.ini') }}-
+
+      - name: Build
+        env:
+          PLATFORMIO_CORE_DIR: ${{ github.workspace }}/.platformio-core
+          PLATFORMIO_BUILD_FLAGS: -DCROSSPOINT_OTA_RELEASES_URL=\"https://api.github.com/repos/${{ github.repository }}/releases/latest\"
+        run: pio run -e paperdiy
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p dist
+          cp .pio/build/paperdiy/firmware.bin "dist/crosspoint-${GITHUB_REF_NAME}-paperdiy.bin"
+          cp .pio/build/paperdiy/firmware.bin dist/firmware.bin
+          cp .pio/build/paperdiy/firmware.factory.bin dist/firmware.factory.bin
+          sha256sum dist/* > dist/SHA256SUMS.txt
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          fail_on_unmatched_files: true

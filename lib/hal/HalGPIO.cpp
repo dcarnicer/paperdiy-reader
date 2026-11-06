@@ -256,6 +256,11 @@ bool HalGPIO::isUsbConnected() const {
   return battery.isCharging();
 }
 
+bool HalGPIO::isCharging() const {
+  static const BatteryMonitor battery;
+  return battery.isCharging();
+}
+
 bool HalGPIO::coldBootImpliesPowerButton() const {
   // Xteink-style power topology: the power button energizes the rail until
   // firmware latches it, so a no-USB POWERON can only be a still-held button
@@ -266,7 +271,8 @@ bool HalGPIO::coldBootImpliesPowerButton() const {
   // EEGO A4 misread them the same way once the charger terminates at 100%
   // (STAT inactive reads as "no USB").
   // The Metalio sleeps powered off and only its button turns it back on.
-  return isXteinkDevice() || BoardConfig::isPaperMono() || BoardConfig::isSticky() || BoardConfig::isMetalioEInk4();
+  return isXteinkDevice() || BoardConfig::isPaperDiy() || BoardConfig::isPaperMono() || BoardConfig::isSticky() ||
+         BoardConfig::isMetalioEInk4();
 }
 
 HalGPIO::WakeupReason HalGPIO::getWakeupReason() const {
