@@ -20,8 +20,10 @@ Objetivo: demostrar que el port funciona en un PaperDIY real y recoger datos.
       24 páginas con refresco cada 5 (05/11).
 - [x] Lectura muy larga funcional: 250+ cambios de página y varios capítulos sin
       reinicios, errores ni fugas de heap/PSRAM (06/11).
-- [ ] Revisión visual física del ghosting tras la lectura larga: las capturas
-      por serial son el framebuffer, no el estado del panel.
+- [x] Revisión visual física del ghosting tras la lectura larga: leve con
+      refresco cada 5 páginas (06/11); las capturas por serial son el
+      framebuffer, no el estado del panel. Valorar bajar a 1 página o añadir
+      un paso intermedio.
 - [x] Ghosting al abrir el menú del lector: corregido con `HALF_REFRESH` en la
       primera pintada; verificado en hardware.
 - [x] Ghosting al pasar páginas: default 15 -> 5 y prueba de LUT AA de
@@ -38,7 +40,9 @@ Objetivo: demostrar que el port funciona en un PaperDIY real y recoger datos.
       tamaño 14/16 pt con reflow verificados.
 - [x] Wi-Fi + web UI + transferencia de archivos.
 - [x] OPDS (Project Gutenberg), Calibre wireless y OTA.
-- [ ] KOReader Sync con credenciales.
+- [x] KOReader Sync con credenciales: validado contra un servidor KOSync local
+      (auth, pull, push y aplicación de progreso remoto, 06/11). Falta probar
+      un servidor oficial/remoto si se usa en producción.
 - [ ] Medir consumo: activo, idle, deep sleep; autonomía estimada.
 - [ ] Medir tiempo de wake y comprobar que el botón que despierta no pasa
       página accidentalmente. Power despierta y conserva la página; A+B con

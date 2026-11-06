@@ -4,7 +4,7 @@
 
 ## CrossPoint 2.0 からの変更
 
-ベースコミット：`308cd522155ec11c3f62e346a1a961facd3dad80`（develop、2.0.0、
+ベースコミット：`bb93a462cca968be7606cde39833dc20c7a9b48c`（develop、2.0.0、
 2026-11-03）。`main` は上流のミラーで、`paperdiy` がフォークです。
 `freeink-sdk` はビルドを自己完結させるため同梱しています。移植内容は
 `patches/sdk.patch` + `patches/firmware.patch` にあります。
@@ -169,7 +169,7 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
   送りも正常。
 - Wi-Fi と Web UI が動作。Web UI から本をアップロードし、リーダーから開けた。
 - 後日検証済み：OPDS、Calibre ワイヤレス、OTA、電源/シャットダウン、電源
-  による復帰。残りは KOReader Sync（認証情報が必要）、一般的な残像、
+  による復帰。当時の残りは KOReader Sync（認証情報が必要）、一般的な残像、
   スリープ電流、A/B 復帰付きディープスリープ、バッテリー駆動時間です。
 
 更新（2026-11-04）：上流 `308cd522` への同期後、起動、ホーム、復帰、
@@ -352,7 +352,7 @@ CrossPoint へサポートを提案できます：
    良い候補です。
 
 移植は `patches/sdk.patch`（SDK ベース `5e94fe7`）と
-`patches/firmware.patch`（CrossPoint ベース `308cd522`）に分かれています。
+`patches/firmware.patch`（CrossPoint ベース `bb93a462`）に分かれています。
 生成と同期の手順は [`10-fork-maintenance.md`](10-fork-maintenance.md) を
 参照してください。
 
@@ -367,7 +367,7 @@ CrossPoint へサポートを提案できます：
 - [x] 設定可能な OTA と `paperdiy` タグ。
 - [x] 基本的なハードウェア検証（2026-11-04）。
 - [x] OPDS、Calibre ワイヤレス、OTA（2026-11-04～05）。
-- [ ] KOReader Sync（認証情報が必要）。
+- [x] KOReader Sync（認証情報が必要、ローカル KOSync サーバーで 2026-11-06 に検証）。
 - [ ] 回転/LUT/残像の調整。
 - [ ] 電流/バッテリー駆動時間の測定。
 - [ ] 2 ボタン UX の磨き込み。

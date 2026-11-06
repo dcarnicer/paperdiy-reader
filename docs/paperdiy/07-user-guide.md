@@ -36,6 +36,11 @@ firmware. Si prefieres el comportamiento original, compila con
 En el lector, A/B pasan página. En listas, mueven la selección; B largo abre el
 elemento; A largo vuelve.
 
+En `Ajustes > Controles > Orientar botones laterales` puedes hacer que A/B
+inviertan la dirección al pasar a horizontal; en vertical invertida se invierten
+siempre. Está desactivado por defecto, también al actualizar desde una versión
+anterior.
+
 Los clics cortos se registran **al soltar**, no al pulsar: es lo que permite
 distinguir un clic de una pulsación larga con solo dos botones. Si se cambia a
 “page on press”, la pulsación larga puede disparar antes una página/movimiento
@@ -121,7 +126,8 @@ antes de abrir el menú; es un compromiso de UX pendiente de decidir.
   el flujo.
 - **OPDS**: añade catálogos (Project Gutenberg, Standard Ebooks, etc.) y navega
   desde el lector.
-- **KOReader Sync**: configura credenciales y sincroniza progreso.
+- **KOReader Sync**: configura credenciales y sincroniza progreso contra el
+  servidor oficial o uno propio (KOSync).
 - **OTA**: busca actualizaciones desde Settings; también puedes flashear por
   USB.
 
