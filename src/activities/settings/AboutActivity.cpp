@@ -104,6 +104,12 @@ void AboutActivity::onEnter() {
   rowValues_[ITEM_CHIP] = buf;
   snprintf(buf, sizeof(buf), "%u MB", static_cast<unsigned>(ESP.getFlashChipSize() / (1024u * 1024u)));
   rowValues_[ITEM_FLASH] = buf;
+  // The profile names a boot default; boards that probe their panel (Picco,
+  // Sticky) can run another driver, and the driver knows which.
+  const char* liveController = display.controllerName();
+  rowValues_[ITEM_DISPLAY] =
+      liveController ? liveController : displayControllerName(BoardConfig::ACTIVE.displayController);
+
   // The PM1 has no coulomb counter, so show the raw rails next to the percentage.
   // This is also the quickest way to tell a full pack from a charger that has
   // already terminated. Fields are -1 when the board has no PM1 backend.
@@ -119,7 +125,6 @@ void AboutActivity::onEnter() {
   } else {
     rowValues_[ITEM_BATTERY] = "n/a";
   }
-  rowValues_[ITEM_DISPLAY] = displayControllerName(BoardConfig::ACTIVE.displayController);
   snprintf(buf, sizeof(buf), "%ux%u", static_cast<unsigned>(BoardConfig::ACTIVE.displayWidth),
            static_cast<unsigned>(BoardConfig::ACTIVE.displayHeight));
   rowValues_[ITEM_RESOLUTION] = buf;
