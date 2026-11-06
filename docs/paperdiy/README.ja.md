@@ -1,0 +1,34 @@
+# PaperDIY ドキュメント
+
+**言語：** [Español](README.md) · [English](README.en.md) · [简体中文](README.zh-CN.md) · **日本語**
+
+このポート独自のドキュメントの索引です（CrossPoint の元ドキュメントは
+`docs/` と `docs/upstream/` にあります）。
+
+> メイン README、ユーザーガイド、ハードウェアと移植メモは英語、簡体字
+> 中国語、日本語に翻訳済みです。その他の詳細ドキュメントは現在スペイン語
+> のみです。
+
+1. [調査と現在の状態](00-research.md)
+2. [ハードウェアとピン](01-hardware.ja.md) — [Español](01-hardware.md) · [English](01-hardware.en.md) · [简体中文](01-hardware.zh-CN.md)
+3. [POC とエコシステム分析](02-current-state.md)
+4. [機能マトリクス](03-feature-matrix.md)
+5. [アーキテクチャ](04-architecture.md)
+6. [ロードマップ](05-roadmap.md)
+7. [移植メモと検証](06-porting.ja.md) — [Español](06-porting.md) · [English](06-porting.en.md) · [简体中文](06-porting.zh-CN.md)
+8. [ユーザーガイド](07-user-guide.ja.md) — [Español](07-user-guide.md) · [English](07-user-guide.en.md) · [简体中文](07-user-guide.zh-CN.md)
+9. [ソース](08-sources.md)
+10. [先行事例：issue #4005 と PaperDIY PR](09-prior-art.md)
+11. [フォークの維持と上流の更新](10-fork-maintenance.md)
+12. [issue #4005 向けコメント草稿](11-upstream-note.md)
+13. [USB テスト](12-serial-testing.md)（スペイン語）
+
+## 一言ステータス
+
+このポートは**ビルド、起動、実機 PaperDIY での検証まで完了**しています
+（画面、ボタン、SD、バッテリー、Wi-Fi、EPUB 読書、OPDS、Calibre ワイヤレス）。
+自動スリープと表紙のスリープ画面も検証済みです。長時間読書は
+2026-11-06 に 250+ ページめくりをエラー・リークなしで確認しました。
+KOReader Sync は 2026-11-06 にローカル KOSync サーバーで検証済みです。
+残りは BLE リモコンのペアリング、スリープ電流/バッテリー駆動時間、604050
+バッテリー、残像の実機目視確認です。`06-porting.md` から始めてください。
