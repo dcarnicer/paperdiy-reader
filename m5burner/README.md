@@ -7,7 +7,7 @@ checklist. Generated packages go to `dist/m5burner/` (ignored by git).
 
 ```bash
 make build ENV=paperdiy
-python3 scripts/make_m5burner_package.py --version 2.0.0
+python3 scripts/make_m5burner_package.py --version 0.1.0
 ```
 
 The script produces:
@@ -68,8 +68,11 @@ differs, update `firmware_category.device` in `m5burner.json`.
 
 - `m5burner.json` here is a template; the packaging script replaces
   `version` and normalizes `repository`.
-- M5Burner uses short semver (`2.0.0`, `2.0.1`, `2.1.0`). Keep the
-  `-paperdiy.N` suffix for internal/GitHub artifacts, not for M5Burner.
+- M5Burner uses this product's own semver, independent of CrossPoint:
+  `0.1.0` first public release, then `0.1.1`, `0.2.0`, `1.0.0`.
+  The upstream base (`5d731041` / SDK `fb7e926`) goes in the description,
+  not in the version. Keep the `-paperdiy.N` suffix for internal/GitHub
+  artifacts, not for M5Burner.
 - The cover is `docs/paperdiy/images/first-read.png` by default; replace it
   with a dedicated square cover if desired.
 - Keep `README.md` and `LICENSE` inside the uploaded package.
