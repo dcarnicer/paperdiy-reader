@@ -41,8 +41,9 @@ enum MenuItem {
 // these screenshots across every device language, so the labels must be
 // identical on every unit.
 const char* const menuNames[AboutActivity::ITEM_COUNT] = {
-    "Device",    "Firmware",           "Chip",        "Flash",   "SD Size", "SD Used", "SD Free", "Battery",
-    "Display Controller", "Resolution", "Touch",       "Frontlight", "RTC",  "Tilt Sensor (IMU)", "MAC Address",
+    "Device",      "Firmware",           "Chip",       "Flash", "SD Size",    "SD Used", "SD Free",
+    "Battery",     "Display Controller", "Resolution", "Touch", "Frontlight", "RTC",     "Tilt Sensor (IMU)",
+    "MAC Address",
 };
 
 // "14.5 GB" / "35 MB": GiB with one decimal, MiB below 1 GiB.
