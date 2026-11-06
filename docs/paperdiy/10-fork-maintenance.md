@@ -85,7 +85,7 @@ git apply --3way patches/firmware.patch
 # docs/infra
 git checkout paperdiy -- README.md README.en.md README.ja.md README.zh-CN.md \
   CHANGELOG.md Makefile NOTICE LICENSE .gitignore .gitattributes hardware \
-  docs/paperdiy docs/README.md docs/upstream scripts patches .github
+  lib/I18n/translations docs/paperdiy docs/README.md docs/upstream scripts patches .github
 rm -f ROADMAP.md SCOPE.md GOVERNANCE.md AGENTS.md USER_GUIDE.md CLAUDE.md .gitmodules
 rm -rf .github && git checkout paperdiy -- .github
 
