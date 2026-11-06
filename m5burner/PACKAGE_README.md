@@ -1,4 +1,4 @@
-# PaperDIY Reader
+# PaperDIY Reader (CrossPoint port)
 
 EPUB reader firmware for the **M5Stack PaperDIY (K159)**. Built on CrossPoint
 Reader and the FreeInk SDK.
