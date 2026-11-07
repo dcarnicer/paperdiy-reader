@@ -1,5 +1,39 @@
 # Changelog
 
+## 2026-11-07 — compatibilidad con M5Launcher
+
+- Añadido `src/platform/LauncherEnv`: detecta el firmware residente de
+  [bmorcelli/Launcher](https://github.com/bmorcelli/Launcher) por su partición
+  `APP_TEST` y lee la configuración de arranque de Launcher (`DDLB`,
+  `LauncherOnKey`, `LauncherKeyLvl`), que registra en el log de arranque.
+- Nuevo `Ajustes > General > Salir a M5Launcher`, visible siempre bajo
+  Launcher y adaptado a su modo de arranque: con tecla configurada pide
+  mantenerla y reinicia con ella pulsada (`LauncherExitActivity`); sin tecla
+  usa un deep sleep de 1 ms o, si `DeepSleep starts Launcher` está desactivado,
+  un reset del ESP32 a través del M5PM1 (`SYS_CMD 0xA2`), que el bootloader ve
+  como encendido.
+- Documentada la configuración recomendada para despertar directamente en el
+  lector: `CFG > GPIO on boot starts Launcher` = A. El sueño del PaperDIY es un
+  apagado del PM1, así que despertar es un encendido; por defecto Launcher se
+  muestra en cada encendido y `DeepSleep starts Launcher` no lo cambia. Con
+  tecla configurada, el bootloader solo abre Launcher si A está pulsado.
+- Bajo Launcher no se entra en el modo recuperación por SD al arrancar con A
+  pulsado: es la forma de abrir Launcher.
+- Bajo Launcher se ocultan `Buscar actualizaciones` y `Actualizar firmware por
+  tarj. SD`; `OtaUpdater` y `FirmwareFlasher` rechazan escribir particiones OTA
+  para no pisar otras apps ni el registro de Launcher.
+- Nuevo `scripts/make_launcher_package.py` y `make launcher`: empaqueta el
+  `firmware.bin` solo de aplicación como
+  `PaperDIYReader-<versión>-launcher.bin`. El workflow de release publica el
+  asset y el build de CI lo valida.
+- Documentación en `docs/paperdiy/13-m5launcher.md` (ES/EN) con instalación,
+  actualización, salida a Launcher y notas de particiones.
+- Validado en hardware (07/11/2026) con M5Launcher 3.0.0: instalación por
+  consola serie (`flash firmware`), arranque, reentrada y actualización con
+  `flash overwrite` conservando la SD y la posición de lectura. Salida a
+  Launcher validada en los tres modos (deep sleep, reset del PM1 y tecla A).
+  Con tecla A, suspender y encender arranca el lector directamente.
+
 ## 2026-11-06 — paquete M5Burner
 
 - Añadido `m5burner/m5burner.json`, README de publicación y

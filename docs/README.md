@@ -2,6 +2,8 @@
 
 - **PaperDIY Reader** (investigación, hardware, roadmap, port, guía):
   [`docs/paperdiy/`](paperdiy/README.md)
+- **M5Launcher** (instalar el lector junto a otras apps):
+  [`docs/paperdiy/13-m5launcher.md`](paperdiy/13-m5launcher.md)
 - **CrossPoint upstream** (documentación heredada del motor): los archivos de
   este directorio (`webserver.md`, `dictionary.md`, `sd-card-fonts.md`,
   `file-formats.md`, etc.) y [`docs/upstream/`](upstream/).

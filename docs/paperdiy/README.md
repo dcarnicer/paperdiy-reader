@@ -22,6 +22,7 @@ CrossPoint sigue en `docs/` y `docs/upstream/`).
 11. [Mantener el fork y actualizar upstream](10-fork-maintenance.md)
 12. [Borrador de comentario para la issue #4005](11-upstream-note.md)
 13. [Testing por USB](12-serial-testing.md)
+14. [M5Launcher](13-m5launcher.md) — [English](13-m5launcher.en.md)
 
 ## Estado en una frase
 

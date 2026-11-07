@@ -23,7 +23,7 @@ from pathlib import Path
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_BUILD = PROJECT_DIR / ".pio" / "build" / "paperdiy"
 DEFAULT_OUTPUT = PROJECT_DIR / "dist" / "m5burner"
-DEFAULT_COVER = PROJECT_DIR / "docs" / "paperdiy" / "images" / "first-read.png"
+DEFAULT_COVER = PROJECT_DIR / "m5burner" / "cover.png"
 TEMPLATE = PROJECT_DIR / "m5burner" / "m5burner.json"
 FIRMWARE_SLUG = "PaperDIYReader"
 

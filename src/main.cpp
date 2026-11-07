@@ -45,6 +45,7 @@
 #include "activities/settings/SdFirmwareUpdateActivity.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
+#include "platform/LauncherEnv.h"
 #include "platform/UsbSerialJtagHandoff.h"
 #include "util/ButtonNavigator.h"
 #include "util/PluginEvents.h"
@@ -621,8 +622,11 @@ void setup() {
   const auto recoveryButton = (BoardConfig::isX4Pro() || BoardConfig::isX4Classic()) ? MappedInputManager::Button::Down
                                                                                      : MappedInputManager::Button::Up;
   // The Picco has no second app slot to flash into (partitions_picco.csv).
+  // Under M5Launcher the launcher owns the app slots, and holding a key at
+  // power-on is how Launcher itself is opened, so never enter recovery there.
   const bool recoveryFirmwareMode = wakeupReason == HalGPIO::WakeupReason::PowerButton && !BoardConfig::isPaperMono() &&
-                                    !BoardConfig::isPicco() && mappedInputManager.isPressed(recoveryButton);
+                                    !BoardConfig::isPicco() && !launcher_env::isUnderLauncher() &&
+                                    mappedInputManager.isPressed(recoveryButton);
 
   halTiltSensor.begin();
   halClock.begin();
@@ -632,6 +636,7 @@ void setup() {
 #else
   LOG_INF("MAIN", "Device: %s", BoardConfig::ACTIVE.name);
 #endif
+  launcher_env::logStatus();
 
   // SD Card Initialization
   // We need 6 open files concurrently when parsing a new chapter. A card that

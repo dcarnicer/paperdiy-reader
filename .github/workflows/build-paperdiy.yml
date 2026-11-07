@@ -33,6 +33,9 @@ jobs:
           PLATFORMIO_CORE_DIR: ${{ github.workspace }}/.platformio-core
         run: pio run -e paperdiy
 
+      - name: Package M5Launcher image
+        run: python3 scripts/make_launcher_package.py --version ci
+
       - name: Upload firmware
         uses: actions/upload-artifact@v4
         with:
@@ -40,4 +43,6 @@ jobs:
           path: |
             .pio/build/paperdiy/firmware.bin
             .pio/build/paperdiy/firmware.factory.bin
+            dist/launcher/PaperDIYReader-*-launcher.bin
+            dist/launcher/README.md
           if-no-files-found: error

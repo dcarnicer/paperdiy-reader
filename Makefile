@@ -8,11 +8,12 @@ PIO       ?= pio
 ENV       ?= paperdiy
 CORE_DIR  ?= $(CURDIR)/.platformio-core
 PORT      ?=
+LAUNCHER_VERSION ?= 0.1.0
 
 PIO_RUN = PLATFORMIO_CORE_DIR="$(CORE_DIR)" $(PIO) run -e $(ENV)
 UPLOAD_PORT = $(if $(PORT),--upload-port "$(PORT)",)
 
-.PHONY: build flash flash-factory monitor clean size menuconfig
+.PHONY: build flash flash-factory monitor clean size menuconfig launcher
 
 build:
 	$(PIO_RUN)
@@ -20,6 +21,11 @@ build:
 # App-only update (keeps the installed bootloader/partition table).
 flash:
 	$(PIO_RUN) -t upload $(UPLOAD_PORT)
+
+# M5Launcher app-only package (not a factory image).
+launcher:
+	$(PIO_RUN)
+	python3 scripts/make_launcher_package.py --version "$(LAUNCHER_VERSION)"
 
 # First install / recovery: bootloader + partition table + app at 0x0.
 flash-factory:
