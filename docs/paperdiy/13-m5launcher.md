@@ -70,17 +70,19 @@ cuatro cosas:
    es la forma de abrir Launcher, así que el lector no entra en el selector de
    firmware por SD aunque arranque con A pulsado.
 
-Los ajustes, la biblioteca, las cachés y los libros siguen en la tarjeta SD
-(`/.crosspoint/`), así que sobreviven a reinstalar la app desde Launcher.
-Launcher sí reinicia el namespace `nvs.net80211` al instalar, de modo que las
-credenciales Wi-Fi hay que volver a introducirlas.
+Los ajustes, la biblioteca, las cachés, los libros y el progreso de lectura
+siguen en la tarjeta SD (`/.crosspoint/`), así que sobreviven a reinstalar la
+app o a borrar la flash. Launcher guarda además su propia configuración en
+`/config.conf` en la raíz de la SD, así que la tecla A y `DDLB` también se
+conservan. Lo que sí se pierde al borrar la flash son las credenciales Wi-Fi
+del lector (`nvs.net80211`); hay que volver a introducirlas.
 
 ## Instalar
 
 Requisitos:
 
 - M5Launcher **3.0.0 o superior** con soporte PaperDIY.
-- Un `.bin` **solo de aplicación** (`firmware.bin`), no el image combinado de
+- Un `.bin` **solo de aplicación** (`firmware.bin`), no la imagen combinada de
   M5Burner ni `firmware.factory.bin`.
 
 ### Desde la tarjeta SD
@@ -174,5 +176,15 @@ Validado el 07/11/2026 en un PaperDIY con M5Launcher 3.0.0:
 - [x] Con `GPIO on boot starts Launcher` = A: suspender y encender arranca el
   lector directamente (dos veces); la salida manteniendo A abre el menú de
   Launcher; B cancela la salida.
-- [ ] Instalación desde SD/WUI: usa el mismo instalador de Launcher, pero no se
-  probó por separado en esta unidad.
+- [x] Instalación limpia desde cero: borrado de los 16 MB, M5Launcher 3.0.0
+  oficial en `0x0` e instalación del release `v0.1.0-paperdiy` desde la SD. La
+  partición `paperd` coincide byte a byte con el asset
+  (`sha256 efe8b795…`).
+- [x] La instalación limpia conserva biblioteca, ajustes y progreso de lectura
+  de la SD, y la configuración de Launcher (`/config.conf`). Solo se pierden
+  las credenciales Wi-Fi de NVS.
+- [x] Tras la instalación limpia: `Salir a M5Launcher` visible, actualizaciones
+  internas ocultas, salida con A y cancelación con B, y despertar directo al
+  lector.
+- [ ] Instalación desde WUI/Favoritos: usa el mismo instalador de Launcher, pero
+  no se probó por separado en esta unidad.

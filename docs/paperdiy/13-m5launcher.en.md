@@ -69,9 +69,11 @@ four things:
    Launcher is opened, so the reader never enters its SD firmware picker when
    it boots with A held.
 
-Settings, library, caches and books stay on the SD card (`/.crosspoint/`), so
-they survive reinstalling the app from Launcher. Launcher does reset the
-`nvs.net80211` namespace on install, so Wi-Fi credentials must be entered
+Settings, library, caches, books and reading progress stay on the SD card
+(`/.crosspoint/`), so they survive reinstalling the app or erasing the flash.
+Launcher additionally keeps its own settings in `/config.conf` at the SD card
+root, so the A key and `DDLB` also survive. What is lost when the flash is
+erased is the reader's Wi-Fi credentials (`nvs.net80211`); they must be entered
 again.
 
 ## Install
@@ -171,5 +173,14 @@ Validated on 2026-11-07 on a PaperDIY with M5Launcher 3.0.0:
 - [x] With `GPIO on boot starts Launcher` = A: sleeping and powering on boots
   the reader directly (twice); exiting while holding A opens Launcher's menu;
   B cancels the exit.
-- [ ] Installation from SD/WUI: it uses the same Launcher installer but was not
-  tested separately on this unit.
+- [x] Clean install from scratch: 16 MB erase, official M5Launcher 3.0.0 at
+  `0x0`, and the `v0.1.0-paperdiy` release installed from the SD card. The
+  `paperd` partition matches the release asset byte for byte
+  (`sha256 efe8b795…`).
+- [x] The clean install preserves the SD library, settings and reading progress,
+  plus Launcher's `/config.conf`. Only the NVS Wi-Fi credentials are lost.
+- [x] After the clean install: `Exit to M5Launcher` is visible, in-app updates
+  are hidden, A exits and B cancels, and waking from sleep boots the reader
+  directly.
+- [ ] Installation from WUI/Favorites: it uses the same Launcher installer but
+  was not tested separately on this unit.
