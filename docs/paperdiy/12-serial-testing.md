@@ -234,3 +234,37 @@ visual tras lectura muy larga y la batería 604050.
 - **Ghosting**: la captura devuelve el framebuffer. La estabilidad está
   validada, pero el ghosting físico tras la lectura larga requiere revisión
   visual del panel.
+
+## Benchmark de cómics y modos de imagen (07/11/2026)
+
+Probado con `paperdiy-test`, TOMO2 de *Seitokai ni mo Ana wa* y los logs
+`ERS Page render: ... total=...`. No se modificó firmware; solo se cambiaron
+ajustes del lector y se compararon varios EPUB.
+
+| Configuración | Page turn | Peso | Observación |
+|---|---:|---:|---|
+| KCC PNG 540 px + grises | 8,0–8,3 s | 13 MB | Ruta completa con dos pasadas de grises |
+| KCC JPEG 540 px + grises | 8,0–8,3 s | 19 MB | JPEG no es más rápido que PNG |
+| KCC PNG + `Imágenes: B/N`, AA on | 4,8–6,8 s | 13 MB | El AA de texto sigue activando las pasadas de grises |
+| KCC PNG + `Imágenes: B/N`, AA off | 3,0–3,1 s | 13 MB | Dither 2×2 del lector; refresco completo ocasional ~4,6 s |
+| 1-bit Floyd–Steinberg + B/N, AA off | **2,3–2,5 s** | **4,7 MB** | Dither fino precalculado; refresco completo ~3,3 s |
+
+Desglose típico en grises (KCC PNG): prewarm ~25 ms, render B/W 3,0–3,8 s,
+display 1,54 s, `gray_lsb` ~0,9 s, `gray_msb` ~0,9 s, `gray_display` ~1,3 s,
+limpieza ~56 ms. El cuello de botella es el render de la imagen y las pasadas
+de grises, no el formato de compresión.
+
+Notas:
+
+- KCC entrega 540 px de ancho, pero el lector usa ~530 px por el margen de
+  pantalla de 5 px; la imagen se reduce ~2%. Un perfil KCC a 530 px evitaría
+  ese reescalado (no probado en hardware).
+- Para que `Imágenes: B/N` salte las pasadas de grises hace falta desactivar
+  también el antialiasing de texto; si no, `needsAnyGrayscale` sigue siendo
+  cierto. Es un ajuste global, no por libro.
+- El prototipo 1-bit se generó posprocesando los PNG de KCC con Floyd–
+  Steinberg (`PIL`, modo `1`). El lector lo dibuja sin dither adicional y el
+  archivo baja a ~1/3 del tamaño.
+- Los ajustes de imagen/AA se cambiaron solo para medir; hay que restaurarlos
+  (`Imágenes: Mostrar`, `Antialiasing: activado`) al terminar.
+
