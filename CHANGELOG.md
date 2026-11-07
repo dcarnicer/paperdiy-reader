@@ -33,7 +33,7 @@
   `flash overwrite` conservando la SD y la posición de lectura. Salida a
   Launcher validada en los tres modos (deep sleep, reset del PM1 y tecla A).
   Con tecla A, suspender y encender arranca el lector directamente.
-- Publicado el release `v0.1.0-paperdiy` con el `.bin` de Launcher y el factory
+- Publicado el release `v0.1.0` con el `.bin` de Launcher y el factory
   image. Instalación limpia validada: borrado de 16 MB, M5Launcher 3.0.0
   oficial e instalación del asset desde la SD; la partición `paperd` coincide
   byte a byte con el release (`sha256 efe8b795…`) y se conservan los datos de

@@ -174,7 +174,7 @@ Validated on 2026-11-07 on a PaperDIY with M5Launcher 3.0.0:
   the reader directly (twice); exiting while holding A opens Launcher's menu;
   B cancels the exit.
 - [x] Clean install from scratch: 16 MB erase, official M5Launcher 3.0.0 at
-  `0x0`, and the `v0.1.0-paperdiy` release installed from the SD card. The
+  `0x0`, and the `v0.1.0` release installed from the SD card. The
   `paperd` partition matches the release asset byte for byte
   (`sha256 efe8b795…`).
 - [x] The clean install preserves the SD library, settings and reading progress,

@@ -177,7 +177,7 @@ Validado el 07/11/2026 en un PaperDIY con M5Launcher 3.0.0:
   lector directamente (dos veces); la salida manteniendo A abre el menú de
   Launcher; B cancela la salida.
 - [x] Instalación limpia desde cero: borrado de los 16 MB, M5Launcher 3.0.0
-  oficial en `0x0` e instalación del release `v0.1.0-paperdiy` desde la SD. La
+  oficial en `0x0` e instalación del release `v0.1.0` desde la SD. La
   partición `paperd` coincide byte a byte con el asset
   (`sha256 efe8b795…`).
 - [x] La instalación limpia conserva biblioteca, ajustes y progreso de lectura

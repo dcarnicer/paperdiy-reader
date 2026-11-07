@@ -48,7 +48,7 @@ jobs:
           cp dist/launcher/*.bin dist/
           cp dist/launcher/*.bin dist/PaperDIYReader-launcher.bin
           cp dist/launcher/README.md dist/launcher-README.md
-          sha256sum dist/*.bin dist/*.md > dist/SHA256SUMS.txt
+          (cd dist && sha256sum *.bin *.md > SHA256SUMS.txt)
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
