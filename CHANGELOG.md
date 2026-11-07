@@ -24,8 +24,11 @@
   para no pisar otras apps ni el registro de Launcher.
 - Nuevo `scripts/make_launcher_package.py` y `make launcher`: empaqueta el
   `firmware.bin` solo de aplicación como
-  `PaperDIYReader-<versión>-launcher.bin`. El workflow de release publica el
-  asset y el build de CI lo valida.
+  `PaperDIYReader-<versión>-launcher.bin` y genera el alias estable
+  `PaperDIYReader-launcher.bin`. El workflow de release publica ambos; para
+  instalar y actualizar hay que usar siempre el alias estable, porque Launcher
+  crea una app por nombre de archivo y el archivo versionado crearía una app
+  nueva.
 - Documentación en `docs/paperdiy/13-m5launcher.md` (ES/EN) con instalación,
   actualización, salida a Launcher y notas de particiones.
 - Validado en hardware (07/11/2026) con M5Launcher 3.0.0: instalación por
@@ -36,7 +39,7 @@
 - Publicado el release `v0.1.0` con el `.bin` de Launcher y el factory
   image. Instalación limpia validada: borrado de 16 MB, M5Launcher 3.0.0
   oficial e instalación del asset desde la SD; la partición `paperd` coincide
-  byte a byte con el release (`sha256 efe8b795…`) y se conservan los datos de
+  byte a byte con el release (`sha256 05f68e10…`) y se conservan los datos de
   la SD (`/.crosspoint/`) y la configuración de Launcher (`/config.conf`).
 
 ## 2026-11-06 — paquete M5Burner

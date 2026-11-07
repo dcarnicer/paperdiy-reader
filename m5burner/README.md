@@ -77,5 +77,7 @@ differs, update `firmware_category.device` in `m5burner.json`.
   `scripts/make_m5burner_package.py`. Pass `--cover` to use another image.
 - Keep `README.md` and `LICENSE` inside the uploaded package.
 - **M5Launcher is a separate package**: install
-  `dist/launcher/PaperDIYReader-<version>-launcher.bin` from `make launcher`,
-  not this combined factory image. See `docs/paperdiy/13-m5launcher.md`.
+  `dist/launcher/PaperDIYReader-launcher.bin` (the stable alias from
+  `make launcher`), not this combined factory image. Keep the stable file name
+  so Launcher overwrites the same app on updates. See
+  `docs/paperdiy/13-m5launcher.md`.

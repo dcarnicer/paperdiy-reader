@@ -193,10 +193,14 @@ M5Burner:
 
 ```bash
 make launcher LAUNCHER_VERSION=0.1.0
-# dist/launcher/PaperDIYReader-0.1.0-launcher.bin
+# dist/launcher/PaperDIYReader-launcher.bin        (alias estable)
+# dist/launcher/PaperDIYReader-0.1.0-launcher.bin  (archivo versionado)
 ```
 
-Cópialo a la SD y usa `SD > Install` en Launcher. El lector detecta Launcher y
+Usa siempre el alias estable `PaperDIYReader-launcher.bin` para instalar y
+actualizar: Launcher crea una app por nombre de archivo, así que el archivo
+versionado crearía una app nueva en cada actualización. Cópialo a la SD y usa
+`SD > Install` en Launcher. El lector detecta Launcher y
 muestra `Ajustes > General > Salir a M5Launcher`; las actualizaciones internas
 se ocultan porque Launcher es quien gestiona las particiones OTA. Para que el
 lector despierte sin pasar por la pantalla de Launcher, configura en Launcher

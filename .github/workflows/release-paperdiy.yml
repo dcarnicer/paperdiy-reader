@@ -46,7 +46,6 @@ jobs:
           cp .pio/build/paperdiy/firmware.factory.bin dist/firmware.factory.bin
           python3 scripts/make_launcher_package.py --version "${GITHUB_REF_NAME}" --output-dir dist/launcher
           cp dist/launcher/*.bin dist/
-          cp dist/launcher/*.bin dist/PaperDIYReader-launcher.bin
           cp dist/launcher/README.md dist/launcher-README.md
           (cd dist && sha256sum *.bin *.md > SHA256SUMS.txt)
 

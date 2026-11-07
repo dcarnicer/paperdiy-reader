@@ -87,10 +87,16 @@ Requisitos:
 
 ### Desde la tarjeta SD
 
-1. Copia `PaperDIYReader-<versión>-launcher.bin` a una tarjeta FAT32/exFAT.
+1. Copia `PaperDIYReader-launcher.bin` (el alias estable del release) a una
+   tarjeta FAT32/exFAT.
 2. Inserta la tarjeta y abre M5Launcher.
 3. Entra en **SD**, selecciona el archivo y elige **Install**.
 4. Arranca el lector desde el menú de Launcher.
+
+Usa siempre el mismo nombre de archivo (`PaperDIYReader-launcher.bin`) para
+instalar y actualizar. Launcher crea una app por nombre de archivo: instalar
+`PaperDIYReader-<versión>-launcher.bin` crea una app nueva en vez de
+sobrescribir la existente. El archivo versionado es solo para archivar.
 
 ### Desde el WebUI o Favoritos
 
@@ -126,7 +132,7 @@ publica además `PaperDIYReader-<tag>-launcher.bin` y el alias estable
 
 ## Actualizar
 
-1. Descarga el nuevo `PaperDIYReader-<versión>-launcher.bin`.
+1. Descarga el nuevo `PaperDIYReader-launcher.bin` (el alias estable).
 2. Instálalo desde Launcher (SD, WUI o Favoritos) sobre la app existente.
 3. Launcher reemplaza el contenido de la partición de la app; los datos de la
    SD no se tocan.
@@ -179,7 +185,7 @@ Validado el 07/11/2026 en un PaperDIY con M5Launcher 3.0.0:
 - [x] Instalación limpia desde cero: borrado de los 16 MB, M5Launcher 3.0.0
   oficial en `0x0` e instalación del release `v0.1.0` desde la SD. La
   partición `paperd` coincide byte a byte con el asset
-  (`sha256 efe8b795…`).
+  (`sha256 05f68e10…`).
 - [x] La instalación limpia conserva biblioteca, ajustes y progreso de lectura
   de la SD, y la configuración de Launcher (`/config.conf`). Solo se pierden
   las credenciales Wi-Fi de NVS.

@@ -61,7 +61,8 @@ This is not a full factory image and must not be flashed at `0x0`.
 
 ## Install
 
-1. Copy `{FIRMWARE_SLUG}-{version}-launcher.bin` to a FAT32/exFAT SD card.
+1. Copy `{FIRMWARE_SLUG}-launcher.bin` (the stable alias) to a FAT32/exFAT SD
+   card.
 2. Insert the card and open M5Launcher.
 3. Go to **SD**, select the file and choose **Install**.
 4. Launch the app from the Launcher menu.
@@ -71,7 +72,10 @@ Favorites. For Favorites, use the stable release URL:
 
 `https://github.com/{repository}/releases/latest/download/{FIRMWARE_SLUG}-launcher.bin`
 
-The app binary is named after the file, so keep a readable name.
+Use the same stable file name for every update. Launcher names the app after
+the file, so installing a versioned file such as
+`{FIRMWARE_SLUG}-{version}-launcher.bin` creates a second app instead of
+replacing the existing one. Keep the versioned file only as an archive.
 
 ## Wake straight into the reader (recommended)
 
@@ -133,14 +137,21 @@ def main() -> int:
     output = args.output_dir / f"{FIRMWARE_SLUG}-{version}-launcher.bin"
     shutil.copy2(firmware, output)
 
+    # Launcher names the app after the file. The stable alias keeps its name
+    # across releases, so installing a newer version replaces the same app
+    # instead of creating a second partition. The versioned file is an archive.
+    stable = args.output_dir / f"{FIRMWARE_SLUG}-launcher.bin"
+    shutil.copy2(output, stable)
+
     digest = sha256(output)
     readme = write_readme(args.output_dir, version, args.repository, digest)
 
     print(f"launcher image: {output}")
+    print(f"stable alias:   {stable}")
     print(f"install notes:  {readme}")
     print(f"source image:   {firmware} ({size} bytes, chip id 0x{chip_id:04X})")
     print(f"sha256:         {digest}")
-    print("Next: test installing this app-only image from M5Launcher on a PaperDIY.")
+    print("Next: test installing the stable alias from M5Launcher on a PaperDIY.")
     return 0
 
 

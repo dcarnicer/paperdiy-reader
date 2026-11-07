@@ -189,11 +189,14 @@ With [M5Launcher](https://github.com/bmorcelli/Launcher) 3.0.0 or newer
 
 ```bash
 make launcher LAUNCHER_VERSION=0.1.0
-# dist/launcher/PaperDIYReader-0.1.0-launcher.bin
+# dist/launcher/PaperDIYReader-launcher.bin        (stable alias)
+# dist/launcher/PaperDIYReader-0.1.0-launcher.bin  (versioned archive)
 ```
 
-Copy it to the SD card and use `SD > Install` in Launcher. The reader detects
-Launcher and exposes `Settings > General > Exit to M5Launcher`; in-app updates
+Always use the stable alias `PaperDIYReader-launcher.bin` for installs and
+updates: Launcher creates one app per file name, so the versioned file would
+create a new app on every update. Copy it to the SD card and use
+`SD > Install` in Launcher. The reader detects Launcher and exposes `Settings > General > Exit to M5Launcher`; in-app updates
 are hidden because Launcher owns the OTA partitions. To wake the reader
 without going through Launcher's screen, set Launcher's
 `CFG > GPIO on boot starts Launcher` to A: Launcher then only appears when A is
