@@ -17,6 +17,7 @@
 
 #include "FirmwareBoardTag.h"
 #include "FirmwareFlasher.h"
+#include "platform/LauncherEnv.h"
 
 namespace {
 // Override in the fork's release environment so OTA checks our releases, not
@@ -28,6 +29,10 @@ constexpr char latestReleaseUrl[] = CROSSPOINT_OTA_RELEASES_URL;
 }  // namespace
 
 OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
+  if (launcher_env::isUnderLauncher()) {
+    LOG_INF("OTA", "Managed by M5Launcher; skipping in-app update check");
+    return LAUNCHER_MANAGED;
+  }
   LOG_DBG("OTA", "Checking for update (current: %s)", CROSSPOINT_VERSION);
 
   // Stream the ~32KB release JSON straight into the parser as it arrives.
@@ -146,6 +151,10 @@ bool OtaUpdater::isUpdateNewer() const {
 const std::string& OtaUpdater::getLatestVersion() const { return latestVersion; }
 
 OtaUpdater::OtaUpdaterError OtaUpdater::installUpdate(ProgressCallback onProgress, void* ctx) {
+  if (launcher_env::isUnderLauncher()) {
+    LOG_INF("OTA", "Managed by M5Launcher; refusing to write another app slot");
+    return LAUNCHER_MANAGED;
+  }
   if (!isUpdateNewer()) {
     return UPDATE_OLDER_ERROR;
   }

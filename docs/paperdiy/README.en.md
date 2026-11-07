@@ -22,6 +22,7 @@ remains in `docs/` and `docs/upstream/`).
 11. [Maintaining the fork and updating upstream](10-fork-maintenance.md)
 12. [Draft comment for issue #4005](11-upstream-note.md)
 13. [USB testing](12-serial-testing.md) (Spanish)
+14. [M5Launcher](13-m5launcher.en.md) — [Español](13-m5launcher.md)
 
 ## One-line status
 

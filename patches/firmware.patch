@@ -57,6 +57,23 @@ index 7640f1df..d417b345 100644
  STR_LONG_PRESS_BEHAVIOR: "Acció en mantenir premut un botó"
  STR_LONG_PRESS_BEHAVIOR_OFF: "Desactivat"
  STR_LONG_PRESS_BEHAVIOR_SKIP: "Saltar capítols"
+diff --git a/lib/I18n/translations/english.yaml b/lib/I18n/translations/english.yaml
+index fddd238c..85d621c5 100644
+--- a/lib/I18n/translations/english.yaml
++++ b/lib/I18n/translations/english.yaml
+@@ -179,6 +179,12 @@ STR_MOVE_FINISHED_TO_READ: "Move Finished Books to Read Folder"
+ STR_REFRESH_FREQ: "Refresh Frequency"
+ STR_KOREADER_SYNC: "CrossPoint Sync"
+ STR_CHECK_UPDATES: "Check for Updates"
++STR_UPDATE_VIA_LAUNCHER: "Use M5Launcher to update"
++STR_EXIT_TO_LAUNCHER: "Exit to M5Launcher"
++STR_EXIT_TO_LAUNCHER_CONFIRM: "The reader will restart into M5Launcher."
++STR_LAUNCHER_HOLD_KEY: "Hold %s to open M5Launcher"
++STR_LAUNCHER_HOLD_KEY_HINT: "Keep holding it until M5Launcher appears. Press another button to cancel."
++STR_LAUNCHER_HOLD_KEY_AT_POWER_ON: "Turn the reader off, then hold it while turning it on. Press another button to cancel."
+ STR_LANGUAGE: "Language"
+ STR_KEYBOARD_LAYOUTS: "Keyboard Layouts"
+ STR_ABOUT: "About"
 diff --git a/lib/I18n/translations/portuguese-BR.yaml b/lib/I18n/translations/portuguese-BR.yaml
 index 0c4bd985..0e858add 100644
 --- a/lib/I18n/translations/portuguese-BR.yaml
@@ -94,7 +111,7 @@ index 62fc34c9..609b6a09 100644
  STR_LONG_PRESS_BEHAVIOR_OFF: "Dezactivat"
  STR_LONG_PRESS_BEHAVIOR_SKIP: "Sărire capitol"
 diff --git a/lib/I18n/translations/spanish.yaml b/lib/I18n/translations/spanish.yaml
-index 215e8fec..de0ea337 100644
+index 215e8fec..5ff024fa 100644
 --- a/lib/I18n/translations/spanish.yaml
 +++ b/lib/I18n/translations/spanish.yaml
 @@ -121,6 +121,7 @@ STR_HAPTIC_MEDIUM: "Media"
@@ -105,6 +122,19 @@ index 215e8fec..de0ea337 100644
  STR_LONG_PRESS_BEHAVIOR: "Al mantener pulsado un botón"
  STR_LONG_PRESS_BEHAVIOR_OFF: "No hacer nada"
  STR_LONG_PRESS_BEHAVIOR_SKIP: "Saltar capítulo"
+@@ -173,6 +174,12 @@ STR_MOVE_FINISHED_TO_READ: "Mover libros terminados a la carpeta Read"
+ STR_REFRESH_FREQ: "Frecuencia de refresco"
+ STR_KOREADER_SYNC: "CrossPoint Sync"
+ STR_CHECK_UPDATES: "Verificar actualizaciones"
++STR_UPDATE_VIA_LAUNCHER: "Actualiza desde M5Launcher"
++STR_EXIT_TO_LAUNCHER: "Salir a M5Launcher"
++STR_EXIT_TO_LAUNCHER_CONFIRM: "El lector se reiniciará en M5Launcher."
++STR_LAUNCHER_HOLD_KEY: "Mantén pulsado %s para abrir M5Launcher"
++STR_LAUNCHER_HOLD_KEY_HINT: "No lo sueltes hasta que aparezca M5Launcher. Pulsa otro botón para cancelar."
++STR_LAUNCHER_HOLD_KEY_AT_POWER_ON: "Apaga el lector y mantenlo pulsado al encenderlo. Pulsa otro botón para cancelar."
+ STR_LANGUAGE: "Idioma"
+ STR_KEYBOARD_LAYOUTS: "Distribuciones de teclado"
+ STR_CLEAR_READING_CACHE: "Borrar caché de lectura"
 diff --git a/lib/I18n/translations/valencian.yaml b/lib/I18n/translations/valencian.yaml
 index 65db2fde..49862530 100644
 --- a/lib/I18n/translations/valencian.yaml
@@ -565,11 +595,357 @@ index 79245351..4d2f2f6b 100644
  
    void onEnter() override;
  
+diff --git a/src/activities/settings/LauncherExitActivity.cpp b/src/activities/settings/LauncherExitActivity.cpp
+new file mode 100644
+index 00000000..4c832677
+--- /dev/null
++++ b/src/activities/settings/LauncherExitActivity.cpp
+@@ -0,0 +1,131 @@
++#include "LauncherExitActivity.h"
++
++#include <Arduino.h>
++#include <BoardConfig.h>
++#include <GfxRenderer.h>
++#include <I18n.h>
++#include <Logging.h>
++
++#include <cstdio>
++
++#include "MappedInputManager.h"
++#include "components/UITheme.h"
++#include "fontIds.h"
++#include "platform/LauncherEnv.h"
++
++namespace {
++
++// Short of the 650 ms two-button long press, so holding A never becomes Back.
++constexpr unsigned long KEY_HOLD_MS = 300;
++
++constexpr MappedInputManager::Button BUTTONS[] = {
++    MappedInputManager::Button::Back,     MappedInputManager::Button::Confirm,     MappedInputManager::Button::Left,
++    MappedInputManager::Button::Right,    MappedInputManager::Button::Up,          MappedInputManager::Button::Down,
++    MappedInputManager::Button::PageBack, MappedInputManager::Button::PageForward,
++};
++
++bool isBoardInputPin(const int pin) {
++  const auto& in = BoardConfig::ACTIVE.input;
++  for (const int8_t p : {in.back, in.confirm, in.left, in.right, in.up, in.down}) {
++    if (p >= 0 && p == pin) return true;
++  }
++  return false;
++}
++
++std::string labelForPin(const int pin) {
++  // PaperDIY's buttons are printed A (GPIO4) and B (GPIO3), as Launcher calls them.
++  if (BoardConfig::isPaperDiy()) {
++    if (pin == BoardConfig::ACTIVE.input.up) return "A";
++    if (pin == BoardConfig::ACTIVE.input.down) return "B";
++  }
++  return "GPIO " + std::to_string(pin);
++}
++
++}  // namespace
++
++void LauncherExitActivity::onEnter() {
++  Activity::onEnter();
++  const auto& cfg = launcher_env::bootConfig();
++  keyPin = static_cast<int8_t>(cfg.keyGpio);
++  keyLevel = cfg.keyLevel;
++  canPoll = isBoardInputPin(keyPin);
++  keyLabel = labelForPin(keyPin);
++  armed = false;
++  keyTouched = false;
++  keyHeldSince = 0;
++  LOG_INF("LAUNCHER", "Waiting for LauncherOnKey GPIO%d==%d (poll=%d)", keyPin, keyLevel ? 1 : 0, canPoll ? 1 : 0);
++  requestUpdate();
++}
++
++bool LauncherExitActivity::keyHeld() const { return canPoll && digitalRead(keyPin) == (keyLevel ? HIGH : LOW); }
++
++bool LauncherExitActivity::anyButtonPressed() const {
++  for (const auto b : BUTTONS) {
++    if (mappedInput.isPressed(b)) return true;
++  }
++  return false;
++}
++
++bool LauncherExitActivity::anyButtonReleased() const {
++  for (const auto b : BUTTONS) {
++    if (mappedInput.wasReleased(b)) return true;
++  }
++  return false;
++}
++
++void LauncherExitActivity::loop() {
++  if (!armed) {
++    armed = !anyButtonPressed() && !keyHeld();
++    return;
++  }
++
++  if (keyHeld()) {
++    keyTouched = true;
++    const unsigned long now = millis();
++    if (keyHeldSince == 0) {
++      keyHeldSince = now == 0 ? 1 : now;
++    } else if (now - keyHeldSince >= KEY_HOLD_MS) {
++      // The user is still holding the key: the bootloader sees it and
++      // starts Launcher instead of this app.
++      launcher_env::restartWithKeyHeld();
++    }
++    return;
++  }
++  keyHeldSince = 0;
++
++  if (!anyButtonReleased()) return;
++  if (keyTouched) {
++    // A tap on the key itself, too short to restart on: not a cancel.
++    keyTouched = false;
++    return;
++  }
++  finish();
++}
++
++void LauncherExitActivity::render(RenderLock&&) {
++  const auto& metrics = UITheme::getInstance().getMetrics();
++  const auto pageWidth = renderer.getScreenWidth();
++  const auto pageHeight = renderer.getScreenHeight();
++
++  renderer.clearScreen();
++  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, tr(STR_EXIT_TO_LAUNCHER));
++
++  char title[96];
++  snprintf(title, sizeof(title), tr(STR_LAUNCHER_HOLD_KEY), keyLabel.c_str());
++  const int width = pageWidth - metrics.contentSidePadding * 2;
++  const int titleTop = pageHeight / 3;
++  const int titleHeight = renderer.getLineHeight(UI_12_FONT_ID) * 3;
++  UITheme::drawCenteredWrappedText(renderer, Rect{metrics.contentSidePadding, titleTop, width, titleHeight},
++                                   UI_12_FONT_ID, title, 3, true, EpdFontFamily::BOLD,
++                                   UITheme::TextVerticalAlignment::TOP);
++
++  const int hintTop = titleTop + titleHeight + metrics.verticalSpacing;
++  UITheme::drawCenteredWrappedText(
++      renderer, Rect{metrics.contentSidePadding, hintTop, width, pageHeight - hintTop - metrics.buttonHintsHeight},
++      UI_10_FONT_ID, canPoll ? tr(STR_LAUNCHER_HOLD_KEY_HINT) : tr(STR_LAUNCHER_HOLD_KEY_AT_POWER_ON), 4, true,
++      EpdFontFamily::REGULAR, UITheme::TextVerticalAlignment::TOP);
++
++  // No button hints: the Back slot is A's long press, which may be the very
++  // key the user must hold. The hint text says how to cancel.
++  renderer.displayBuffer();
++}
+diff --git a/src/activities/settings/LauncherExitActivity.h b/src/activities/settings/LauncherExitActivity.h
+new file mode 100644
+index 00000000..1e78779a
+--- /dev/null
++++ b/src/activities/settings/LauncherExitActivity.h
+@@ -0,0 +1,37 @@
++#pragma once
++
++#include <cstdint>
++#include <string>
++
++#include "activities/Activity.h"
++
++// Exit to M5Launcher when Launcher is set to start only with a key held
++// (CFG > GPIO on boot starts Launcher). Launcher's bootloader samples that key
++// on every reset, so this screen waits until the user holds it and then
++// restarts while it is still down. Any other button cancels.
++class LauncherExitActivity final : public Activity {
++  int8_t keyPin = -1;
++  bool keyLevel = false;
++  // False when the key is not one of this board's input pins; the screen then
++  // only explains how to hold it at power-on.
++  bool canPoll = false;
++  std::string keyLabel;
++  // Buttons still down from the Settings press must be released first, so
++  // their release is not taken as a cancel.
++  bool armed = false;
++  // Set while the key is seen down, so its own short-press event does not
++  // count as a cancel.
++  bool keyTouched = false;
++  unsigned long keyHeldSince = 0;
++
++  bool keyHeld() const;
++  bool anyButtonPressed() const;
++  bool anyButtonReleased() const;
++
++ public:
++  explicit LauncherExitActivity(GfxRenderer& renderer, MappedInputManager& mappedInput)
++      : Activity("LauncherExit", renderer, mappedInput) {}
++  void onEnter() override;
++  void loop() override;
++  void render(RenderLock&&) override;
++};
+diff --git a/src/activities/settings/OtaUpdateActivity.cpp b/src/activities/settings/OtaUpdateActivity.cpp
+index b3e54ada..e312cd7d 100644
+--- a/src/activities/settings/OtaUpdateActivity.cpp
++++ b/src/activities/settings/OtaUpdateActivity.cpp
+@@ -37,6 +37,15 @@ void OtaUpdateActivity::onWifiSelectionComplete(const bool success) {
+     }
+     return;
+   }
++  if (res == OtaUpdater::LAUNCHER_MANAGED) {
++    LOG_INF("OTA", "Updates are managed by M5Launcher");
++    {
++      RenderLock lock(*this);
++      failedDetail = tr(STR_UPDATE_VIA_LAUNCHER);
++      state = FAILED;
++    }
++    return;
++  }
+   if (res != OtaUpdater::OK) {
+     LOG_DBG("OTA", "Update check failed: %d", res);
+     {
+@@ -192,7 +201,9 @@ void OtaUpdateActivity::runUpdateInstall() {
+     LOG_DBG("OTA", "Update failed: %d", res);
+     {
+       RenderLock lock(*this);
+-      failedDetail = res == OtaUpdater::WRONG_DEVICE_ERROR ? tr(STR_FIRMWARE_WRONG_DEVICE) : nullptr;
++      failedDetail = res == OtaUpdater::WRONG_DEVICE_ERROR ? tr(STR_FIRMWARE_WRONG_DEVICE)
++                     : res == OtaUpdater::LAUNCHER_MANAGED ? tr(STR_UPDATE_VIA_LAUNCHER)
++                                                           : nullptr;
+       state = FAILED;
+     }
+     requestUpdate();
+diff --git a/src/activities/settings/SdFirmwareUpdateActivity.cpp b/src/activities/settings/SdFirmwareUpdateActivity.cpp
+index c3159303..8169e335 100644
+--- a/src/activities/settings/SdFirmwareUpdateActivity.cpp
++++ b/src/activities/settings/SdFirmwareUpdateActivity.cpp
+@@ -13,11 +13,20 @@
+ #include "components/UITheme.h"
+ #include "fontIds.h"
+ #include "network/FirmwareFlasher.h"
++#include "platform/LauncherEnv.h"
+ 
+ void SdFirmwareUpdateActivity::onEnter() {
+   Activity::onEnter();
+   // Build-identity marker — confirms which firmware build owns the SD update flow.
+   LOG_INF("FW", "SdFirmwareUpdateActivity build=%s %s recovery=%d", __DATE__, __TIME__, recoveryMode ? 1 : 0);
++  if (recoveryMode && launcher_env::isUnderLauncher()) {
++    // Launcher owns the OTA slots. Its recovery hatch would target another
++    // installed app's partition, so show the explanation and go home.
++    errorMessage = tr(STR_UPDATE_VIA_LAUNCHER);
++    state = State::FAILED;
++    requestUpdate();
++    return;
++  }
+   state = State::PICKING;
+   launchPicker();
+ }
+@@ -66,6 +75,12 @@ void SdFirmwareUpdateActivity::onPickerResult(const ActivityResult& result) {
+ }
+ 
+ bool SdFirmwareUpdateActivity::validateFirmware() {
++  if (launcher_env::isUnderLauncher()) {
++    LOG_INF("FW", "Updates are managed by M5Launcher");
++    errorMessage = tr(STR_UPDATE_VIA_LAUNCHER);
++    return false;
++  }
++
+   HalFile file;
+   if (!Storage.openFileForRead("FW", firmwarePath.c_str(), file) || !file) {
+     errorMessage = tr(STR_FIRMWARE_FILE_OPEN_FAILED);
+@@ -174,7 +189,8 @@ void SdFirmwareUpdateActivity::performUpdate() {
+     // was swapped).
+     errorMessage = result == firmware_flash::Result::BAD_CHIP || result == firmware_flash::Result::WRONG_BOARD
+                        ? tr(STR_FIRMWARE_WRONG_DEVICE)
+-                       : tr(STR_FIRMWARE_WRITE_FAILED);
++                   : result == firmware_flash::Result::LAUNCHER_MANAGED ? tr(STR_UPDATE_VIA_LAUNCHER)
++                                                                        : tr(STR_FIRMWARE_WRITE_FAILED);
+     RenderLock lock(*this);
+     state = State::FAILED;
+     requestUpdate();
+@@ -198,6 +214,12 @@ void SdFirmwareUpdateActivity::loop() {
+     if (mappedInput.wasPressed(MappedInputManager::Button::Back) ||
+         mappedInput.wasPressed(MappedInputManager::Button::Confirm) || mappedInput.wasScreenTapped(x, y)) {
+       if (recoveryMode) {
++        if (launcher_env::isUnderLauncher()) {
++          // The picker cannot flash under Launcher; return to Home instead of
++          // trapping the user in a loop that always fails.
++          finish();
++          return;
++        }
+         // Go back to picker so user can try a different .bin
+         state = State::PICKING;
+         launchPicker();
 diff --git a/src/activities/settings/SettingsActivity.cpp b/src/activities/settings/SettingsActivity.cpp
-index 8938844b..319a6507 100644
+index 8938844b..e442530b 100644
 --- a/src/activities/settings/SettingsActivity.cpp
 +++ b/src/activities/settings/SettingsActivity.cpp
-@@ -550,6 +550,6 @@ void SettingsActivity::drawFooter() {
+@@ -24,6 +24,7 @@
+ #include "KOReaderSettingsActivity.h"
+ #include "KeyboardLayoutsActivity.h"
+ #include "LanguageSelectActivity.h"
++#include "LauncherExitActivity.h"
+ #include "MappedInputManager.h"
+ #include "OpdsServerListActivity.h"
+ #include "OtaUpdateActivity.h"
+@@ -34,11 +35,13 @@
+ #include "StatusBarSettingsActivity.h"
+ #include "TextSettingsActivity.h"
+ #include "activities/network/WifiSelectionActivity.h"
++#include "activities/util/ConfirmationActivity.h"
+ #include "activities/util/IntervalSelectionActivity.h"
+ #include "components/UITheme.h"
+ #include "components/UIThemeTokens.h"
+ #include "components/UiAppHelpers.h"
+ #include "fontIds.h"
++#include "platform/LauncherEnv.h"
+ #include "util/PluginEvents.h"
+ 
+ namespace fui = freeink::ui;
+@@ -81,7 +84,7 @@ SettingsSection sectionFor(const SettingInfo& setting) {
+ }
+ 
+ // Device-only action rows added per section, beyond the shared list.
+-constexpr size_t EXTRA_ROWS_PER_SECTION = 6;
++constexpr size_t EXTRA_ROWS_PER_SECTION = 7;
+ }  // namespace
+ 
+ void SettingsActivity::rebuildSettings() {
+@@ -141,12 +144,17 @@ void SettingsActivity::rebuildSettings() {
+   // OTA fetches this board's own release asset (see OtaUpdater); boards whose
+   // asset isn't published yet just report no update available. The Picco's
+   // stock layout has one app slot (partitions_picco.csv), so it cannot update
+-  // itself either way.
+-  if (!BoardConfig::isPicco()) {
++  // itself either way. Under M5Launcher the launcher owns the app slot, so
++  // self-updating would target another installed app's partition.
++  const bool underLauncher = launcher_env::isUnderLauncher();
++  if (!BoardConfig::isPicco() && !underLauncher) {
+     addAction(SettingsSection::General, StrId::STR_CHECK_UPDATES, SettingAction::CheckForUpdates);
+     addAction(SettingsSection::General, StrId::STR_SD_FIRMWARE_UPDATE, SettingAction::SdFirmwareUpdate);
+   }
+   addAction(SettingsSection::General, StrId::STR_ABOUT, SettingAction::About);
++  if (underLauncher) {
++    addAction(SettingsSection::General, StrId::STR_EXIT_TO_LAUNCHER, SettingAction::ExitToLauncher);
++  }
+   rebuildRowItems();
+ }
+ 
+@@ -352,6 +360,22 @@ void SettingsActivity::toggleSelectedSetting() {
+       case SettingAction::SdFirmwareUpdate:
+         startActivityForResult(std::make_unique<SdFirmwareUpdateActivity>(renderer, mappedInput), resultHandler);
+         break;
++      case SettingAction::ExitToLauncher:
++        // With CFG > GPIO on boot starts Launcher set, only that key held
++        // across a reset starts Launcher, so the user has to hold it.
++        if (launcher_env::bootConfig().hasKey()) {
++          startActivityForResult(std::make_unique<LauncherExitActivity>(renderer, mappedInput), nullptr);
++          break;
++        }
++        startActivityForResult(std::make_unique<ConfirmationActivity>(renderer, mappedInput, tr(STR_EXIT_TO_LAUNCHER),
++                                                                      tr(STR_EXIT_TO_LAUNCHER_CONFIRM)),
++                               [](const ActivityResult& result) {
++                                 if (result.isCancelled) return;
++                                 if (!launcher_env::exitToLauncher()) {
++                                   LOG_ERR("SET", "Could not restart into M5Launcher");
++                                 }
++                               });
++        break;
+       case SettingAction::DownloadFonts:
+         startActivityForResult(std::make_unique<FontDownloadActivity>(renderer, mappedInput),
+                                [this](const ActivityResult&) {
+@@ -550,6 +574,6 @@ void SettingsActivity::drawFooter() {
  }
  
  void SettingsActivity::render(RenderLock&& lock) {
@@ -577,6 +953,18 @@ index 8938844b..319a6507 100644
 +  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
    UiListActivity::render(std::move(lock));
  }
+diff --git a/src/activities/settings/SettingsActivity.h b/src/activities/settings/SettingsActivity.h
+index 56b6b5ca..f0fcd383 100644
+--- a/src/activities/settings/SettingsActivity.h
++++ b/src/activities/settings/SettingsActivity.h
+@@ -25,6 +25,7 @@ enum class SettingAction {
+   ClearCache,
+   CheckForUpdates,
+   SdFirmwareUpdate,
++  ExitToLauncher,
+   Language,
+   DownloadFonts,
+   TextSettings,
 diff --git a/src/components/OptionPopup.h b/src/components/OptionPopup.h
 index 550584bc..cf4f19e5 100644
 --- a/src/components/OptionPopup.h
@@ -649,11 +1037,35 @@ index 0854756b..834a089f 100644
    // strings only need to outlive the fui::header() call that consumes them.
    static char percentText[8];
 diff --git a/src/main.cpp b/src/main.cpp
-index 65b4aed3..5070563f 100644
+index 65b4aed3..84eae2c1 100644
 --- a/src/main.cpp
 +++ b/src/main.cpp
-@@ -634,10 +634,39 @@ void setup() {
+@@ -45,6 +45,7 @@
+ #include "activities/settings/SdFirmwareUpdateActivity.h"
+ #include "components/UITheme.h"
+ #include "fontIds.h"
++#include "platform/LauncherEnv.h"
+ #include "platform/UsbSerialJtagHandoff.h"
+ #include "util/ButtonNavigator.h"
+ #include "util/PluginEvents.h"
+@@ -621,8 +622,11 @@ void setup() {
+   const auto recoveryButton = (BoardConfig::isX4Pro() || BoardConfig::isX4Classic()) ? MappedInputManager::Button::Down
+                                                                                      : MappedInputManager::Button::Up;
+   // The Picco has no second app slot to flash into (partitions_picco.csv).
++  // Under M5Launcher the launcher owns the app slots, and holding a key at
++  // power-on is how Launcher itself is opened, so never enter recovery there.
+   const bool recoveryFirmwareMode = wakeupReason == HalGPIO::WakeupReason::PowerButton && !BoardConfig::isPaperMono() &&
+-                                    !BoardConfig::isPicco() && mappedInputManager.isPressed(recoveryButton);
++                                    !BoardConfig::isPicco() && !launcher_env::isUnderLauncher() &&
++                                    mappedInputManager.isPressed(recoveryButton);
+ 
+   halTiltSensor.begin();
+   halClock.begin();
+@@ -632,12 +636,42 @@ void setup() {
+ #else
+   LOG_INF("MAIN", "Device: %s", BoardConfig::ACTIVE.name);
  #endif
++  launcher_env::logStatus();
  
    // SD Card Initialization
 -  // We need 6 open files concurrently when parsing a new chapter
@@ -694,7 +1106,7 @@ index 65b4aed3..5070563f 100644
      activityManager.goToFullScreenMessage("SD card error", EpdFontFamily::BOLD);
      return;
    }
-@@ -717,8 +746,8 @@ void setup() {
+@@ -717,8 +751,8 @@ void setup() {
      case HalGPIO::WakeupReason::AfterUSBPower:
        // Most devices return to sleep after a USB-powered cold boot.
        LOG_DBG("MAIN", "Wakeup reason: After USB Power");
@@ -705,7 +1117,7 @@ index 65b4aed3..5070563f 100644
        // X4 Pro must stay awake so USB Serial/JTAG remains available after leaving
        // USB Drive and reconnecting the cable. Paper Mono has no armable GPIO wake
        // (its button is behind the PMIC). Metalio also needs native USB available
-@@ -854,6 +883,10 @@ void loop() {
+@@ -854,6 +888,10 @@ void loop() {
    gpio.setSharedConfirmPowerShortPressEmitsPower(SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP);
    mappedInputManager.update();
  
@@ -716,7 +1128,7 @@ index 65b4aed3..5070563f 100644
    // Bluetooth page turner, before the USB drive's early return: a card handed to USB stops the radio
    // before anything else.
    bleturner::Scene scene{};
-@@ -925,6 +958,29 @@ void loop() {
+@@ -925,6 +963,29 @@ void loop() {
          logSerial.write(buf, bufferSize);
          logSerial.printf("SCREENSHOT_END\n");
        }
@@ -746,7 +1158,7 @@ index 65b4aed3..5070563f 100644
      }
    }
  
-@@ -1008,7 +1064,15 @@ void loop() {
+@@ -1008,7 +1069,15 @@ void loop() {
    }
  
    const unsigned long sleepTimeoutMs = SETTINGS.getSleepTimeoutMs();
@@ -763,7 +1175,7 @@ index 65b4aed3..5070563f 100644
      LOG_DBG("SLP", "Auto-sleep triggered after %lu ms of inactivity", sleepTimeoutMs);
      enterDeepSleep(true);
      // This should never be hit as `enterDeepSleep` calls esp_deep_sleep_start
-@@ -1040,10 +1104,10 @@ void loop() {
+@@ -1040,10 +1109,10 @@ void loop() {
      return;
    }
  
@@ -778,7 +1190,7 @@ index 65b4aed3..5070563f 100644
    if ((SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP ||
         SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::IGNORE) &&
        millis() >= allowSleepAt && mappedInputManager.wasReleased(MappedInputManager::Button::Power)) {
-@@ -1066,6 +1130,27 @@ void loop() {
+@@ -1066,6 +1135,27 @@ void loop() {
      }
    }
  
@@ -828,12 +1240,63 @@ index 7109854a..3f7a8c96 100644
  #elif FREEINK_DEVICE_DELINK
  #define CROSSPOINT_BOARD_NAME "delink"
  #else
+diff --git a/src/network/FirmwareFlasher.cpp b/src/network/FirmwareFlasher.cpp
+index de52491e..8ee8e1f6 100644
+--- a/src/network/FirmwareFlasher.cpp
++++ b/src/network/FirmwareFlasher.cpp
+@@ -14,6 +14,7 @@
+ 
+ #include "FirmwareBoardTag.h"
+ #include "OtaBootSwitch.h"
++#include "platform/LauncherEnv.h"
+ 
+ namespace firmware_flash {
+ 
+@@ -65,6 +66,8 @@ const char* resultName(Result r) {
+       return "WRITE_FAIL";
+     case Result::OTADATA_FAIL:
+       return "OTADATA_FAIL";
++    case Result::LAUNCHER_MANAGED:
++      return "LAUNCHER_MANAGED";
+   }
+   return "?";
+ }
+@@ -273,6 +276,14 @@ Result validateImageFile(const char* sdPath, size_t partitionSize) {
+ }
+ 
+ Result flashFromSdPath(const char* sdPath, ProgressCb onProgress, void* ctx, bool alreadyValidated) {
++  // Launcher owns the OTA slots and its app registry. The "next" OTA slot may
++  // belong to another installed app, so an in-app flash would overwrite it and
++  // corrupt Launcher's bookkeeping. Updates go through Launcher's installer.
++  if (launcher_env::isUnderLauncher()) {
++    LOG_ERR("FLASH", "Refusing to flash under M5Launcher; use Launcher to update");
++    return Result::LAUNCHER_MANAGED;
++  }
++
+   // Resolve destination first so we can size-check during validation. The full image-integrity
+   // pass below verifies header, segment table, XOR checksum and SHA256 trailer end-to-end before
+   // we touch otadata, so a truncated/corrupted .bin can never become the next boot target.
+diff --git a/src/network/FirmwareFlasher.h b/src/network/FirmwareFlasher.h
+index a60b0d2f..1885e9fb 100644
+--- a/src/network/FirmwareFlasher.h
++++ b/src/network/FirmwareFlasher.h
+@@ -32,6 +32,7 @@ enum class Result {
+   ERASE_FAIL,
+   WRITE_FAIL,
+   OTADATA_FAIL,
++  LAUNCHER_MANAGED,
+ };
+ 
+ // Progress callback: called after every chunk write. `written`/`total` are bytes.
 diff --git a/src/network/OtaUpdater.cpp b/src/network/OtaUpdater.cpp
-index 1f64b229..03c6a6e6 100644
+index 1f64b229..26c8df33 100644
 --- a/src/network/OtaUpdater.cpp
 +++ b/src/network/OtaUpdater.cpp
-@@ -19,7 +19,12 @@
+@@ -17,12 +17,22 @@
+ 
+ #include "FirmwareBoardTag.h"
  #include "FirmwareFlasher.h"
++#include "platform/LauncherEnv.h"
  
  namespace {
 -constexpr char latestReleaseUrl[] = "https://api.github.com/repos/crosspoint-reader/crosspoint-reader/releases/latest";
@@ -846,7 +1309,14 @@ index 1f64b229..03c6a6e6 100644
  }  // namespace
  
  OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
-@@ -101,8 +106,12 @@ bool OtaUpdater::isUpdateNewer() const {
++  if (launcher_env::isUnderLauncher()) {
++    LOG_INF("OTA", "Managed by M5Launcher; skipping in-app update check");
++    return LAUNCHER_MANAGED;
++  }
+   LOG_DBG("OTA", "Checking for update (current: %s)", CROSSPOINT_VERSION);
+ 
+   // Stream the ~32KB release JSON straight into the parser as it arrives.
+@@ -101,8 +111,12 @@ bool OtaUpdater::isUpdateNewer() const {
  
    const auto currentVersion = CROSSPOINT_VERSION;
  
@@ -860,3 +1330,203 @@ index 1f64b229..03c6a6e6 100644
    sscanf(currentVersion, "%d.%d.%d", &currentMajor, &currentMinor, &currentPatch);
  
    /*
+@@ -137,6 +151,10 @@ bool OtaUpdater::isUpdateNewer() const {
+ const std::string& OtaUpdater::getLatestVersion() const { return latestVersion; }
+ 
+ OtaUpdater::OtaUpdaterError OtaUpdater::installUpdate(ProgressCallback onProgress, void* ctx) {
++  if (launcher_env::isUnderLauncher()) {
++    LOG_INF("OTA", "Managed by M5Launcher; refusing to write another app slot");
++    return LAUNCHER_MANAGED;
++  }
+   if (!isUpdateNewer()) {
+     return UPDATE_OLDER_ERROR;
+   }
+diff --git a/src/network/OtaUpdater.h b/src/network/OtaUpdater.h
+index 5015a54c..5134a31c 100644
+--- a/src/network/OtaUpdater.h
++++ b/src/network/OtaUpdater.h
+@@ -22,6 +22,7 @@ class OtaUpdater {
+     INTERNAL_UPDATE_ERROR,
+     OOM_ERROR,
+     WRONG_DEVICE_ERROR,
++    LAUNCHER_MANAGED,
+   };
+ 
+   size_t getOtaSize() const { return otaSize; }
+diff --git a/src/platform/LauncherEnv.cpp b/src/platform/LauncherEnv.cpp
+new file mode 100644
+index 00000000..9712b033
+--- /dev/null
++++ b/src/platform/LauncherEnv.cpp
+@@ -0,0 +1,119 @@
++#include "LauncherEnv.h"
++
++#include <Arduino.h>
++#include <BoardConfig.h>
++#include <Logging.h>
++#include <esp_partition.h>
++#include <esp_sleep.h>
++#include <nvs.h>
++
++#if FREEINK_DEVICE_PAPERDIY || FREEINK_DEVICE_PAPERMONO
++#include <M5Pm1.h>
++#endif
++
++namespace launcher_env {
++namespace {
++
++constexpr const char* TAG = "LAUNCHER";
++
++const esp_partition_t* residentPartition() {
++  return esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_TEST, nullptr);
++}
++
++BootConfig readBootConfig() {
++  // Same namespace, keys and types as Launcher's settings.cpp (bool = u8,
++  // int = i32) and its keyboot bootloader. A missing key keeps the default.
++  BootConfig cfg;
++  nvs_handle_t handle;
++  if (nvs_open("launcher", NVS_READONLY, &handle) != ESP_OK) return cfg;
++  uint8_t u8 = 0;
++  if (nvs_get_u8(handle, "DDLB", &u8) == ESP_OK) cfg.ddlb = u8 != 0;
++  int32_t i32 = -1;
++  if (nvs_get_i32(handle, "LauncherOnKey", &i32) == ESP_OK) cfg.keyGpio = i32;
++  if (nvs_get_u8(handle, "LauncherKeyLvl", &u8) == ESP_OK) cfg.keyLevel = u8 != 0;
++  nvs_close(handle);
++  return cfg;
++}
++
++[[noreturn]] void deepSleepRestart() {
++  // RESET_REASON_CORE_DEEP_SLEEP: the bootloader starts Launcher unless DDLB.
++  LOG_INF(TAG, "Restarting into M5Launcher via deep-sleep wake");
++  logSerial.flush();
++  esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
++  esp_sleep_enable_timer_wakeup(1000);
++  esp_deep_sleep_start();
++  // esp_deep_sleep_start() does not return; satisfy [[noreturn]] regardless.
++  ESP.restart();
++  while (true) {
++  }
++}
++
++bool pmicPowerOnReset() {
++#if FREEINK_DEVICE_PAPERDIY || FREEINK_DEVICE_PAPERMONO
++  if (!BoardConfig::isPaperDiy() && !BoardConfig::isPaperMono()) return false;
++  // SYS_CMD: KEY 0xA in the high nibble, 2 = reset. The PM1 resets the ESP32
++  // through CHIP_EN, which the bootloader sees as RESET_REASON_CHIP_POWER_ON.
++  constexpr uint8_t SYS_CMD_RESET = 0xA2;
++  LOG_INF(TAG, "Restarting into M5Launcher via M5PM1 reset");
++  logSerial.flush();
++  freeink::m5pm1::beginBus();
++  // Same settle time the PMIC reference driver uses before a system command.
++  delay(120);
++  if (!freeink::m5pm1::writeReg(freeink::m5pm1::REG_SYS_CMD, SYS_CMD_RESET)) {
++    LOG_ERR(TAG, "M5PM1 reset command was not acknowledged");
++    return false;
++  }
++  delay(2000);
++  LOG_ERR(TAG, "M5PM1 reset did not restart the device");
++#endif
++  return false;
++}
++
++}  // namespace
++
++bool isUnderLauncher() {
++  // The partition table is fixed for the lifetime of this boot; Launcher only
++  // rewrites it from its own firmware and then reboots.
++  static const bool detected = residentPartition() != nullptr;
++  return detected;
++}
++
++const BootConfig& bootConfig() {
++  // Launcher cannot change these while this app runs.
++  static const BootConfig cfg = readBootConfig();
++  return cfg;
++}
++
++void logStatus() {
++  if (!isUnderLauncher()) return;
++  const BootConfig& cfg = bootConfig();
++  LOG_INF(TAG, "M5Launcher detected: DDLB=%d LauncherOnKey=%d LauncherKeyLvl=%d", cfg.ddlb ? 1 : 0,
++          static_cast<int>(cfg.keyGpio), cfg.keyLevel ? 1 : 0);
++}
++
++bool exitToLauncher() {
++  if (!isUnderLauncher()) {
++    LOG_INF(TAG, "Not running under M5Launcher; refusing to leave the app");
++    return false;
++  }
++  const BootConfig& cfg = bootConfig();
++  if (cfg.hasKey()) {
++    LOG_INF(TAG, "LauncherOnKey=%d: Launcher starts only with that key held", static_cast<int>(cfg.keyGpio));
++    return false;
++  }
++  // A plain ESP.restart() (RTC_SW_CPU_RST) never starts Launcher. The
++  // deep-sleep wake was validated on hardware and needs no PMIC; use the
++  // PMIC power-on reset only when DDLB makes a deep-sleep wake skip Launcher.
++  if (!cfg.ddlb) deepSleepRestart();
++  return pmicPowerOnReset();
++}
++
++void restartWithKeyHeld() {
++  LOG_INF(TAG, "Restarting with LauncherOnKey held");
++  logSerial.flush();
++  ESP.restart();
++  while (true) {
++  }
++}
++
++}  // namespace launcher_env
+diff --git a/src/platform/LauncherEnv.h b/src/platform/LauncherEnv.h
+new file mode 100644
+index 00000000..81040cff
+--- /dev/null
++++ b/src/platform/LauncherEnv.h
+@@ -0,0 +1,46 @@
++#pragma once
++
++#include <cstdint>
++
++// bmorcelli/Launcher ("M5Launcher") keeps its resident firmware in an
++// ESP_PARTITION_SUBTYPE_APP_TEST slot and boots installed apps from a dynamic
++// OTA partition. That marker lets an app detect the launcher and avoid
++// touching the boot selection or another installed app's OTA slot.
++namespace launcher_env {
++
++// Launcher's boot settings, read from its "launcher" NVS namespace. Launcher's
++// bootloader reads the same keys to choose between its own UI and the app:
++//   - keyGpio > 0: only that GPIO held at keyLevel starts Launcher, on any
++//     reset (power-on, deep-sleep wake, software restart).
++//   - otherwise:   power-on always starts Launcher; a deep-sleep wake does too
++//     unless ddlb is set; a software restart never does.
++struct BootConfig {
++  bool ddlb = false;      // CFG > DeepSleep starts Launcher, inverted
++  int32_t keyGpio = -1;   // CFG > GPIO on boot starts Launcher; -1 = off
++  bool keyLevel = false;  // level that counts as "held"
++  // The bootloader skips GPIO 0 (a boot strap) as well as -1.
++  bool hasKey() const { return keyGpio > 0; }
++};
++
++// True when the partition table contains Launcher's resident APP_TEST slot.
++bool isUnderLauncher();
++
++// Launcher's boot settings, read once per boot. Defaults (no key, DDLB off)
++// when the namespace or a key is missing, matching the bootloader.
++const BootConfig& bootConfig();
++
++// One log line with the detected Launcher boot settings; no-op otherwise.
++void logStatus();
++
++// Restart into Launcher's resident firmware when no key is configured: a
++// deep-sleep wake while DDLB is off, otherwise a power-on reset through the
++// M5PM1 (PaperDIY, Paper Mono). Returns false without restarting when a key is
++// configured (the caller must restart with the key held), when not under
++// Launcher, or when no restart path is available.
++bool exitToLauncher();
++
++// Software restart for the key mode. The bootloader starts Launcher only if
++// the configured key is held while it samples the pin.
++[[noreturn]] void restartWithKeyHeld();
++
++}  // namespace launcher_env

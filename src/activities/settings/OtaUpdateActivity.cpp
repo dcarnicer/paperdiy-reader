@@ -37,6 +37,15 @@ void OtaUpdateActivity::onWifiSelectionComplete(const bool success) {
     }
     return;
   }
+  if (res == OtaUpdater::LAUNCHER_MANAGED) {
+    LOG_INF("OTA", "Updates are managed by M5Launcher");
+    {
+      RenderLock lock(*this);
+      failedDetail = tr(STR_UPDATE_VIA_LAUNCHER);
+      state = FAILED;
+    }
+    return;
+  }
   if (res != OtaUpdater::OK) {
     LOG_DBG("OTA", "Update check failed: %d", res);
     {
@@ -192,7 +201,9 @@ void OtaUpdateActivity::runUpdateInstall() {
     LOG_DBG("OTA", "Update failed: %d", res);
     {
       RenderLock lock(*this);
-      failedDetail = res == OtaUpdater::WRONG_DEVICE_ERROR ? tr(STR_FIRMWARE_WRONG_DEVICE) : nullptr;
+      failedDetail = res == OtaUpdater::WRONG_DEVICE_ERROR ? tr(STR_FIRMWARE_WRONG_DEVICE)
+                     : res == OtaUpdater::LAUNCHER_MANAGED ? tr(STR_UPDATE_VIA_LAUNCHER)
+                                                           : nullptr;
       state = FAILED;
     }
     requestUpdate();

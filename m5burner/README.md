@@ -73,6 +73,9 @@ differs, update `firmware_category.device` in `m5burner.json`.
   The upstream base (`5d731041` / SDK `fb7e926`) goes in the description,
   not in the version. Keep the `-paperdiy.N` suffix for internal/GitHub
   artifacts, not for M5Burner.
-- The cover is `docs/paperdiy/images/first-read.png` by default; replace it
-  with a dedicated square cover if desired.
+- The cover is `m5burner/cover.png` (1280×720) and is used by default by
+  `scripts/make_m5burner_package.py`. Pass `--cover` to use another image.
 - Keep `README.md` and `LICENSE` inside the uploaded package.
+- **M5Launcher is a separate package**: install
+  `dist/launcher/PaperDIYReader-<version>-launcher.bin` from `make launcher`,
+  not this combined factory image. See `docs/paperdiy/13-m5launcher.md`.

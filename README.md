@@ -185,6 +185,25 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
   read_flash 0 0x1000000 paperdiy-original.bin
 ```
 
+### M5Launcher
+
+Con [M5Launcher](https://github.com/bmorcelli/Launcher) 3.0.0 o superior
+(port PaperDIY), instala el binario **solo de aplicación**, no la imagen de
+M5Burner:
+
+```bash
+make launcher LAUNCHER_VERSION=0.1.0
+# dist/launcher/PaperDIYReader-0.1.0-launcher.bin
+```
+
+Cópialo a la SD y usa `SD > Install` en Launcher. El lector detecta Launcher y
+muestra `Ajustes > General > Salir a M5Launcher`; las actualizaciones internas
+se ocultan porque Launcher es quien gestiona las particiones OTA. Para que el
+lector despierte sin pasar por la pantalla de Launcher, configura en Launcher
+`CFG > GPIO on boot starts Launcher` = A: Launcher solo aparecerá al encender
+con A pulsado. Ver
+[`docs/paperdiy/13-m5launcher.md`](docs/paperdiy/13-m5launcher.md).
+
 ## Estructura
 
 ```
@@ -222,6 +241,7 @@ disponibles en [English](docs/paperdiy/README.en.md),
 - [Mantener el fork y actualizar upstream](docs/paperdiy/10-fork-maintenance.md)
 - [Borrador de comentario para la issue #4005](docs/paperdiy/11-upstream-note.md)
 - [Testing por USB](docs/paperdiy/12-serial-testing.md)
+- [M5Launcher](docs/paperdiy/13-m5launcher.md)
 
 ## Limitaciones conocidas
 
