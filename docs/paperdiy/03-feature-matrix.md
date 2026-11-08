@@ -47,7 +47,7 @@ aplica al hardware.
 | WebDAV | ❌ | ✅ | ❌ | 🟡 | 🧪 |
 | Web UI | ❌ | ✅ | 🟡 | ❌ | 🧪 |
 | OTA | ❌ | ✅ | ❌ | ✅ | 🧪 |
-| OTA bajo M5Launcher | ❌ | ❌ | ❌ | ❌ | ❌ (roadmap) |
+| OTA bajo M5Launcher | ❌ | ❌ | ❌ | ❌ | 🧪 (aviso + catálogo de Launcher) |
 | BLE page turner | ❌ | 🟡 | ❌ | ❌ | 🧪 (activado) |
 | USB MSC | ❌ | ✅ (algunos) | ❌ | ❌ | 🧪 (activado) |
 | Deep sleep | ❌ | ✅ | ✅ | ✅ | 🧪 |

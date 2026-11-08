@@ -29,9 +29,12 @@ class OtaUpdateActivity : public Activity {
   // Cancel/Update confirmation over the version info (replaces the old
   // hand-rolled bottom tap rects).
   OptionPopup confirmPopup;
+  // Under M5Launcher the check reads Launcher's catalog and Launcher installs.
+  bool launcherManaged = false;
 
   void onWifiSelectionComplete(bool success);
   void runUpdateInstall();
+  void exitToLauncher();
 
  public:
   explicit OtaUpdateActivity(GfxRenderer& renderer, MappedInputManager& mappedInput)

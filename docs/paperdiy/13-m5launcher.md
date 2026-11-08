@@ -8,10 +8,11 @@ aplicaciones desde particiones OTA dinámicas. La versión 3.0.0 incluye el port
 del **M5Stack PaperDIY**, así que el lector puede convivir con otros firmwares
 en la misma placa.
 
-> **OTA bajo M5Launcher: no disponible.** La app detecta Launcher y desactiva
-> las actualizaciones internas (`OtaUpdater` devuelve `LAUNCHER_MANAGED` y
-> `FirmwareFlasher` rechaza escribir otra partición). Actualiza instalando
-> `PaperDIYReader-launcher.bin` desde Launcher. **No flashees `firmware.bin`
+> **OTA bajo M5Launcher: la instala Launcher.** El lector no escribe en la
+> flash: `Verificar actualizaciones` consulta el catálogo de Launcher
+> (LauncherHub) y avisa si hay versión nueva; se instala desde
+> `M5Launcher > OTA`. `OtaUpdater::installUpdate` y `FirmwareFlasher` siguen
+> devolviendo `LAUNCHER_MANAGED`. **No flashees `firmware.bin`
 > en `0x10000`** con Launcher instalado: sobrescribirías su partición
 > residente.
 
@@ -64,12 +65,12 @@ cuatro cosas:
 
    En los dos últimos casos aparece la pantalla de arranque de Launcher: pulsa
    **A** largo para entrar en el menú antes de que arranque la última app.
-2. **Actualizaciones gestionadas por Launcher.** Se ocultan
-   `Buscar actualizaciones` y `Actualizar firmware por tarjeta SD`. Bajo
-   Launcher la app corre en una partición OTA elegida dinámicamente; escribir
-   en la "siguiente" partición podría machacar otra app instalada y romper el
-   registro de Launcher. Las actualizaciones se hacen instalando un `.bin`
-   nuevo desde Launcher.
+2. **Actualizaciones gestionadas por Launcher.** `Verificar actualizaciones`
+   solo avisa: consulta LauncherHub y, si hay versión nueva, ofrece
+   `Salir a M5Launcher` para instalarla desde `OTA`. Se oculta
+   `Actualizar firmware por tarjeta SD`. Bajo Launcher la app corre en una
+   partición OTA elegida dinámicamente; escribir en la "siguiente" partición
+   podría machacar otra app instalada y romper el registro de Launcher.
 3. **Protección en profundidad.** Aunque se llegue al actualizador por otra vía,
    `OtaUpdater` y `FirmwareFlasher` rechazan escribir particiones OTA mientras
    Launcher esté presente.
@@ -89,13 +90,25 @@ del lector (`nvs.net80211`); hay que volver a introducirlas.
 | Instalación | OTA interna | Cómo actualizar |
 |---|---|---|
 | Standalone | Sí, `crosspoint-<tag>-paperdiy.bin` desde `Buscar actualizaciones` | OTA o SD |
-| Bajo M5Launcher | **No** (`LAUNCHER_MANAGED`) | Instalar `PaperDIYReader-launcher.bin` desde Launcher |
+| Bajo M5Launcher | Solo aviso: `Verificar actualizaciones` consulta LauncherHub | `M5Launcher > OTA` (catálogo) o `PaperDIYReader-launcher.bin` desde SD/WUI |
 
 Bajo Launcher la app corre en una partición OTA dinámica. Escribir la
 "siguiente" partición podría machacar otra app instalada o romper el registro
-de Launcher, así que se ocultan las opciones y el actualizador rechaza la
-escritura aunque se llegue por otra vía. El roadmap incluye investigar una
-actualización segura gestionada por Launcher; ver `05-roadmap.md`.
+de Launcher, así que el lector nunca escribe en la flash: el actualizador
+rechaza la escritura aunque se llegue por otra vía.
+
+El aviso busca en `https://api.launcherhub.net/firmwares?category=paper-diy`
+la app llamada exactamente **`CrossPoint for PaperDIY (community port)`**, que
+es el nombre publicado en M5Burner (LauncherHub replica M5Burner), y toma la
+versión más alta de `?fid=<fid>`. Si la app aún no está en el catálogo, el
+lector dice que no hay actualizaciones. Si se renombra en M5Burner, hay que
+cambiar `launcherHubAppName` en `src/network/OtaUpdater.cpp`.
+
+Pendiente de validar en hardware: la instalación de Launcher (catálogo o SD)
+elige una etiqueta libre (`paper1` si `paperd` existe) y, si hay espacio,
+puede crear una segunda app en vez de reemplazar la existente
+(`installFirmwareDynamic` → `launcherInstallNextAppLabel`). Si ocurre, borra la
+versión antigua desde el menú de la app en Launcher.
 
 ## Instalar
 

@@ -172,10 +172,11 @@ prefijo `v` y compara los tres primeros segmentos. El asset que consume la OTA
 se llama `crosspoint-v2.1.0-paperdiy.bin`: el sufijo `-paperdiy` es el board
 tag, no la versión.
 
-Bajo M5Launcher la OTA interna está **desactivada por diseño**: `OtaUpdater`
-devuelve `LAUNCHER_MANAGED` y `FirmwareFlasher` rechaza escribir otra
-partición. La actualización va por el paquete de Launcher
-(`PaperDIYReader-launcher.bin`), no por `Buscar actualizaciones`. Ver
+Bajo M5Launcher el lector **no escribe en la flash**: `installUpdate` devuelve
+`LAUNCHER_MANAGED` y `FirmwareFlasher` rechaza escribir otra partición.
+`Verificar actualizaciones` consulta LauncherHub, que replica M5Burner, así
+que **cada release debe subirse también a M5Burner** con el mismo nombre
+(`CrossPoint for PaperDIY (community port)`) para que el aviso la vea. Ver
 `13-m5launcher.md`.
 
 **No publiques** un `firmware.factory.bin` con `ota_0` si estás usando el

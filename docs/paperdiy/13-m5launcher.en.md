@@ -57,11 +57,12 @@ four things:
 
    In the last two cases Launcher's boot screen appears: long-press **A** to
    enter its menu before the last app auto-boots.
-2. **Launcher-managed updates.** `Check for Updates` and `SD Card Firmware
-   Update` are hidden. Under Launcher the app runs from a dynamically chosen
-   OTA partition; writing the "next" partition could overwrite another
-   installed app and corrupt Launcher's registry. Update by installing a new
-   `.bin` from Launcher instead.
+2. **Launcher-managed updates.** `Check for Updates` only notifies: it queries
+   LauncherHub and, when a newer version exists, offers `Exit to M5Launcher`
+   so it can be installed from `OTA`. `SD Card Firmware Update` is hidden.
+   Under Launcher the app runs from a dynamically chosen OTA partition;
+   writing the "next" partition could overwrite another installed app and
+   corrupt Launcher's registry.
 3. **Defense in depth.** Even if an update path is reached another way,
    `OtaUpdater` and `FirmwareFlasher` refuse to write OTA partitions while
    Launcher is present.
@@ -81,13 +82,26 @@ again.
 | Installation | In-app OTA | How to update |
 |---|---|---|
 | Standalone | Yes, `crosspoint-<tag>-paperdiy.bin` via `Check for Updates` | OTA or SD |
-| Under M5Launcher | **No** (`LAUNCHER_MANAGED`) | Install `PaperDIYReader-launcher.bin` from Launcher |
+| Under M5Launcher | Notice only: `Check for Updates` queries LauncherHub | `M5Launcher > OTA` (catalog) or `PaperDIYReader-launcher.bin` from SD/WUI |
 
 Under Launcher the app runs from a dynamic OTA partition. Writing the "next"
 partition could overwrite another installed app or corrupt Launcher's
-registry, so the update rows are hidden and the updater refuses the write even
-if reached another way. The roadmap includes investigating a safe
-Launcher-managed update path; see `05-roadmap.md`.
+registry, so the reader never writes flash: the updater refuses the write even
+if reached another way.
+
+The notice looks up the app named exactly
+**`CrossPoint for PaperDIY (community port)`** in
+`https://api.launcherhub.net/firmwares?category=paper-diy` (LauncherHub mirrors
+M5Burner, where it is published under that name) and takes the highest version
+from `?fid=<fid>`. Until the app is in the catalog the reader reports no update.
+If it is renamed on M5Burner, change `launcherHubAppName` in
+`src/network/OtaUpdater.cpp`.
+
+Not yet validated on hardware: Launcher's installer (catalog or SD) picks a
+free label (`paper1` when `paperd` exists) and, when there is room, may create
+a second app instead of replacing the existing one
+(`installFirmwareDynamic` → `launcherInstallNextAppLabel`). If that happens,
+delete the old version from its app menu in Launcher.
 
 ## Install
 

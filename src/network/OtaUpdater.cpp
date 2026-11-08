@@ -11,7 +11,11 @@
 #include <esp_ota_ops.h>
 // clang-format on
 
+#include <ArduinoJson.h>
+#include <strings.h>
+
 #include <algorithm>
+#include <cstdio>
 #include <cstring>
 #include <string>
 
@@ -26,13 +30,122 @@ namespace {
 #define CROSSPOINT_OTA_RELEASES_URL "https://api.github.com/repos/crosspoint-reader/crosspoint-reader/releases/latest"
 #endif
 constexpr char latestReleaseUrl[] = CROSSPOINT_OTA_RELEASES_URL;
+
+// Under M5Launcher, updates come from LauncherHub, the catalog Launcher's OTA
+// menu installs from. It mirrors M5Burner, where the app is published under
+// this exact name.
+constexpr char launcherHubUrl[] = "https://api.launcherhub.net/firmwares";
+constexpr char launcherHubCategory[] = "paper-diy";
+constexpr char launcherHubAppName[] = "CrossPoint for PaperDIY (community port)";
+// Each published version adds ~350 bytes to the fid response.
+constexpr size_t MAX_LAUNCHER_HUB_RESPONSE = 24 * 1024;
+
+bool fetchLauncherHubJson(const std::string& url, JsonDocument& doc, const JsonDocument& filter) {
+  auto body = makeUniqueNoThrow<char[]>(MAX_LAUNCHER_HUB_RESPONSE);
+  if (!body) {
+    LOG_ERR("OTA", "OOM: LauncherHub response buffer (%u bytes)", static_cast<unsigned>(MAX_LAUNCHER_HUB_RESPONSE));
+    return false;
+  }
+  size_t used = 0;
+  bool tooLarge = false;
+  const bool ok = HttpDownloader::fetchUrl(url, [&](const uint8_t* data, size_t len) {
+    if (used + len > MAX_LAUNCHER_HUB_RESPONSE) {
+      tooLarge = true;
+      return false;
+    }
+    std::memcpy(body.get() + used, data, len);
+    used += len;
+    return true;
+  });
+  if (tooLarge) {
+    LOG_ERR("OTA", "LauncherHub response over %u bytes", static_cast<unsigned>(MAX_LAUNCHER_HUB_RESPONSE));
+    return false;
+  }
+  if (!ok) {
+    LOG_ERR("OTA", "LauncherHub fetch failed (status %d): %s", HttpDownloader::lastStatus(), url.c_str());
+    return false;
+  }
+  const DeserializationError err = deserializeJson(doc, body.get(), used, DeserializationOption::Filter(filter));
+  if (err) {
+    LOG_ERR("OTA", "LauncherHub JSON: %s", err.c_str());
+    return false;
+  }
+  return true;
+}
+
+// Missing segments stay 0, so "2.2" orders as 2.2.0.
+void parseVersion(const char* version, int out[3]) {
+  out[0] = out[1] = out[2] = 0;
+  if (*version == 'v' || *version == 'V') ++version;
+  sscanf(version, "%d.%d.%d", &out[0], &out[1], &out[2]);
+}
+
+bool versionGreater(const int a[3], const int b[3]) {
+  for (int i = 0; i < 3; ++i) {
+    if (a[i] != b[i]) return a[i] > b[i];
+  }
+  return false;
+}
 }  // namespace
 
-OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
-  if (launcher_env::isUnderLauncher()) {
-    LOG_INF("OTA", "Managed by M5Launcher; skipping in-app update check");
-    return LAUNCHER_MANAGED;
+OtaUpdater::OtaUpdaterError OtaUpdater::checkLauncherCatalog() {
+  LOG_DBG("OTA", "Checking LauncherHub for update (current: %s)", CROSSPOINT_VERSION);
+
+  std::string url = std::string(launcherHubUrl) + "?category=" + launcherHubCategory + "&q=CrossPoint";
+  JsonDocument listFilter;
+  listFilter["items"][0]["fid"] = true;
+  listFilter["items"][0]["name"] = true;
+  JsonDocument list;
+  if (!fetchLauncherHubJson(url, list, listFilter)) return HTTP_ERROR;
+
+  const char* fid = nullptr;
+  for (JsonObjectConst item : list["items"].as<JsonArrayConst>()) {
+    const char* name = item["name"] | "";
+    if (strcasecmp(name, launcherHubAppName) == 0) {
+      fid = item["fid"] | "";
+      break;
+    }
   }
+  if (fid == nullptr || *fid == '\0') {
+    LOG_INF("OTA", "\"%s\" is not in the LauncherHub %s catalog yet", launcherHubAppName, launcherHubCategory);
+    return NO_UPDATE;
+  }
+
+  url = std::string(launcherHubUrl) + "?fid=" + fid;
+  JsonDocument versionFilter;
+  versionFilter["versions"][0]["version"] = true;
+  JsonDocument versions;
+  if (!fetchLauncherHubJson(url, versions, versionFilter)) return HTTP_ERROR;
+
+  // Pick the highest version rather than trusting the response order.
+  const char* best = nullptr;
+  int bestParts[3] = {};
+  for (JsonObjectConst entry : versions["versions"].as<JsonArrayConst>()) {
+    const char* version = entry["version"] | "";
+    if (*version == '\0') continue;
+    int parts[3];
+    parseVersion(version, parts);
+    if (best == nullptr || versionGreater(parts, bestParts)) {
+      best = version;
+      std::memcpy(bestParts, parts, sizeof(bestParts));
+    }
+  }
+  if (best == nullptr) {
+    LOG_ERR("OTA", "LauncherHub entry %s lists no versions", fid);
+    return JSON_PARSE_ERROR;
+  }
+
+  latestVersion = best;
+  otaUrl.clear();
+  otaSize = 0;
+  totalSize = 0;
+  updateAvailable = true;
+  LOG_DBG("OTA", "LauncherHub latest: %s (fid %s)", latestVersion.c_str(), fid);
+  return OK;
+}
+
+OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
+  if (launcher_env::isUnderLauncher()) return checkLauncherCatalog();
   LOG_DBG("OTA", "Checking for update (current: %s)", CROSSPOINT_VERSION);
 
   // Stream the ~32KB release JSON straight into the parser as it arrives.

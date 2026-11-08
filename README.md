@@ -202,13 +202,15 @@ actualizar: Launcher crea una app por nombre de archivo, así que el archivo
 versionado crearía una app nueva en cada actualización. Cópialo a la SD y usa
 `SD > Install` en Launcher.
 
-> **OTA bajo Launcher:** las actualizaciones internas no funcionan bajo
-> M5Launcher. Actualiza instalando `PaperDIYReader-launcher.bin` desde
-> Launcher; no flashees `firmware.bin` en `0x10000` con Launcher instalado.
+> **OTA bajo Launcher:** el lector no se actualiza a sí mismo bajo
+> M5Launcher. `Verificar actualizaciones` avisa si hay versión nueva en el
+> catálogo de Launcher; instálala desde `M5Launcher > OTA` o con
+> `PaperDIYReader-launcher.bin`. No flashees `firmware.bin` en `0x10000` con
+> Launcher instalado.
 
 El lector detecta Launcher y
-muestra `Ajustes > General > Salir a M5Launcher`; las actualizaciones internas
-se ocultan porque Launcher es quien gestiona las particiones OTA. Para que el
+muestra `Ajustes > General > Salir a M5Launcher`; la actualización por SD se
+oculta porque Launcher es quien gestiona las particiones OTA. Para que el
 lector despierte sin pasar por la pantalla de Launcher, configura en Launcher
 `CFG > GPIO on boot starts Launcher` = A: Launcher solo aparecerá al encender
 con A pulsado. Ver
