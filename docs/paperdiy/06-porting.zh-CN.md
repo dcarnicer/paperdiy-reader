@@ -69,7 +69,8 @@
 ### `src/network/OtaUpdater.cpp`
 
 - 可配置 `CROSSPOINT_OTA_RELEASES_URL`；接受带 `v` 前缀的标签。
-- 默认指向官方仓库，但不存在 `-paperdiy` 资源，因此不会安装外部固件。
+- `paperdiy` 环境固定本仓库的发布和资源名
+  （`CROSSPOINT_OTA_ASSET_FORMAT`，`crosspoint-paperdiy-<version>-ota.bin`）。
 
 ### `platformio.ini`
 

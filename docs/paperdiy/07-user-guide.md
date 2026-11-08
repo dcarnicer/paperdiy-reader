@@ -179,7 +179,8 @@ primera consulta puede tardar unos segundos porque recorre la FAT.
 Si algo falla:
 
 1. Mantén power ~10 s hasta LED rojo → download mode.
-2. Flashea `firmware.factory.bin` en `0x0`.
+2. Flashea `crosspoint-paperdiy-latest.bin` de la release (o
+   `firmware.factory.bin` de un build local) en `0x0`.
 3. Si no entra en download mode, prueba otro cable/USB; el ESP32-S3 nativo no
    necesita adaptador.
 

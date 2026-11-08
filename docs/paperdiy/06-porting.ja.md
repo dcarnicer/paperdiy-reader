@@ -70,8 +70,8 @@
 ### `src/network/OtaUpdater.cpp`
 
 - `CROSSPOINT_OTA_RELEASES_URL` を設定可能。`v` 接頭辞付きタグも受け付ける。
-- 既定では公式リポジトリを指すが、`-paperdiy` アセットが存在しないため、
-  外部ファームウェアをインストールすることはない。
+- `paperdiy` 環境はこのリポジトリのリリースとアセット名
+  （`CROSSPOINT_OTA_ASSET_FORMAT`、`crosspoint-paperdiy-<version>-ota.bin`）を固定する。
 
 ### `platformio.ini`
 

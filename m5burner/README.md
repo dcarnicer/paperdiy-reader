@@ -14,7 +14,7 @@ The script produces:
 
 ```
 dist/m5burner/
-├── PaperDIYReader-<version>.bin       # for the desktop Publish dialog
+├── crosspoint-paperdiy-latest.bin    # for the desktop Publish dialog
 ├── paperdiy-reader-<version>.zip      # for the repo/PR route
 └── paperdiy-reader-<version>/
     ├── m5burner.json
@@ -25,7 +25,7 @@ dist/m5burner/
         └── PaperDIYReader_0x0.bin
 ```
 
-The `.bin` and `firmware/PaperDIYReader_0x0.bin` are the combined
+`crosspoint-paperdiy-latest.bin` and `firmware/PaperDIYReader_0x0.bin` are the combined
 `firmware.factory.bin` (bootloader + partition table + app). Use the `.bin` in
 the M5Burner desktop **Publish** dialog; use the `.zip` only for the
 `M5Stack-Firmware` repository/PR route. Do not use the `paperdiy-test` build:
@@ -69,16 +69,16 @@ differs, update `firmware_category.device` in `m5burner.json`.
 - `m5burner.json` here is a template; the packaging script replaces
   `version` and normalizes `repository`.
 - M5Burner uses the same version as the GitHub release, without the `v`:
-  `2.0.0-paperdiy.1`, `2.0.0-paperdiy.2`… (CrossPoint version + port
-  revision; see `.agents/rules/release-versioning.md`). The reader's update
+  `2.0.0-1`, `2.0.0-2`… (CrossPoint version + port revision, kept short
+  because M5Burner limits the field; see
+  `.agents/rules/release-versioning.md`). The reader's update
   notice compares this field and picks the highest one, so type it exactly
   and never leave an old-scheme version such as `2.1.0` in the entry. Do not
   upload RCs.
 - The cover is `m5burner/cover.png` (1280×720) and is used by default by
   `scripts/make_m5burner_package.py`. Pass `--cover` to use another image.
 - Keep `README.md` and `LICENSE` inside the uploaded package.
-- **M5Launcher is a separate package**: install
-  `dist/launcher/PaperDIYReader-launcher.bin` (the stable alias from
-  `make launcher`), not this combined factory image. Keep the stable file name
-  so updates do not add one app per version. See
-  `docs/paperdiy/13-m5launcher.md`.
+- The same full image serves M5Launcher: LauncherHub mirrors M5Burner and
+  Launcher copies only the app at `0x10000`. Prefer uploading the GitHub
+  release asset `crosspoint-paperdiy-latest.bin`, so M5Burner gets the exact
+  binary of the tagged release. See `docs/paperdiy/13-m5launcher.md`.

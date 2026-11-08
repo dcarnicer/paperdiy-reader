@@ -185,24 +185,16 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 ### M5Launcher
 
 With [M5Launcher](https://github.com/bmorcelli/Launcher) 3.0.0 or newer
-(PaperDIY port), install the **app-only** binary, not the M5Burner image:
-
-```bash
-make launcher LAUNCHER_VERSION=2.0.0-paperdiy.1
-# dist/launcher/PaperDIYReader-launcher.bin        (stable alias)
-# dist/launcher/PaperDIYReader-2.0.0-paperdiy.1-launcher.bin  (versioned archive)
-```
-
-Always use the stable alias `PaperDIYReader-launcher.bin` for installs and
-updates: Launcher names the app after the file, so the versioned file would
-create a new app on every update (whether the stable alias replaces the
-existing app is not yet verified; see the guide). Copy it to the SD card and use
-`SD > Install` in Launcher.
+(PaperDIY port), install **CrossPoint for PaperDIY (community port)** from
+`M5Launcher > OTA`, or the release's full image `crosspoint-paperdiy-latest.bin`
+from the SD card (`SD > Install`), the WebUI or Favorites. It is the same image
+published on M5Burner; Launcher copies only the app.
 
 > **OTA under Launcher:** the reader does not update itself under M5Launcher.
 > `Check for Updates` reports a newer version in Launcher's catalog; install it
-> from `M5Launcher > OTA` or with `PaperDIYReader-launcher.bin`. Do not flash
-> `firmware.bin` at `0x10000` while Launcher is installed.
+> from `M5Launcher > OTA` and **then delete the old copy**, because Launcher
+> installs each version next to the previous one. Do not flash `firmware.bin`
+> at `0x10000` while Launcher is installed.
 
 The reader detects Launcher and exposes `Settings > General > Exit to M5Launcher`; the SD firmware
 update is hidden because Launcher owns the OTA partitions. To wake the reader
@@ -263,9 +255,10 @@ The detailed documentation is in Spanish. The
   fallback is deep sleep with A/B wake. Battery life still needs measuring.
 - The physical power button is managed by the M5PM1; the firmware receives it
   as an I²C event, not as a GPIO.
-- OTA points to the official repo by default, but there is no `-paperdiy`
-  asset, so it never installs foreign firmware. For your own OTA, configure
-  `CROSSPOINT_OTA_RELEASES_URL`.
+- The `paperdiy` env's OTA checks this repo's releases
+  (`CROSSPOINT_OTA_RELEASES_URL`) and downloads
+  `crosspoint-paperdiy-<version>-ota.bin` (`CROSSPOINT_OTA_ASSET_FORMAT`); both
+  are set in `platformio.ini`.
 - CrossPoint 2.0 is the development branch (2.0.0), not the stable 1.6.x.
 
 ## Credits and license

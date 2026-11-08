@@ -29,13 +29,17 @@ Version parse(const char* text) {
     ++p;
   }
 
-  const char* revision = std::strstr(text, "-paperdiy.");
-  if (revision != nullptr) v.revision = readNumber(revision + std::strlen("-paperdiy."));
+  // The port revision is the number right after the CrossPoint version.
+  if (p[0] == '-' && p[1] >= '0' && p[1] <= '9') {
+    char* end = nullptr;
+    v.revision = static_cast<int>(std::strtol(p + 1, &end, 10));
+    p = end;
+  }
 
-  const char* rc = std::strstr(text, "-rc");
+  const char* rc = std::strstr(p, "-rc");
   if (rc != nullptr) {
     v.preRelease = rc[3] == '.' ? readNumber(rc + 4) : 0;
-  } else if (std::strstr(text, "-dev") != nullptr) {
+  } else if (std::strstr(p, "-dev") != nullptr) {
     v.preRelease = 0;
   }
   return v;

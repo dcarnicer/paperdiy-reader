@@ -238,9 +238,10 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
   駆動時間はまだ測定が必要です。
 - 物理電源ボタンは M5PM1 が管理し、ファームウェアには GPIO ではなく I²C
   イベントとして届きます。
-- OTA は既定で公式リポジトリを参照しますが、`-paperdiy` アセットが存在
-  しないため、外部ファームウェアをインストールすることはありません。
-  独自 OTA を使う場合は `CROSSPOINT_OTA_RELEASES_URL` を設定してください。
+- `paperdiy` 環境の OTA はこのリポジトリのリリース
+  （`CROSSPOINT_OTA_RELEASES_URL`）を確認し、`crosspoint-paperdiy-<version>-ota.bin`
+  （`CROSSPOINT_OTA_ASSET_FORMAT`）をダウンロードします。どちらも
+  `platformio.ini` で設定します。
 - CrossPoint 2.0 は開発ブランチ（2.0.0）であり、安定版の 1.6.x では
   ありません。
 

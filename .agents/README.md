@@ -26,7 +26,7 @@ home rather than restoring `.skills/` or duplicating the root policy.
 - `ui-activities.md`: orientation, input, UI, activities, tasks, and fonts
 - `testing-debugging.md`: build, formatting, CI, serial, crash, and verification procedures
 - `git-workflow.md`: repository context, branches, commits, and publication controls
-- `release-versioning.md`: `<CrossPoint X.Y.Z>-paperdiy.<N>` versions, tags, ordering, and OTA asset naming
+- `release-versioning.md`: `<CrossPoint X.Y.Z>-<N>` versions, tags, ordering, and OTA asset naming
 - `generated-files-cache.md`: generated sources, i18n, local artifacts, and cache formats
 
 ## Mandatory firmware review

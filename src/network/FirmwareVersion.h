@@ -1,7 +1,7 @@
 #pragma once
 
-// PaperDIY release versions: <CrossPoint X.Y.Z>-paperdiy.<N>[-rc.<M>], with an
-// optional leading "v" on tags (see .agents/rules/release-versioning.md).
+// PaperDIY release versions: <CrossPoint X.Y.Z>-<N>[-rc.<M>], e.g. 2.0.0-1, with
+// an optional leading "v" on tags (see .agents/rules/release-versioning.md).
 // Ordering: CrossPoint version, then the port revision N, then a release
 // candidate before its final release. A missing segment or revision is 0, and
 // any "-rc"/"-dev" suffix counts as a pre-release of that version.

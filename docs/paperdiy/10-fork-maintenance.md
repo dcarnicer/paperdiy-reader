@@ -150,33 +150,34 @@ Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
 
 ## OTA
 
-El código usa `CROSSPOINT_OTA_RELEASES_URL`, por defecto el repo oficial de
-CrossPoint. Eso es **seguro**: el asset se busca como
-`crosspoint-<tag>-paperdiy.bin`, que no existe en las releases oficiales, así
-que el PaperDIY no se actualiza con firmware ajeno.
+El env `paperdiy` de `platformio.ini` fija dos cosas de la OTA standalone:
 
-Para publicar releases propias, descomenta en `platformio.ini`:
+- `CROSSPOINT_OTA_RELEASES_URL`: las releases de este fork
+  (`dcarnicer/paperdiy-reader`). Así un build local y el de CI son iguales.
+- `CROSSPOINT_OTA_ASSET_FORMAT` = `crosspoint-paperdiy-%%s-ota.bin`: el
+  nombre del asset que busca, con la versión del tag sin la `v`. El `%%` es el
+  escape de `%` en `platformio.ini`.
 
-```ini
--DCROSSPOINT_OTA_RELEASES_URL=\"https://api.github.com/repos/TUUSUARIO/paperdiy-reader/releases/latest\"
-```
+El workflow `.github/workflows/release-paperdiy.yml` publica exactamente dos
+`.bin`, que comprueba `scripts/check_release_assets.py` (la app de la imagen
+completa debe ser idéntica a la de la OTA):
 
-El workflow `.github/workflows/release-paperdiy.yml` ya compila y publica:
+- `crosspoint-paperdiy-latest.bin`: imagen completa (`0x0`) para M5Burner,
+  M5Launcher y esptool. Nombre fijo para que
+  `releases/latest/download/crosspoint-paperdiy-latest.bin` dé siempre la
+  última.
+- `crosspoint-paperdiy-<versión>-ota.bin`: solo la app, para la OTA
+  standalone.
 
-- `crosspoint-<tag>-paperdiy.bin` (asset que consume la OTA)
-- `firmware.bin` (actualización de app)
-- `firmware.factory.bin` (instalación completa/recuperación)
-
-Tag: `v<versión>` (por ejemplo `v2.0.0-paperdiy.1`, ver Versionado). El asset
-que consume la OTA se llama `crosspoint-v2.0.0-paperdiy.1-paperdiy.bin`: el
-último `-paperdiy` es el board tag que busca la OTA, no la versión.
+Tag: `v<versión>` (por ejemplo `v2.0.0-1`, ver Versionado).
 
 Bajo M5Launcher el lector **no escribe en la flash**: `installUpdate` devuelve
 `LAUNCHER_MANAGED` y `FirmwareFlasher` rechaza escribir otra partición.
 `Verificar actualizaciones` consulta LauncherHub, que replica M5Burner, así
 que **cada release debe subirse también a M5Burner** con el mismo nombre
-(`CrossPoint for PaperDIY (community port)`) para que el aviso la vea. Ver
-`13-m5launcher.md`.
+(`CrossPoint for PaperDIY (community port)`) para que el aviso la vea: se sube
+`crosspoint-paperdiy-latest.bin` y en el campo de versión va la del tag sin la
+`v`. Ver `13-m5launcher.md`.
 
 **No publiques** un `firmware.factory.bin` con `ota_0` si estás usando el
 dual-boot de la PR de prateek; aquí no lo usamos.
@@ -185,15 +186,17 @@ dual-boot de la PR de prateek; aquí no lo usamos.
 
 La versión es la de CrossPoint sobre la que se construye más una revisión del
 port, para que se vea de un vistazo qué upstream lleva cada release:
-`<CrossPoint X.Y.Z>-paperdiy.<N>`.
+`<CrossPoint X.Y.Z>-<N>` (por ejemplo `2.0.0-1`). Es corta a propósito: el
+campo de versión de M5Burner no admite cadenas largas y tiene que coincidir con
+la de la release.
 
 - `X.Y.Z` es `[crosspoint] version` de upstream `main` en el commit
   sincronizado (hoy `2.0.0`, `818a1540`). No se inventa ni se sube por libre.
 - `N` empieza en 1 y sube en cada release pública (fixes, features, docs).
-  Un sync a otra versión de CrossPoint lo reinicia: `2.1.0-paperdiy.1`.
-- Tag `v2.0.0-paperdiy.1`; `[crosspoint] version` / `CROSSPOINT_VERSION` es
+  Un sync a otra versión de CrossPoint lo reinicia: `2.1.0-1`.
+- Tag `v2.0.0-1`; `[crosspoint] version` / `CROSSPOINT_VERSION` es
   la misma cadena sin la `v`.
-- RC: `v2.0.0-paperdiy.2-rc.1`; el workflow la publica como pre-release y no
+- RC: `v2.0.0-2-rc.1`; el workflow la publica como pre-release y no
   aparece en `/releases/latest`. No se sube a M5Burner.
 - Los builds locales de `paperdiy` llevan la versión tal cual; no se publican.
 - Nunca se reutiliza un tag; para reconstruir una release se sube `N`.
@@ -202,9 +205,9 @@ port, para que se vea de un vistazo qué upstream lleva cada release:
 - El commit upstream y el pin del SDK van en el CHANGELOG y en las notas.
 - Todas las versiones subidas a M5Burner siguen este esquema: el aviso coge la
   más alta del catálogo, y una `2.1.0` suelta se ofrecería a todos los
-  `2.0.0-paperdiy.N`.
+  `2.0.0-N`.
 - `v0.1.0` y `v2.1.0` son anteriores a este esquema; `v2.1.0` se retiró de
-  GitHub antes de publicar `v2.0.0-paperdiy.1`. Un aparato en 2.1.0
+  GitHub antes de publicar `v2.0.0-1`. Un aparato en 2.1.0
   (standalone o bajo Launcher) la compara como más nueva y hay que
   actualizarlo una vez a mano.
 - El workflow de release valida tag y versión con

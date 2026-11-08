@@ -59,7 +59,8 @@ four things:
    enter its menu before the last app auto-boots.
 2. **Launcher-managed updates.** `Check for Updates` only notifies: it queries
    LauncherHub and, when a newer version exists, offers `Exit to M5Launcher`
-   so it can be installed from `OTA`. `SD Card Firmware Update` is hidden.
+   so it can be installed from `OTA`; then delete the old copy. `SD Card
+   Firmware Update` is hidden.
    Under Launcher the app runs from a dynamically chosen OTA partition;
    writing the "next" partition could overwrite another installed app and
    corrupt Launcher's registry.
@@ -81,13 +82,14 @@ again.
 
 | Installation | In-app OTA | How to update |
 |---|---|---|
-| Standalone | Yes, `crosspoint-<tag>-paperdiy.bin` via `Check for Updates` | OTA or SD |
-| Under M5Launcher | Notice only: `Check for Updates` queries LauncherHub | `M5Launcher > OTA` (catalog) or `PaperDIYReader-launcher.bin` from SD/WUI |
+| Standalone | Yes: `Check for Updates` downloads `crosspoint-paperdiy-<version>-ota.bin` from the latest release | OTA, or that same `-ota.bin` via `SD Card Firmware Update` |
+| Under M5Launcher | Notice only: `Check for Updates` queries LauncherHub | `M5Launcher > OTA` (catalog) or `crosspoint-paperdiy-latest.bin` from SD, WebUI or Favorites |
 
 Under Launcher the app runs from a dynamic OTA partition. Writing the "next"
 partition could overwrite another installed app or corrupt Launcher's
 registry, so the reader never writes flash: the updater refuses the write even
-if reached another way.
+if reached another way. Other firmware that runs under Launcher, such as Bruce
+or SigurdOS, does the same.
 
 The notice looks up the app named
 **`CrossPoint for PaperDIY (community port)`** (ignoring case) in
@@ -97,78 +99,74 @@ from `?fid=<fid>`. Until the app is in the catalog the reader reports no update.
 If it is renamed on M5Burner, change `launcherHubAppName` in
 `src/network/OtaUpdater.cpp`.
 
-Not yet validated on hardware: Launcher's installer (catalog or SD) picks a
-free label (`paper1` when `paperd` exists) and, when there is room, may create
-a second app instead of replacing the existing one
-(`installFirmwareDynamic` → `launcherInstallNextAppLabel`). If that happens,
-delete the old version from its app menu in Launcher.
+**Launcher installs each version next to the previous one.** While there is
+free space, installing from the catalog, SD, WebUI or Favorites creates a new
+app under a free label (`crossp`, `cross1`, …) instead of replacing the
+existing one; it only asks which app to replace when the new one does not fit
+(`installFirmwareDynamic` and `launcherSelectInstallLayout` in Launcher 3.0.0).
+This is Launcher's design since 2.7.0, which supports several apps at once.
+That is why the notice says "Then delete the old copy in Launcher". Only serial
+`flash overwrite` reuses the same partition. This comes from Launcher's code;
+we have not yet seen it on hardware with the catalog app.
 
 ## Install
 
 Requirements:
 
 - M5Launcher **3.0.0 or newer** with PaperDIY support.
-- An **app-only** `.bin` (`firmware.bin`), not the M5Burner combined image or
-  `firmware.factory.bin`.
+- The release's full image, `crosspoint-paperdiy-latest.bin` (the same one
+  published on M5Burner). Launcher reads the partition table inside it and
+  copies only the app at `0x10000`. From SD, WebUI or Favorites it also creates
+  an empty 448 KB SPIFFS partition, because the table declares a `spiffs`; the
+  reader does not use it.
+
+### From the catalog
+
+1. Open **M5Launcher > OTA** and enter the PaperDIY category.
+2. Pick **CrossPoint for PaperDIY (community port)** and install the latest
+   version.
 
 ### From the SD card
 
-1. Copy `PaperDIYReader-launcher.bin` (the release's stable alias) to a
-   FAT32/exFAT SD card.
+1. Copy `crosspoint-paperdiy-latest.bin` to a FAT32/exFAT card.
 2. Insert the card and open M5Launcher.
 3. Open **SD**, select the file and choose **Install**.
 4. Launch the reader from the Launcher menu.
 
-Use the same file name (`PaperDIYReader-launcher.bin`) for installs and
-updates. Launcher names the app after the file: installing
-`PaperDIYReader-<version>-launcher.bin` creates a new app instead of replacing
-the existing one. The versioned file is only an archive. Even with the same
-name, it is not yet verified that an SD or catalog install replaces `paperd`:
-see [OTA and updates](#ota-and-updates).
-
 ### From the WebUI or Favorites
 
-You can also upload the `.bin` through **WUI > OTA Update**, or save the direct
-release-asset URL in **Favorites**. For Favorites use the stable URL:
+Upload the same `.bin` from **WUI > OTA Update**, or save this always-latest
+link in **Favorites**:
 
 ```
-https://github.com/dcarnicer/paperdiy-reader/releases/latest/download/PaperDIYReader-launcher.bin
+https://github.com/dcarnicer/paperdiy-reader/releases/latest/download/crosspoint-paperdiy-latest.bin
 ```
 
-The file must be the app binary; Launcher recognizes it by the ESP image header
-(`0xE9`).
+## Release files
 
-## Build and package
+Every release publishes two `.bin` files, produced by
+`.github/workflows/release-paperdiy.yml` and checked by
+`scripts/check_release_assets.py`, which verifies that the app inside the full
+image is identical to the OTA image:
 
-```bash
-make build ENV=paperdiy
-python3 scripts/make_launcher_package.py --version 2.0.0-paperdiy.1
-```
+| File | What it is |
+|---|---|
+| `crosspoint-paperdiy-latest.bin` | Full image (`0x0`) for M5Burner, M5Launcher and esptool. The name is fixed so the `latest` link always gives the newest |
+| `crosspoint-paperdiy-<version>-ota.bin` | App only, for a standalone reader: `Check for Updates` downloads it, or copy it to the SD root for `SD Card Firmware Update`. Do not install it with esptool, M5Burner or Launcher |
 
-The script produces:
-
-```
-dist/launcher/
-├── PaperDIYReader-2.0.0-paperdiy.1-launcher.bin
-└── README.md
-```
-
-`make launcher LAUNCHER_VERSION=2.0.0-paperdiy.1` does the same. The release workflow also
-publishes `PaperDIYReader-<version>-launcher.bin` and the stable
-`PaperDIYReader-launcher.bin` alias next to the factory image.
+Locally, `make build ENV=paperdiy` leaves the full image at
+`.pio/build/paperdiy/firmware.factory.bin`.
 
 ## Update
 
-1. Download the new `PaperDIYReader-launcher.bin` (the stable alias).
-2. Install it from Launcher (SD, WUI or Favorites) over the existing app.
-3. SD data is untouched. Serial `flash overwrite` reuses the `paperd`
-   partition; from SD, WUI or the catalog, Launcher may create a second app
-   (`paper1`) when there is free space (not yet verified). If it shows up
-   twice, delete the old version from Launcher.
+1. Install the new version from **M5Launcher > OTA**, or the new
+   `crosspoint-paperdiy-latest.bin` from SD, WebUI or Favorites.
+2. In Launcher's menu, open the old version and choose **Delete**.
+3. SD data (`/.crosspoint/`) is untouched.
 
 Do not use `make flash` or `esptool ... write_flash 0x10000` while Launcher is
 installed: that writes to Launcher's resident partition. To return to a
-standalone install, flash `firmware.factory.bin` at `0x0`, and erase the flash
+standalone install, flash `crosspoint-paperdiy-latest.bin` at `0x0`, and erase the flash
 first if you want to remove the dynamic partitions.
 
 ## Technical notes
@@ -201,7 +199,8 @@ Validated on 2026-11-07 on a PaperDIY with M5Launcher 3.0.0, before
 saying in-app updates are hidden):
 
 - [x] The `paperdiy` environment builds with the changes.
-- [x] The packager validates the ESP header, ESP32-S3 chip id and asset name.
+- [x] The Launcher packager (since removed) validated the ESP header and
+  ESP32-S3 chip id.
 - [x] Installation from M5Launcher (serial console, `flash firmware`).
 - [x] The app boots under Launcher, shows `Exit to M5Launcher` and hides the
   in-app update rows.
@@ -239,5 +238,5 @@ with `flash firmware` and `flash overwrite`):
   `DeepSleep starts Launcher` on it exits via deep sleep, and with it off via
   the PM1 reset; Launcher appears in both cases, then boots the reader.
 - [ ] Notice against the real app published on M5Burner.
-- [ ] Updating from the catalog or SD replaces `paperd` instead of creating
-  `paper1`.
+- [ ] See on hardware that updating from the catalog installs the new version
+  next to the old one and that the old one deletes cleanly from Launcher.
