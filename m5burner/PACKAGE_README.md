@@ -10,7 +10,7 @@ Reader and the FreeInk SDK.
 
 1. Open M5Burner and select **M5Stack PaperDIY**.
 2. Use **Erase** first if the device has another firmware or old settings.
-3. Select the `PaperDIYReader-<version>.bin` firmware, the USB port and
+3. Select the `crosspoint-paperdiy-latest.bin` firmware, the USB port and
    **Burn**.
 4. Insert a FAT32/exFAT SD card with `.epub` files and power on.
 

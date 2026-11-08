@@ -160,8 +160,11 @@ void OtaUpdateActivity::render(RenderLock&&) {
     renderer.drawText(UI_10_FONT_ID, metrics.contentSidePadding, infoTop + height + metrics.verticalSpacing,
                       (std::string(tr(STR_NEW_VERSION)) + updater.getLatestVersion()).c_str());
     if (launcherManaged) {
+      // Launcher installs the new version next to the old one.
       renderer.drawText(UI_10_FONT_ID, metrics.contentSidePadding, infoTop + 2 * (height + metrics.verticalSpacing),
                         tr(STR_LAUNCHER_UPDATE_HINT));
+      renderer.drawText(UI_10_FONT_ID, metrics.contentSidePadding, infoTop + 3 * (height + metrics.verticalSpacing),
+                        tr(STR_LAUNCHER_DELETE_OLD));
     }
 
     if (confirmPopup.processRender(renderer, mappedInput)) return;

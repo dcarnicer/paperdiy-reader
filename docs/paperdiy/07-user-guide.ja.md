@@ -180,7 +180,8 @@
 問題が起きた場合：
 
 1. 電源を約 10 秒長押しして赤 LED が点灯 → ダウンロードモード。
-2. `firmware.factory.bin` を `0x0` に書き込みます。
+2. リリースの `crosspoint-paperdiy-latest.bin`（ローカルビルドなら
+   `firmware.factory.bin`）を `0x0` に書き込みます。
 3. ダウンロードモードに入らない場合は、別のケーブル/USB ポートを試して
    ください。ESP32-S3 のネイティブ USB にアダプターは不要です。
 

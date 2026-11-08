@@ -1,28 +1,42 @@
 # Changelog
 
-## 2.0.0-paperdiy.1 — 2026-11-08
+## 2.0.0-1 — 2026-11-08
 
-Primera release con el esquema de versión `<CrossPoint X.Y.Z>-paperdiy.<N>`:
-CrossPoint `2.0.0` (`818a1540`) y revisión 1 del port. Sustituye a `v2.1.0`,
+Primera release con el esquema de versión `<CrossPoint X.Y.Z>-<N>`:
+CrossPoint `2.0.0` (`818a1540`) y revisión 1 del port. Es corta porque el
+campo de versión de M5Burner no admite cadenas largas. Sustituye a `v2.1.0`,
 que se retiró porque su número no correspondía a ninguna versión de
 CrossPoint. Un PaperDIY en 2.1.0, standalone o bajo M5Launcher, ve 2.1.0
 como más nueva: hay que actualizarlo una vez a mano.
 
 - La OTA de GitHub y el aviso de Launcher comparan versión de CrossPoint,
   revisión del port y RC (`FirmwareVersion`, con tests de host).
+- La release publica solo dos `.bin`: `crosspoint-paperdiy-latest.bin`
+  (imagen completa para M5Burner, M5Launcher y esptool, con enlace `latest`
+  permanente) y `crosspoint-paperdiy-<versión>-ota.bin` (solo para la OTA
+  standalone). Desaparecen `firmware.bin`, los `.bin` de Launcher solo-app y
+  `scripts/make_launcher_package.py`: Launcher instala la imagen completa.
+- La URL de releases del fork se fija en `platformio.ini`, así que un build
+  local busca actualizaciones en este repo igual que el de CI.
+- Un PaperDIY en v0.1.0 busca el asset con el nombre antiguo y no verá esta
+  actualización: hay que instalarla una vez a mano.
+- Si guardaste en Favoritos de Launcher el enlace a
+  `PaperDIYReader-launcher.bin`, cámbialo por
+  `…/releases/latest/download/crosspoint-paperdiy-latest.bin`.
 
 ### Aviso de actualización bajo M5Launcher
 
 - Bajo M5Launcher vuelve `Verificar actualizaciones`, solo como aviso: busca
   `CrossPoint for PaperDIY (community port)` en LauncherHub (réplica de
   M5Burner) y, si hay versión nueva, ofrece `Salir a M5Launcher` para
-  instalarla desde `OTA`. El lector sigue sin escribir en la flash bajo
-  Launcher; la actualización por SD sigue oculta.
+  instalarla desde `OTA`, y recuerda borrar la versión anterior: Launcher
+  instala cada versión junto a la vieja. El lector sigue sin escribir en la
+  flash bajo Launcher; la actualización por SD sigue oculta.
 - Validado en un PaperDIY con M5Launcher 3.0.0 con un build temporal: aviso,
   salida con tecla A, por deep sleep y por reset del PM1. Falta probarlo con la
   app publicada en M5Burner.
 
-## 2.1.0 — 2026-11-08 (retirada, ver 2.0.0-paperdiy.1)
+## 2.1.0 — 2026-11-08 (retirada, ver 2.0.0-1)
 
 Primera release sobre CrossPoint `818a1540`. Incluye el sync del motor, la
 actualización de expat/ArduinoJson/NimBLE/M5GFX y las correcciones encontradas

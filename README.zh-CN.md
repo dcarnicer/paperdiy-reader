@@ -219,8 +219,9 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
   USB 连接时 A+B 通过 PM1 关机，A 无法唤醒。如果 USB 保持主板供电，
   则回退到深度休眠并用 A/B 唤醒。续航仍待测量。
 - 物理电源键由 M5PM1 管理；固件通过 I²C 事件接收，而不是 GPIO。
-- OTA 默认指向官方仓库，但没有 `-paperdiy` 资源，因此不会安装其他固件。
-  如需自己的 OTA，请配置 `CROSSPOINT_OTA_RELEASES_URL`。
+- `paperdiy` 环境的 OTA 检查本仓库的发布（`CROSSPOINT_OTA_RELEASES_URL`），
+  并下载 `crosspoint-paperdiy-<version>-ota.bin`（`CROSSPOINT_OTA_ASSET_FORMAT`）；
+  两者都在 `platformio.ini` 中设置。
 - CrossPoint 2.0 是开发分支（2.0.0），不是稳定的 1.6.x。
 
 ## 致谢与许可

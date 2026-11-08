@@ -71,8 +71,8 @@ in `patches/sdk.patch` + `patches/firmware.patch`.
 
 - Configurable `CROSSPOINT_OTA_RELEASES_URL`; tags with a `v` prefix are
   accepted.
-- By default it points to the official repo, but there is no `-paperdiy`
-  asset, so it never installs foreign firmware.
+- The `paperdiy` env pins this repo's releases and the asset name
+  (`CROSSPOINT_OTA_ASSET_FORMAT`, `crosspoint-paperdiy-<version>-ota.bin`).
 
 ### `platformio.ini`
 

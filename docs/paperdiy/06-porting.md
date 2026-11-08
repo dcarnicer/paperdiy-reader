@@ -70,8 +70,8 @@ mantiene en `patches/sdk.patch` + `patches/firmware.patch`.
 ### `src/network/OtaUpdater.cpp`
 
 - `CROSSPOINT_OTA_RELEASES_URL` configurable; tags con prefijo `v` aceptados.
-- Por defecto apunta al repo oficial, pero no existe asset `-paperdiy`, así que
-  no instala firmware ajeno.
+- El env `paperdiy` fija las releases de este repo y el nombre del asset
+  (`CROSSPOINT_OTA_ASSET_FORMAT`, `crosspoint-paperdiy-<versión>-ota.bin`).
 
 ### `platformio.ini`
 

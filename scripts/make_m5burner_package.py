@@ -113,7 +113,8 @@ def main() -> int:
 
     # The desktop M5Burner publish dialog takes a single .bin; the zip is for
     # the M5Stack-Firmware repository/PR route.
-    binary = args.output_dir / f"{FIRMWARE_SLUG}-{args.version}.bin"
+    # Same name as the GitHub release asset; the version goes in M5Burner's field.
+    binary = args.output_dir / "crosspoint-paperdiy-latest.bin"
     shutil.copy2(factory, binary)
 
     print(f"package: {package_dir}")

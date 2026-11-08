@@ -173,6 +173,8 @@ OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
   releaseParser.setFirmwareAssetName("");
   // Each board updates from crosspoint-<version>-<device>.bin. The combined
   // C3 image uses x3-x4; other asset suffixes match their firmware board tag.
+  // A fork can instead set CROSSPOINT_OTA_ASSET_FORMAT, a printf format whose
+  // %s is the release version (tag without the leading "v").
   const bool isX4 = board_tag::boardNameLen() == 2 && memcmp(board_tag::boardName(), "x4", 2) == 0;
   char assetSuffix[20] = "-x3-x4";
   if (!isX4) {
@@ -187,7 +189,13 @@ OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
       releaseParser.feed(reinterpret_cast<const char*>(data + offset), 1);
       offset++;
       if (releaseParser.foundTag()) {
+#ifdef CROSSPOINT_OTA_ASSET_FORMAT
+        const char* version = releaseParser.getTagName();
+        if (*version == 'v' || *version == 'V') ++version;
+        snprintf(assetName, sizeof(assetName), CROSSPOINT_OTA_ASSET_FORMAT, version);
+#else
         snprintf(assetName, sizeof(assetName), "crosspoint-%s%s.bin", releaseParser.getTagName(), assetSuffix);
+#endif
         releaseParser.setFirmwareAssetName(assetName);
         assetNameSet = true;
       }

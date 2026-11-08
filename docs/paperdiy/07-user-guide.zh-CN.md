@@ -162,7 +162,8 @@
 如果出现问题：
 
 1. 长按电源约 10 秒直到红色 LED 亮起 → 下载模式。
-2. 在 `0x0` 烧录 `firmware.factory.bin`。
+2. 在 `0x0` 烧录发布中的 `crosspoint-paperdiy-latest.bin`（本地构建则为
+   `firmware.factory.bin`）。
 3. 如果无法进入下载模式，换一根线/USB 口；ESP32-S3 原生 USB 不需要
    转接器。
 
