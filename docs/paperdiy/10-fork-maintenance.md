@@ -167,19 +167,39 @@ El workflow `.github/workflows/release-paperdiy.yml` ya compila y publica:
 - `firmware.bin` (actualización de app)
 - `firmware.factory.bin` (instalación completa/recuperación)
 
-Tag recomendado: `v2.1.0-paperdiy.1` o `2.1.0-paperdiy.1`. El parser de OTA
-ignora el prefijo `v` y compara los tres primeros segmentos.
+Tag: `vMAJOR.MINOR.PATCH` (por ejemplo `v2.1.0`). El parser de OTA ignora el
+prefijo `v` y compara los tres primeros segmentos. El asset que consume la OTA
+se llama `crosspoint-v2.1.0-paperdiy.bin`: el sufijo `-paperdiy` es el board
+tag, no la versión.
 
 **No publiques** un `firmware.factory.bin` con `ota_0` si estás usando el
 dual-boot de la PR de prateek; aquí no lo usamos.
 
 ## Versionado
 
-- `CROSSPOINT_VERSION` = versión upstream + `-paperdiy`.
-- Releases: `2.x.y-paperdiy.N`.
+La versión pública es semver limpio del fork, sin sufijos:
+
+- Release: tag `vMAJOR.MINOR.PATCH` y `[crosspoint] version` /
+  `CROSSPOINT_VERSION` igual a `MAJOR.MINOR.PATCH` (por ejemplo `v2.1.0` →
+  `2.1.0`).
+- MAJOR: cambios incompatibles (particiones, migración de ajustes, etc.).
+- MINOR: features nuevas o sync de upstream que las trae.
+- PATCH: fixes, dependencias y documentación.
+- RC: `v2.2.0-rc.1`; se publica como pre-release y no aparece en
+  `/releases/latest`.
+- Builds internos: sin tag, `2.2.0-dev.<sha>`.
+- Nunca se reutiliza un tag; para reconstruir una release se sube PATCH.
+- El commit upstream y el pin del SDK van en el CHANGELOG y en las notas de la
+  release, no en el tag.
+- `-paperdiy` solo queda en el nombre del asset OTA
+  (`crosspoint-v2.1.0-paperdiy.bin`), porque es el board tag que espera la OTA.
+- El workflow de release valida tag y versión con
+  `scripts/check_release_version.py`.
 - Changelog con: upstream base, cambios PaperDIY, hardware validado, notas de
   flash.
 - `firmware.factory.bin` siempre probado en una unidad antes de publicar.
+- Regla operativa para agentes:
+  [`release-versioning.md`](../../.agents/rules/release-versioning.md).
 
 ## Qué se queda downstream
 

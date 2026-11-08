@@ -278,7 +278,8 @@ Probado con `paperdiy-test` sobre `paperdiy-m5gfx`: upstream CrossPoint
 - Arranque, Home, menú, Ajustes, Sistema, Lector, About, Biblioteca y lector:
   correctos. La captura de Home mostró la portada y el libro reciente sin
   artefactos.
-- About: `2.0.0-paperdiy`, ESP32-S3 rev 2, 16 MB, SD 7,4 GB (555 MB usados),
+- About: `2.0.0-paperdiy` en el build de prueba (la release `v2.1.0` reporta
+  `2.1.0`), ESP32-S3 rev 2, 16 MB, SD 7,4 GB (555 MB usados),
   batería 4,14 V, `LovyanGFX EPD` a 960×540, sin táctil/frontlight/RTC/IMU.
 - Paginación: 1/31 → 2/31 → 6/31 → 4/31 con A/B, sin entradas perdidas.
 - Orientación: vertical, horizontal horario y horizontal antihorario. En

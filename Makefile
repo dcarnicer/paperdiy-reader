@@ -8,7 +8,7 @@ PIO       ?= pio
 ENV       ?= paperdiy
 CORE_DIR  ?= $(CURDIR)/.platformio-core
 PORT      ?=
-LAUNCHER_VERSION ?= 0.1.0
+LAUNCHER_VERSION ?= 2.1.0
 
 PIO_RUN = PLATFORMIO_CORE_DIR="$(CORE_DIR)" $(PIO) run -e $(ENV)
 UPLOAD_PORT = $(if $(PORT),--upload-port "$(PORT)",)

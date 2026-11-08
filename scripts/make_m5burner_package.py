@@ -6,7 +6,7 @@ whose files are named <name>_<hex-address>.bin. We ship the combined factory
 image at 0x0 so bootloader, partition table and app stay together.
 
 Usage:
-    python3 scripts/make_m5burner_package.py --version 2.0.0-paperdiy.1
+    python3 scripts/make_m5burner_package.py --version 2.1.0
 """
 from __future__ import annotations
 
@@ -55,7 +55,7 @@ def build_license(output: Path, repository: str) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--version", default="0.1.0")
+    parser.add_argument("--version", default="2.1.0")
     parser.add_argument("--build-dir", type=Path, default=DEFAULT_BUILD)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--cover", type=Path, default=DEFAULT_COVER)

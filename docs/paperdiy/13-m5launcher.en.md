@@ -113,18 +113,18 @@ The file must be the app binary; Launcher recognizes it by the ESP image header
 
 ```bash
 make build ENV=paperdiy
-python3 scripts/make_launcher_package.py --version 0.1.0
+python3 scripts/make_launcher_package.py --version 2.1.0
 ```
 
 The script produces:
 
 ```
 dist/launcher/
-├── PaperDIYReader-0.1.0-launcher.bin
+├── PaperDIYReader-2.1.0-launcher.bin
 └── README.md
 ```
 
-`make launcher LAUNCHER_VERSION=0.1.0` does the same. The release workflow also
+`make launcher LAUNCHER_VERSION=2.1.0` does the same. The release workflow also
 publishes `PaperDIYReader-<tag>-launcher.bin` and the stable
 `PaperDIYReader-launcher.bin` alias next to the factory image.
 

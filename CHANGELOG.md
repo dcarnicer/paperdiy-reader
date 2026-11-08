@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.1.0-paperdiy.1 — 2026-11-08
+## 2.1.0 — 2026-11-08
 
 Primera release sobre CrossPoint `818a1540`. Incluye el sync del motor, la
 actualización de expat/ArduinoJson/NimBLE/M5GFX y las correcciones encontradas
