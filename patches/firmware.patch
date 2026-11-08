@@ -58,10 +58,10 @@ index 7640f1df..d417b345 100644
  STR_LONG_PRESS_BEHAVIOR_OFF: "Desactivat"
  STR_LONG_PRESS_BEHAVIOR_SKIP: "Saltar capítols"
 diff --git a/lib/I18n/translations/english.yaml b/lib/I18n/translations/english.yaml
-index 72d5bb5c..7eb91f79 100644
+index 72d5bb5c..7648bb4b 100644
 --- a/lib/I18n/translations/english.yaml
 +++ b/lib/I18n/translations/english.yaml
-@@ -179,6 +179,13 @@ STR_MOVE_FINISHED_TO_READ: "Move Finished Books to Read Folder"
+@@ -179,6 +179,14 @@ STR_MOVE_FINISHED_TO_READ: "Move Finished Books to Read Folder"
  STR_REFRESH_FREQ: "Refresh Frequency"
  STR_KOREADER_SYNC: "CrossPoint Sync"
  STR_CHECK_UPDATES: "Check for Updates"
@@ -69,12 +69,22 @@ index 72d5bb5c..7eb91f79 100644
 +STR_EXIT_TO_LAUNCHER: "Exit to M5Launcher"
 +STR_EXIT_TO_LAUNCHER_CONFIRM: "The reader will restart into M5Launcher."
 +STR_LAUNCHER_UPDATE_HINT: "Install it from M5Launcher > OTA"
++STR_LAUNCHER_DELETE_OLD: "Then delete the old copy in Launcher"
 +STR_LAUNCHER_HOLD_KEY: "Hold %s to open M5Launcher"
 +STR_LAUNCHER_HOLD_KEY_HINT: "Keep holding it until M5Launcher appears. Press another button to cancel."
 +STR_LAUNCHER_HOLD_KEY_AT_POWER_ON: "Turn the reader off, then hold it while turning it on. Press another button to cancel."
  STR_LANGUAGE: "Language"
  STR_KEYBOARD_LAYOUTS: "Keyboard Layouts"
  STR_ABOUT: "About"
+@@ -599,7 +607,7 @@ STR_FIRMWARE_FILE_OPEN_FAILED: "Cannot open file"
+ STR_FIRMWARE_WRITE_FAILED: "Firmware write failed"
+ STR_FIRMWARE_UPDATE_DO_NOT_POWER_OFF: "Do not power off!"
+ STR_RECOVERY_MODE: "Recovery Mode"
+-STR_RECOVERY_MODE_HINT: "Place firmware.bin on SD card root and select it"
++STR_RECOVERY_MODE_HINT: "Copy the -ota.bin firmware to the SD root and select it"
+ 
+ STR_HOME_SHORTCUT: "Home"
+ STR_HOME_BUTTON: "Home Button Gestures"
 diff --git a/lib/I18n/translations/portuguese-BR.yaml b/lib/I18n/translations/portuguese-BR.yaml
 index 0c4bd985..0e858add 100644
 --- a/lib/I18n/translations/portuguese-BR.yaml
@@ -112,7 +122,7 @@ index 62fc34c9..609b6a09 100644
  STR_LONG_PRESS_BEHAVIOR_OFF: "Dezactivat"
  STR_LONG_PRESS_BEHAVIOR_SKIP: "Sărire capitol"
 diff --git a/lib/I18n/translations/spanish.yaml b/lib/I18n/translations/spanish.yaml
-index 215e8fec..7fb36b56 100644
+index 215e8fec..9c2ecb13 100644
 --- a/lib/I18n/translations/spanish.yaml
 +++ b/lib/I18n/translations/spanish.yaml
 @@ -121,6 +121,7 @@ STR_HAPTIC_MEDIUM: "Media"
@@ -123,7 +133,7 @@ index 215e8fec..7fb36b56 100644
  STR_LONG_PRESS_BEHAVIOR: "Al mantener pulsado un botón"
  STR_LONG_PRESS_BEHAVIOR_OFF: "No hacer nada"
  STR_LONG_PRESS_BEHAVIOR_SKIP: "Saltar capítulo"
-@@ -173,6 +174,13 @@ STR_MOVE_FINISHED_TO_READ: "Mover libros terminados a la carpeta Read"
+@@ -173,6 +174,14 @@ STR_MOVE_FINISHED_TO_READ: "Mover libros terminados a la carpeta Read"
  STR_REFRESH_FREQ: "Frecuencia de refresco"
  STR_KOREADER_SYNC: "CrossPoint Sync"
  STR_CHECK_UPDATES: "Verificar actualizaciones"
@@ -131,13 +141,14 @@ index 215e8fec..7fb36b56 100644
 +STR_EXIT_TO_LAUNCHER: "Salir a M5Launcher"
 +STR_EXIT_TO_LAUNCHER_CONFIRM: "El lector se reiniciará en M5Launcher."
 +STR_LAUNCHER_UPDATE_HINT: "Instálala desde M5Launcher > OTA"
++STR_LAUNCHER_DELETE_OLD: "Después borra la versión anterior en Launcher"
 +STR_LAUNCHER_HOLD_KEY: "Mantén pulsado %s para abrir M5Launcher"
 +STR_LAUNCHER_HOLD_KEY_HINT: "No lo sueltes hasta que aparezca M5Launcher. Pulsa otro botón para cancelar."
 +STR_LAUNCHER_HOLD_KEY_AT_POWER_ON: "Apaga el lector y mantenlo pulsado al encenderlo. Pulsa otro botón para cancelar."
  STR_LANGUAGE: "Idioma"
  STR_KEYBOARD_LAYOUTS: "Distribuciones de teclado"
  STR_CLEAR_READING_CACHE: "Borrar caché de lectura"
-@@ -246,6 +254,7 @@ STR_INVERTED_TAP: "Toque invertido"
+@@ -246,6 +255,7 @@ STR_INVERTED_TAP: "Toque invertido"
  STR_KOSYNC: "CrossPoint Sync"
  STR_BOOKMARK_OPTION: "Marcador"
  STR_DICTIONARY: "Diccionario"
@@ -145,6 +156,15 @@ index 215e8fec..7fb36b56 100644
  STR_READER_MENU: "Menú de lectura"
  STR_DISABLED: "Desactivado"
  STR_NOTO_SANS: "Noto Sans"
+@@ -545,7 +555,7 @@ STR_FIRMWARE_FILE_OPEN_FAILED: "No se puede abrir el archivo"
+ STR_FIRMWARE_WRITE_FAILED: "Falló la escritura del firmware"
+ STR_FIRMWARE_UPDATE_DO_NOT_POWER_OFF: "¡No apague el dispositivo!"
+ STR_RECOVERY_MODE: "Modo de recuperación"
+-STR_RECOVERY_MODE_HINT: "Copie firmware.bin a la raíz de la SD y elíjalo"
++STR_RECOVERY_MODE_HINT: "Copia el firmware -ota.bin a la raíz de la SD y elígelo"
+ STR_ADD_HIDDEN_NETWORK: "Añadir red oculta..."
+ STR_ENTER_WIFI_SSID: "Introduce el nombre de la red (SSID)"
+ STR_DBL_CLICK_PWR_LIGHT: "Doble pulsación de encendido: luz"
 diff --git a/lib/I18n/translations/valencian.yaml b/lib/I18n/translations/valencian.yaml
 index 65db2fde..49862530 100644
 --- a/lib/I18n/translations/valencian.yaml
@@ -350,7 +370,7 @@ index bee6736b..692a5584 100644
    // the bus pads (no-op on SPI boards). Call only after all file users have
    // stopped; open HalFiles become invalid. A deep-sleep wake resets the MCU and
 diff --git a/platformio.ini b/platformio.ini
-index 53531bf7..cff1379e 100644
+index 53531bf7..873a4541 100644
 --- a/platformio.ini
 +++ b/platformio.ini
 @@ -4,7 +4,7 @@ build_cache_dir = .cache
@@ -358,7 +378,7 @@ index 53531bf7..cff1379e 100644
  
  [crosspoint]
 -version = 2.0.0
-+version = 2.0.0-paperdiy.1
++version = 2.0.0-1
  
  [base]
  platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip
@@ -380,7 +400,7 @@ index 53531bf7..cff1379e 100644
  build_flags =
    -DFREEINK_CAP_BLE_HID_HOST=1
    -DCONFIG_BT_NIMBLE_ROLE_PERIPHERAL_DISABLED=1
-@@ -625,6 +625,44 @@ build_flags =
+@@ -625,6 +625,45 @@ build_flags =
    -DLOG_LEVEL=1 ; Set log level to info for release candidate builds
    -DUSE_BLOCK_DEVICE_INTERFACE=1
  
@@ -403,11 +423,12 @@ index 53531bf7..cff1379e 100644
 +  -DUSB_PRODUCT=\"CrossPoint_PaperDIY\"
 +  -DUSB_MANUFACTURER=\"CrossPoint\"
 +  -DCROSSPOINT_VERSION=\"${crosspoint.version}\"
++  -DCROSSPOINT_OTA_ASSET_FORMAT=\"crosspoint-paperdiy-%%s-ota.bin\"
 +  -DENABLE_SERIAL_LOG
 +  -DLOG_LEVEL=2
-+  ; Fork OTA: uncomment and point at THIS fork before publishing releases.
-+  ; The default (official CrossPoint) is safe because no -paperdiy asset exists.
-+  ; -DCROSSPOINT_OTA_RELEASES_URL=\"https://api.github.com/repos/YOURUSER/paperdiy-reader/releases/latest\"
++  ; Standalone OTA checks this fork's releases for the app-only asset named
++  ; by CROSSPOINT_OTA_ASSET_FORMAT (see .agents/rules/release-versioning.md).
++  -DCROSSPOINT_OTA_RELEASES_URL=\"https://api.github.com/repos/dcarnicer/paperdiy-reader/releases/latest\"
 +lib_deps =
 +  ${base.lib_deps}
 +  BoardPaperDiy=symlink://freeink-sdk/libs/hardware/BoardPaperDiy
@@ -829,7 +850,7 @@ index 00000000..1e78779a
 +  void render(RenderLock&&) override;
 +};
 diff --git a/src/activities/settings/OtaUpdateActivity.cpp b/src/activities/settings/OtaUpdateActivity.cpp
-index b3e54ada..c50456d1 100644
+index b3e54ada..a22524c5 100644
 --- a/src/activities/settings/OtaUpdateActivity.cpp
 +++ b/src/activities/settings/OtaUpdateActivity.cpp
 @@ -4,12 +4,14 @@
@@ -908,18 +929,21 @@ index b3e54ada..c50456d1 100644
  }
  
  void OtaUpdateActivity::render(RenderLock&&) {
-@@ -131,6 +159,10 @@ void OtaUpdateActivity::render(RenderLock&&) {
+@@ -131,6 +159,13 @@ void OtaUpdateActivity::render(RenderLock&&) {
                        (std::string(tr(STR_CURRENT_VERSION)) + CROSSPOINT_VERSION).c_str());
      renderer.drawText(UI_10_FONT_ID, metrics.contentSidePadding, infoTop + height + metrics.verticalSpacing,
                        (std::string(tr(STR_NEW_VERSION)) + updater.getLatestVersion()).c_str());
 +    if (launcherManaged) {
++      // Launcher installs the new version next to the old one.
 +      renderer.drawText(UI_10_FONT_ID, metrics.contentSidePadding, infoTop + 2 * (height + metrics.verticalSpacing),
 +                        tr(STR_LAUNCHER_UPDATE_HINT));
++      renderer.drawText(UI_10_FONT_ID, metrics.contentSidePadding, infoTop + 3 * (height + metrics.verticalSpacing),
++                        tr(STR_LAUNCHER_DELETE_OLD));
 +    }
  
      if (confirmPopup.processRender(renderer, mappedInput)) return;
    } else if (state == UPDATE_IN_PROGRESS) {
-@@ -192,7 +224,9 @@ void OtaUpdateActivity::runUpdateInstall() {
+@@ -192,7 +227,9 @@ void OtaUpdateActivity::runUpdateInstall() {
      LOG_DBG("OTA", "Update failed: %d", res);
      {
        RenderLock lock(*this);
@@ -1436,10 +1460,10 @@ index a60b0d2f..1885e9fb 100644
  // Progress callback: called after every chunk write. `written`/`total` are bytes.
 diff --git a/src/network/FirmwareVersion.cpp b/src/network/FirmwareVersion.cpp
 new file mode 100644
-index 00000000..f43e725e
+index 00000000..66635873
 --- /dev/null
 +++ b/src/network/FirmwareVersion.cpp
-@@ -0,0 +1,52 @@
+@@ -0,0 +1,56 @@
 +#include "FirmwareVersion.h"
 +
 +#include <cstdlib>
@@ -1471,13 +1495,17 @@ index 00000000..f43e725e
 +    ++p;
 +  }
 +
-+  const char* revision = std::strstr(text, "-paperdiy.");
-+  if (revision != nullptr) v.revision = readNumber(revision + std::strlen("-paperdiy."));
++  // The port revision is the number right after the CrossPoint version.
++  if (p[0] == '-' && p[1] >= '0' && p[1] <= '9') {
++    char* end = nullptr;
++    v.revision = static_cast<int>(std::strtol(p + 1, &end, 10));
++    p = end;
++  }
 +
-+  const char* rc = std::strstr(text, "-rc");
++  const char* rc = std::strstr(p, "-rc");
 +  if (rc != nullptr) {
 +    v.preRelease = rc[3] == '.' ? readNumber(rc + 4) : 0;
-+  } else if (std::strstr(text, "-dev") != nullptr) {
++  } else if (std::strstr(p, "-dev") != nullptr) {
 +    v.preRelease = 0;
 +  }
 +  return v;
@@ -1494,14 +1522,14 @@ index 00000000..f43e725e
 +}  // namespace firmware_version
 diff --git a/src/network/FirmwareVersion.h b/src/network/FirmwareVersion.h
 new file mode 100644
-index 00000000..6a9001ec
+index 00000000..81fd80bf
 --- /dev/null
 +++ b/src/network/FirmwareVersion.h
 @@ -0,0 +1,26 @@
 +#pragma once
 +
-+// PaperDIY release versions: <CrossPoint X.Y.Z>-paperdiy.<N>[-rc.<M>], with an
-+// optional leading "v" on tags (see .agents/rules/release-versioning.md).
++// PaperDIY release versions: <CrossPoint X.Y.Z>-<N>[-rc.<M>], e.g. 2.0.0-1, with
++// an optional leading "v" on tags (see .agents/rules/release-versioning.md).
 +// Ordering: CrossPoint version, then the port revision N, then a release
 +// candidate before its final release. A missing segment or revision is 0, and
 +// any "-rc"/"-dev" suffix counts as a pre-release of that version.
@@ -1525,7 +1553,7 @@ index 00000000..6a9001ec
 +
 +}  // namespace firmware_version
 diff --git a/src/network/OtaUpdater.cpp b/src/network/OtaUpdater.cpp
-index 1f64b229..5ae45b26 100644
+index 1f64b229..651e6904 100644
 --- a/src/network/OtaUpdater.cpp
 +++ b/src/network/OtaUpdater.cpp
 @@ -11,18 +11,151 @@
@@ -1681,7 +1709,15 @@ index 1f64b229..5ae45b26 100644
    LOG_DBG("OTA", "Checking for update (current: %s)", CROSSPOINT_VERSION);
  
    // Stream the ~32KB release JSON straight into the parser as it arrives.
-@@ -46,7 +179,7 @@ OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
+@@ -40,13 +173,15 @@ OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
+   releaseParser.setFirmwareAssetName("");
+   // Each board updates from crosspoint-<version>-<device>.bin. The combined
+   // C3 image uses x3-x4; other asset suffixes match their firmware board tag.
++  // A fork can instead set CROSSPOINT_OTA_ASSET_FORMAT, a printf format whose
++  // %s is the release version (tag without the leading "v").
+   const bool isX4 = board_tag::boardNameLen() == 2 && memcmp(board_tag::boardName(), "x4", 2) == 0;
+   char assetSuffix[20] = "-x3-x4";
+   if (!isX4) {
      snprintf(assetSuffix, sizeof(assetSuffix), "-%.*s", static_cast<int>(board_tag::boardNameLen()),
               board_tag::boardName());
    }
@@ -1690,7 +1726,21 @@ index 1f64b229..5ae45b26 100644
    bool assetNameSet = false;
    const bool ok = HttpDownloader::fetchUrl(latestReleaseUrl, [&](const uint8_t* data, size_t len) {
      size_t offset = 0;
-@@ -96,47 +229,20 @@ bool OtaUpdater::isUpdateNewer() const {
+@@ -54,7 +189,13 @@ OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
+       releaseParser.feed(reinterpret_cast<const char*>(data + offset), 1);
+       offset++;
+       if (releaseParser.foundTag()) {
++#ifdef CROSSPOINT_OTA_ASSET_FORMAT
++        const char* version = releaseParser.getTagName();
++        if (*version == 'v' || *version == 'V') ++version;
++        snprintf(assetName, sizeof(assetName), CROSSPOINT_OTA_ASSET_FORMAT, version);
++#else
+         snprintf(assetName, sizeof(assetName), "crosspoint-%s%s.bin", releaseParser.getTagName(), assetSuffix);
++#endif
+         releaseParser.setFirmwareAssetName(assetName);
+         assetNameSet = true;
+       }
+@@ -96,47 +237,20 @@ bool OtaUpdater::isUpdateNewer() const {
      return false;
    }
  
