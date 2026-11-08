@@ -2,6 +2,8 @@ name: build-paperdiy
 
 on:
   push:
+    branches:
+      - paperdiy
   pull_request:
   workflow_dispatch:
 
