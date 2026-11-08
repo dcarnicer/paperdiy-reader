@@ -101,6 +101,13 @@ tocar un cable ni leer documentación técnica.
       ESP32-S3) y el teclado HID BLE emulado desde macOS se ve pero falla al
       emparejar. Falta un mando BLE real.
 - [x] USB MSC probado (exponer SD).
+- [ ] Rehabilitar la OTA bajo M5Launcher: investigar una actualización segura
+      que no pise otras apps ni el registro de Launcher. Opciones: delegar en
+      Launcher (URL/intent), pedir a Launcher que instale el asset, escribir
+      solo la partición activa con rollback, o reservar un slot. Criterios: no
+      tocar otras apps, verificar chip/board tag, rollback y probar con
+      Launcher 3.0.0+. Estado actual: OTA interna desactivada
+      (`LAUNCHER_MANAGED`); ver `13-m5launcher.md`.
 - [ ] Screenshots y sleep screens personalizables.
 
 **Criterio de salida:** el PaperDIY compite con un Kindle básico en lectura,
@@ -140,6 +147,7 @@ aunque sin táctil/frontlight.
 | Diccionario español | Alto | Bajo/Medio | 2 |
 | OPDS/Calibre/web UI | Alto | Bajo (heredado) | 2 |
 | BLE page turner | Alto | Bajo (heredado) | 2 |
+| OTA bajo Launcher | Alto | Alto | 2 |
 | FB2/MD/HTML | Medio | Alto | 3 |
 | CBZ | Medio | Medio | 3 |
 | PDF conversión | Medio | Alto | 3 |

@@ -59,6 +59,11 @@ def write_readme(output_dir: Path, version: str, repository: str, digest: str) -
 App-only firmware for the **M5Stack PaperDIY** (ESP32-S3, 16 MB flash).
 This is not a full factory image and must not be flashed at `0x0`.
 
+> **In-app OTA does not work under M5Launcher.** The reader detects Launcher
+> and refuses to write OTA partitions. Update by installing the newer
+> `PaperDIYReader-launcher.bin` from Launcher. Do not flash `firmware.bin` at
+> `0x10000` while Launcher is installed.
+
 ## Install
 
 1. Copy `{FIRMWARE_SLUG}-launcher.bin` (the stable alias) to a FAT32/exFAT SD
@@ -98,10 +103,15 @@ Open **Settings > General > Exit to M5Launcher**:
 
 ## Updates
 
-When the reader runs under M5Launcher, in-app OTA and SD firmware updates are
-disabled: Launcher owns the OTA slots, and writing to the "next" slot could
-overwrite another installed app. Update by installing a newer app-only `.bin`
-from Launcher. Books, settings and caches live on the SD card and are kept.
+In-app OTA and SD firmware updates are intentionally disabled under
+M5Launcher: the reader runs from a dynamic OTA partition and writing the
+"next" slot could overwrite another installed app or Launcher's registry.
+`OtaUpdater` returns `LAUNCHER_MANAGED` and `FirmwareFlasher` refuses the
+write even if the UI is bypassed.
+
+Update by installing a newer app-only `PaperDIYReader-launcher.bin` from
+Launcher (SD, WebUI or Favorites). Books, settings and caches live on the SD
+card and are kept. See `docs/paperdiy/13-m5launcher.en.md`.
 
 ## Source and license
 

@@ -200,7 +200,13 @@ make launcher LAUNCHER_VERSION=2.1.0
 Usa siempre el alias estable `PaperDIYReader-launcher.bin` para instalar y
 actualizar: Launcher crea una app por nombre de archivo, así que el archivo
 versionado crearía una app nueva en cada actualización. Cópialo a la SD y usa
-`SD > Install` en Launcher. El lector detecta Launcher y
+`SD > Install` en Launcher.
+
+> **OTA bajo Launcher:** las actualizaciones internas no funcionan bajo
+> M5Launcher. Actualiza instalando `PaperDIYReader-launcher.bin` desde
+> Launcher; no flashees `firmware.bin` en `0x10000` con Launcher instalado.
+
+El lector detecta Launcher y
 muestra `Ajustes > General > Salir a M5Launcher`; las actualizaciones internas
 se ocultan porque Launcher es quien gestiona las particiones OTA. Para que el
 lector despierte sin pasar por la pantalla de Launcher, configura en Launcher

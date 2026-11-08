@@ -76,6 +76,19 @@ root, so the A key and `DDLB` also survive. What is lost when the flash is
 erased is the reader's Wi-Fi credentials (`nvs.net80211`); they must be entered
 again.
 
+## OTA and updates
+
+| Installation | In-app OTA | How to update |
+|---|---|---|
+| Standalone | Yes, `crosspoint-<tag>-paperdiy.bin` via `Check for Updates` | OTA or SD |
+| Under M5Launcher | **No** (`LAUNCHER_MANAGED`) | Install `PaperDIYReader-launcher.bin` from Launcher |
+
+Under Launcher the app runs from a dynamic OTA partition. Writing the "next"
+partition could overwrite another installed app or corrupt Launcher's
+registry, so the update rows are hidden and the updater refuses the write even
+if reached another way. The roadmap includes investigating a safe
+Launcher-managed update path; see `05-roadmap.md`.
+
 ## Install
 
 Requirements:

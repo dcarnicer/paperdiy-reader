@@ -172,6 +172,12 @@ prefijo `v` y compara los tres primeros segmentos. El asset que consume la OTA
 se llama `crosspoint-v2.1.0-paperdiy.bin`: el sufijo `-paperdiy` es el board
 tag, no la versión.
 
+Bajo M5Launcher la OTA interna está **desactivada por diseño**: `OtaUpdater`
+devuelve `LAUNCHER_MANAGED` y `FirmwareFlasher` rechaza escribir otra
+partición. La actualización va por el paquete de Launcher
+(`PaperDIYReader-launcher.bin`), no por `Buscar actualizaciones`. Ver
+`13-m5launcher.md`.
+
 **No publiques** un `firmware.factory.bin` con `ota_0` si estás usando el
 dual-boot de la PR de prateek; aquí no lo usamos.
 
@@ -232,4 +238,6 @@ eso.
 - [ ] Batería/carga, sleep current, autonomía.
 - [ ] SD, Wi-Fi, OPDS/Calibre, OTA.
 - [ ] Recuperación por download mode.
+- [ ] Release notes incluyen el aviso de OTA bajo M5Launcher y el enlace a
+      `13-m5launcher.md`.
 - [ ] Changelog y artefactos.

@@ -8,6 +8,13 @@ aplicaciones desde particiones OTA dinámicas. La versión 3.0.0 incluye el port
 del **M5Stack PaperDIY**, así que el lector puede convivir con otros firmwares
 en la misma placa.
 
+> **OTA bajo M5Launcher: no disponible.** La app detecta Launcher y desactiva
+> las actualizaciones internas (`OtaUpdater` devuelve `LAUNCHER_MANAGED` y
+> `FirmwareFlasher` rechaza escribir otra partición). Actualiza instalando
+> `PaperDIYReader-launcher.bin` desde Launcher. **No flashees `firmware.bin`
+> en `0x10000`** con Launcher instalado: sobrescribirías su partición
+> residente.
+
 ## Configuración recomendada
 
 Por defecto, Launcher muestra su pantalla en **cada encendido**, y en el
@@ -76,6 +83,19 @@ app o a borrar la flash. Launcher guarda además su propia configuración en
 `/config.conf` en la raíz de la SD, así que la tecla A y `DDLB` también se
 conservan. Lo que sí se pierde al borrar la flash son las credenciales Wi-Fi
 del lector (`nvs.net80211`); hay que volver a introducirlas.
+
+## OTA y actualizaciones
+
+| Instalación | OTA interna | Cómo actualizar |
+|---|---|---|
+| Standalone | Sí, `crosspoint-<tag>-paperdiy.bin` desde `Buscar actualizaciones` | OTA o SD |
+| Bajo M5Launcher | **No** (`LAUNCHER_MANAGED`) | Instalar `PaperDIYReader-launcher.bin` desde Launcher |
+
+Bajo Launcher la app corre en una partición OTA dinámica. Escribir la
+"siguiente" partición podría machacar otra app instalada o romper el registro
+de Launcher, así que se ocultan las opciones y el actualizador rechaza la
+escritura aunque se llegue por otra vía. El roadmap incluye investigar una
+actualización segura gestionada por Launcher; ver `05-roadmap.md`.
 
 ## Instalar
 
