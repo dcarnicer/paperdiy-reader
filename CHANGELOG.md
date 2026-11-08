@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-08 — correcciones de la prueba en hardware
+
+- `VocabularyStore`: elimina el terminador NUL de las definiciones StarDict y
+  ya no marca `definition_truncated` cuando el único recorte era ese byte.
+- Traducido al español el nuevo ajuste `Guardar vocabulario`.
+- Verificado en un PaperDIY real: arranque, Home, menús, About, lector,
+  paginación, orientación vertical/horizontal y USB MSC. Diccionario StarDict
+  y `/Vocabulary.txt` probados con un diccionario de prueba.
+
 ## 2026-11-08 — dependencias (pendiente de smoke hardware)
 
 - expat vendorizado actualizado de 2.7.3 a 2.10.0. El firmware usa el RNG del
