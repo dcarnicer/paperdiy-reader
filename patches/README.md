@@ -30,7 +30,7 @@ Generación:
 git diff sdk-baseline..paperdiy -- freeink-sdk > patches/sdk.patch
 
 # firmware.patch: diff de todo el código no-SDK propio (incluye traducciones)
-git diff main..paperdiy -- platformio.ini src lib/GfxRenderer lib/hal lib/I18n/translations > patches/firmware.patch
+git diff main..paperdiy -- platformio.ini src lib/GfxRenderer lib/hal lib/JsonParser lib/I18n/translations > patches/firmware.patch
 
 cat patches/sdk.patch patches/firmware.patch > patches/paperdiy-support.patch
 ```

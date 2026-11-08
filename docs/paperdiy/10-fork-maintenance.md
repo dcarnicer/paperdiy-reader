@@ -120,7 +120,7 @@ Después del merge hay que regenerar los parches contra las bases nuevas. El
 ```bash
 # sdk-baseline debe tener el SDK pristine del pin actual, sin cambios del port.
 git diff sdk-baseline..paperdiy -- freeink-sdk > patches/sdk.patch
-git diff main..paperdiy -- platformio.ini src lib/GfxRenderer lib/hal lib/I18n/translations > patches/firmware.patch
+git diff main..paperdiy -- platformio.ini src lib/GfxRenderer lib/hal lib/JsonParser lib/I18n/translations > patches/firmware.patch
 cat patches/sdk.patch patches/firmware.patch > patches/paperdiy-support.patch
 git apply --check patches/sdk.patch   # sobre un worktree de sdk-baseline
 git apply --check patches/firmware.patch  # sobre un worktree de main

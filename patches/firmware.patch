@@ -58,16 +58,17 @@ index 7640f1df..d417b345 100644
  STR_LONG_PRESS_BEHAVIOR_OFF: "Desactivat"
  STR_LONG_PRESS_BEHAVIOR_SKIP: "Saltar capítols"
 diff --git a/lib/I18n/translations/english.yaml b/lib/I18n/translations/english.yaml
-index 72d5bb5c..55cc8a94 100644
+index 72d5bb5c..7eb91f79 100644
 --- a/lib/I18n/translations/english.yaml
 +++ b/lib/I18n/translations/english.yaml
-@@ -179,6 +179,12 @@ STR_MOVE_FINISHED_TO_READ: "Move Finished Books to Read Folder"
+@@ -179,6 +179,13 @@ STR_MOVE_FINISHED_TO_READ: "Move Finished Books to Read Folder"
  STR_REFRESH_FREQ: "Refresh Frequency"
  STR_KOREADER_SYNC: "CrossPoint Sync"
  STR_CHECK_UPDATES: "Check for Updates"
 +STR_UPDATE_VIA_LAUNCHER: "Use M5Launcher to update"
 +STR_EXIT_TO_LAUNCHER: "Exit to M5Launcher"
 +STR_EXIT_TO_LAUNCHER_CONFIRM: "The reader will restart into M5Launcher."
++STR_LAUNCHER_UPDATE_HINT: "Install it from M5Launcher > OTA"
 +STR_LAUNCHER_HOLD_KEY: "Hold %s to open M5Launcher"
 +STR_LAUNCHER_HOLD_KEY_HINT: "Keep holding it until M5Launcher appears. Press another button to cancel."
 +STR_LAUNCHER_HOLD_KEY_AT_POWER_ON: "Turn the reader off, then hold it while turning it on. Press another button to cancel."
@@ -111,7 +112,7 @@ index 62fc34c9..609b6a09 100644
  STR_LONG_PRESS_BEHAVIOR_OFF: "Dezactivat"
  STR_LONG_PRESS_BEHAVIOR_SKIP: "Sărire capitol"
 diff --git a/lib/I18n/translations/spanish.yaml b/lib/I18n/translations/spanish.yaml
-index 215e8fec..5ff024fa 100644
+index 215e8fec..7fb36b56 100644
 --- a/lib/I18n/translations/spanish.yaml
 +++ b/lib/I18n/translations/spanish.yaml
 @@ -121,6 +121,7 @@ STR_HAPTIC_MEDIUM: "Media"
@@ -122,19 +123,28 @@ index 215e8fec..5ff024fa 100644
  STR_LONG_PRESS_BEHAVIOR: "Al mantener pulsado un botón"
  STR_LONG_PRESS_BEHAVIOR_OFF: "No hacer nada"
  STR_LONG_PRESS_BEHAVIOR_SKIP: "Saltar capítulo"
-@@ -173,6 +174,12 @@ STR_MOVE_FINISHED_TO_READ: "Mover libros terminados a la carpeta Read"
+@@ -173,6 +174,13 @@ STR_MOVE_FINISHED_TO_READ: "Mover libros terminados a la carpeta Read"
  STR_REFRESH_FREQ: "Frecuencia de refresco"
  STR_KOREADER_SYNC: "CrossPoint Sync"
  STR_CHECK_UPDATES: "Verificar actualizaciones"
 +STR_UPDATE_VIA_LAUNCHER: "Actualiza desde M5Launcher"
 +STR_EXIT_TO_LAUNCHER: "Salir a M5Launcher"
 +STR_EXIT_TO_LAUNCHER_CONFIRM: "El lector se reiniciará en M5Launcher."
++STR_LAUNCHER_UPDATE_HINT: "Instálala desde M5Launcher > OTA"
 +STR_LAUNCHER_HOLD_KEY: "Mantén pulsado %s para abrir M5Launcher"
 +STR_LAUNCHER_HOLD_KEY_HINT: "No lo sueltes hasta que aparezca M5Launcher. Pulsa otro botón para cancelar."
 +STR_LAUNCHER_HOLD_KEY_AT_POWER_ON: "Apaga el lector y mantenlo pulsado al encenderlo. Pulsa otro botón para cancelar."
  STR_LANGUAGE: "Idioma"
  STR_KEYBOARD_LAYOUTS: "Distribuciones de teclado"
  STR_CLEAR_READING_CACHE: "Borrar caché de lectura"
+@@ -246,6 +254,7 @@ STR_INVERTED_TAP: "Toque invertido"
+ STR_KOSYNC: "CrossPoint Sync"
+ STR_BOOKMARK_OPTION: "Marcador"
+ STR_DICTIONARY: "Diccionario"
++STR_SAVE_VOCABULARY_LOOKUPS: "Guardar vocabulario"
+ STR_READER_MENU: "Menú de lectura"
+ STR_DISABLED: "Desactivado"
+ STR_NOTO_SANS: "Noto Sans"
 diff --git a/lib/I18n/translations/valencian.yaml b/lib/I18n/translations/valencian.yaml
 index 65db2fde..49862530 100644
 --- a/lib/I18n/translations/valencian.yaml
@@ -147,6 +157,22 @@ index 65db2fde..49862530 100644
  STR_LONG_PRESS_BEHAVIOR: "Acció en mantindre premut un botó"
  STR_LONG_PRESS_BEHAVIOR_OFF: "Desactivat"
  STR_LONG_PRESS_BEHAVIOR_SKIP: "Saltar capítols"
+diff --git a/lib/JsonParser/ReleaseJsonParser.h b/lib/JsonParser/ReleaseJsonParser.h
+index 2a3571f6..e25b4585 100644
+--- a/lib/JsonParser/ReleaseJsonParser.h
++++ b/lib/JsonParser/ReleaseJsonParser.h
+@@ -65,9 +65,9 @@ class ReleaseJsonParser {
+   bool tagFound;
+   bool firmwareFound;
+ 
+-  char currentAssetName[48];
++  char currentAssetName[64];
+   char currentAssetUrl[512];
+   size_t currentAssetSize;
+ 
+-  char firmwareAssetName[48];
++  char firmwareAssetName[64];
+ };
 diff --git a/lib/hal/HalDisplay.cpp b/lib/hal/HalDisplay.cpp
 index 2b3c8c6a..89ff7744 100644
 --- a/lib/hal/HalDisplay.cpp
@@ -324,9 +350,36 @@ index bee6736b..692a5584 100644
    // the bus pads (no-op on SPI boards). Call only after all file users have
    // stopped; open HalFiles become invalid. A deep-sleep wake resets the MCU and
 diff --git a/platformio.ini b/platformio.ini
-index 53531bf7..e74256fa 100644
+index 53531bf7..cff1379e 100644
 --- a/platformio.ini
 +++ b/platformio.ini
+@@ -4,7 +4,7 @@ build_cache_dir = .cache
+ extra_configs = platformio.local.ini
+ 
+ [crosspoint]
+-version = 2.0.0
++version = 2.0.0-paperdiy.1
+ 
+ [base]
+ platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip
+@@ -171,7 +171,7 @@ lib_deps =
+   ; .ttf/.otf rendering). Vendors only stb_truetype + FreeType (no expat), so it
+   ; does not hit the FreeInkBook duplicate-XML_* symbol problem.
+   FreeInkFont=symlink://freeink-sdk/libs/font/FreeInkFont
+-  bblanchon/ArduinoJson @ 7.4.2
++  bblanchon/ArduinoJson @ 7.4.3
+   ; Pinned for the reviewed cache patches in scripts/sdfat_patches/.
+   greiman/SdFat @ 2.3.1
+   ricmoo/QRCode @ 0.0.1
+@@ -278,7 +278,7 @@ custom_sdkconfig =
+   CONFIG_BT_NIMBLE_TRANSPORT_ACL_FROM_LL_COUNT=8
+ lib_deps =
+   BleKeyboardHost=symlink://freeink-sdk/libs/network/BleKeyboardHost
+-  h2zero/NimBLE-Arduino@2.5.1
++  h2zero/NimBLE-Arduino@2.5.2
+ build_flags =
+   -DFREEINK_CAP_BLE_HID_HOST=1
+   -DCONFIG_BT_NIMBLE_ROLE_PERIPHERAL_DISABLED=1
 @@ -625,6 +625,44 @@ build_flags =
    -DLOG_LEVEL=1 ; Set log level to info for release candidate builds
    -DUSE_BLOCK_DEVICE_INTERFACE=1
@@ -349,7 +402,7 @@ index 53531bf7..e74256fa 100644
 +  -DFREEINK_CAP_BLE_HID_HOST=1
 +  -DUSB_PRODUCT=\"CrossPoint_PaperDIY\"
 +  -DUSB_MANUFACTURER=\"CrossPoint\"
-+  -DCROSSPOINT_VERSION=\"${crosspoint.version}-paperdiy\"
++  -DCROSSPOINT_VERSION=\"${crosspoint.version}\"
 +  -DENABLE_SERIAL_LOG
 +  -DLOG_LEVEL=2
 +  ; Fork OTA: uncomment and point at THIS fork before publishing releases.
@@ -358,7 +411,7 @@ index 53531bf7..e74256fa 100644
 +lib_deps =
 +  ${base.lib_deps}
 +  BoardPaperDiy=symlink://freeink-sdk/libs/hardware/BoardPaperDiy
-+  m5stack/M5GFX @ 0.2.33
++  m5stack/M5GFX @ 0.2.36
 +
 +; --- PaperDIY test build — serial key injection for automated UI tests --------
 +; Development only. Do not publish this environment's firmware as a release.
@@ -776,26 +829,97 @@ index 00000000..1e78779a
 +  void render(RenderLock&&) override;
 +};
 diff --git a/src/activities/settings/OtaUpdateActivity.cpp b/src/activities/settings/OtaUpdateActivity.cpp
-index b3e54ada..e312cd7d 100644
+index b3e54ada..c50456d1 100644
 --- a/src/activities/settings/OtaUpdateActivity.cpp
 +++ b/src/activities/settings/OtaUpdateActivity.cpp
-@@ -37,6 +37,15 @@ void OtaUpdateActivity::onWifiSelectionComplete(const bool success) {
-     }
-     return;
+@@ -4,12 +4,14 @@
+ #include <I18n.h>
+ #include <WiFi.h>
+ 
++#include "LauncherExitActivity.h"
+ #include "MappedInputManager.h"
+ #include "SilentRestart.h"
+ #include "activities/network/WifiSelectionActivity.h"
+ #include "components/UITheme.h"
+ #include "fontIds.h"
+ #include "network/OtaUpdater.h"
++#include "platform/LauncherEnv.h"
+ 
+ void OtaUpdateActivity::onWifiSelectionComplete(const bool success) {
+   if (!success) {
+@@ -59,21 +61,45 @@ void OtaUpdateActivity::onWifiSelectionComplete(const bool success) {
+     RenderLock lock(*this);
+     state = WAITING_CONFIRMATION;
    }
-+  if (res == OtaUpdater::LAUNCHER_MANAGED) {
-+    LOG_INF("OTA", "Updates are managed by M5Launcher");
-+    {
-+      RenderLock lock(*this);
-+      failedDetail = tr(STR_UPDATE_VIA_LAUNCHER);
-+      state = FAILED;
-+    }
+-  const char* options[] = {tr(STR_CANCEL), tr(STR_UPDATE)};
+-  // Default the selection to Update so the hardware Confirm button installs,
+-  // matching the pre-popup layout (Back = cancel, Confirm = update).
++  // Under M5Launcher the second option leaves for Launcher, which installs the
++  // update; the selection defaults to it so Confirm acts, as with Update.
++  const char* options[] = {tr(STR_CANCEL), launcherManaged ? tr(STR_EXIT_TO_LAUNCHER) : tr(STR_UPDATE)};
+   confirmPopup.show(tr(STR_NEW_UPDATE), options, 2, 1, [this](const int idx) {
+-    if (idx == 1) {
+-      runUpdateInstall();
+-    } else {
++    if (idx != 1) {
+       finish();
++    } else if (launcherManaged) {
++      exitToLauncher();
++    } else {
++      runUpdateInstall();
+     }
+   });
+   requestUpdate();
+ }
+ 
++void OtaUpdateActivity::exitToLauncher() {
++  // With CFG > GPIO on boot starts Launcher set, only that key held across a
++  // reset opens Launcher, so the user has to hold it.
++  if (launcher_env::bootConfig().hasKey()) {
++    startActivityForResult(std::make_unique<LauncherExitActivity>(renderer, mappedInput),
++                           [this](const ActivityResult&) { finish(); });
 +    return;
 +  }
-   if (res != OtaUpdater::OK) {
-     LOG_DBG("OTA", "Update check failed: %d", res);
-     {
-@@ -192,7 +201,9 @@ void OtaUpdateActivity::runUpdateInstall() {
++  // Deep sleep and the PM1 reset expect the radio stopped first.
++  WiFi.disconnect(false);
++  WiFi.mode(WIFI_OFF);
++  if (!launcher_env::exitToLauncher()) {
++    LOG_ERR("OTA", "Could not restart into M5Launcher");
++    RenderLock lock(*this);
++    launcherExitFailed = true;
++    failedDetail = tr(STR_LAUNCHER_UPDATE_HINT);
++    state = FAILED;
++  }
++  requestUpdate();
++}
++
+ void OtaUpdateActivity::onEnter() {
+   Activity::onEnter();
++  launcherManaged = launcher_env::isUnderLauncher();
+ 
+   // Turn on WiFi immediately
+   LOG_DBG("OTA", "Turning on WiFi...");
+@@ -97,6 +123,8 @@ void OtaUpdateActivity::onExit() {
+     delay(30);
+     silentRestart();
+   }
++  // A failed exit to Launcher already stopped Wi-Fi after its TLS fetches.
++  if (launcherExitFailed) silentRestart();
+ }
+ 
+ void OtaUpdateActivity::render(RenderLock&&) {
+@@ -131,6 +159,10 @@ void OtaUpdateActivity::render(RenderLock&&) {
+                       (std::string(tr(STR_CURRENT_VERSION)) + CROSSPOINT_VERSION).c_str());
+     renderer.drawText(UI_10_FONT_ID, metrics.contentSidePadding, infoTop + height + metrics.verticalSpacing,
+                       (std::string(tr(STR_NEW_VERSION)) + updater.getLatestVersion()).c_str());
++    if (launcherManaged) {
++      renderer.drawText(UI_10_FONT_ID, metrics.contentSidePadding, infoTop + 2 * (height + metrics.verticalSpacing),
++                        tr(STR_LAUNCHER_UPDATE_HINT));
++    }
+ 
+     if (confirmPopup.processRender(renderer, mappedInput)) return;
+   } else if (state == UPDATE_IN_PROGRESS) {
+@@ -192,7 +224,9 @@ void OtaUpdateActivity::runUpdateInstall() {
      LOG_DBG("OTA", "Update failed: %d", res);
      {
        RenderLock lock(*this);
@@ -806,6 +930,26 @@ index b3e54ada..e312cd7d 100644
        state = FAILED;
      }
      requestUpdate();
+diff --git a/src/activities/settings/OtaUpdateActivity.h b/src/activities/settings/OtaUpdateActivity.h
+index 6913d4f9..9aa5b060 100644
+--- a/src/activities/settings/OtaUpdateActivity.h
++++ b/src/activities/settings/OtaUpdateActivity.h
+@@ -29,9 +29,15 @@ class OtaUpdateActivity : public Activity {
+   // Cancel/Update confirmation over the version info (replaces the old
+   // hand-rolled bottom tap rects).
+   OptionPopup confirmPopup;
++  // Under M5Launcher the check reads Launcher's catalog and Launcher installs.
++  bool launcherManaged = false;
++  // Set when exiting to Launcher failed after Wi-Fi was stopped; onExit still
++  // restarts to clear the TLS heap fragmentation.
++  bool launcherExitFailed = false;
+ 
+   void onWifiSelectionComplete(bool success);
+   void runUpdateInstall();
++  void exitToLauncher();
+ 
+  public:
+   explicit OtaUpdateActivity(GfxRenderer& renderer, MappedInputManager& mappedInput)
 diff --git a/src/activities/settings/SdFirmwareUpdateActivity.cpp b/src/activities/settings/SdFirmwareUpdateActivity.cpp
 index c3159303..8169e335 100644
 --- a/src/activities/settings/SdFirmwareUpdateActivity.cpp
@@ -868,7 +1012,7 @@ index c3159303..8169e335 100644
          state = State::PICKING;
          launchPicker();
 diff --git a/src/activities/settings/SettingsActivity.cpp b/src/activities/settings/SettingsActivity.cpp
-index 8938844b..e442530b 100644
+index 8938844b..9f913de6 100644
 --- a/src/activities/settings/SettingsActivity.cpp
 +++ b/src/activities/settings/SettingsActivity.cpp
 @@ -24,6 +24,7 @@
@@ -902,18 +1046,20 @@ index 8938844b..e442530b 100644
  }  // namespace
  
  void SettingsActivity::rebuildSettings() {
-@@ -141,12 +144,17 @@ void SettingsActivity::rebuildSettings() {
+@@ -141,12 +144,19 @@ void SettingsActivity::rebuildSettings() {
    // OTA fetches this board's own release asset (see OtaUpdater); boards whose
    // asset isn't published yet just report no update available. The Picco's
    // stock layout has one app slot (partitions_picco.csv), so it cannot update
 -  // itself either way.
--  if (!BoardConfig::isPicco()) {
-+  // itself either way. Under M5Launcher the launcher owns the app slot, so
-+  // self-updating would target another installed app's partition.
++  // itself either way. Under M5Launcher the launcher owns the app slot: the
++  // check only reports a new version, and SD flashing is hidden.
 +  const bool underLauncher = launcher_env::isUnderLauncher();
-+  if (!BoardConfig::isPicco() && !underLauncher) {
+   if (!BoardConfig::isPicco()) {
      addAction(SettingsSection::General, StrId::STR_CHECK_UPDATES, SettingAction::CheckForUpdates);
-     addAction(SettingsSection::General, StrId::STR_SD_FIRMWARE_UPDATE, SettingAction::SdFirmwareUpdate);
+-    addAction(SettingsSection::General, StrId::STR_SD_FIRMWARE_UPDATE, SettingAction::SdFirmwareUpdate);
++    if (!underLauncher) {
++      addAction(SettingsSection::General, StrId::STR_SD_FIRMWARE_UPDATE, SettingAction::SdFirmwareUpdate);
++    }
    }
    addAction(SettingsSection::General, StrId::STR_ABOUT, SettingAction::About);
 +  if (underLauncher) {
@@ -922,7 +1068,7 @@ index 8938844b..e442530b 100644
    rebuildRowItems();
  }
  
-@@ -352,6 +360,22 @@ void SettingsActivity::toggleSelectedSetting() {
+@@ -352,6 +362,22 @@ void SettingsActivity::toggleSelectedSetting() {
        case SettingAction::SdFirmwareUpdate:
          startActivityForResult(std::make_unique<SdFirmwareUpdateActivity>(renderer, mappedInput), resultHandler);
          break;
@@ -945,7 +1091,7 @@ index 8938844b..e442530b 100644
        case SettingAction::DownloadFonts:
          startActivityForResult(std::make_unique<FontDownloadActivity>(renderer, mappedInput),
                                 [this](const ActivityResult&) {
-@@ -550,6 +574,6 @@ void SettingsActivity::drawFooter() {
+@@ -550,6 +576,6 @@ void SettingsActivity::drawFooter() {
  }
  
  void SettingsActivity::render(RenderLock&& lock) {
@@ -1288,14 +1434,116 @@ index a60b0d2f..1885e9fb 100644
  };
  
  // Progress callback: called after every chunk write. `written`/`total` are bytes.
+diff --git a/src/network/FirmwareVersion.cpp b/src/network/FirmwareVersion.cpp
+new file mode 100644
+index 00000000..f43e725e
+--- /dev/null
++++ b/src/network/FirmwareVersion.cpp
+@@ -0,0 +1,52 @@
++#include "FirmwareVersion.h"
++
++#include <cstdlib>
++#include <cstring>
++
++namespace firmware_version {
++namespace {
++
++// Reads a non-negative decimal at `p`; returns 0 when there is none.
++int readNumber(const char* p) {
++  if (p == nullptr || *p < '0' || *p > '9') return 0;
++  return static_cast<int>(std::strtol(p, nullptr, 10));
++}
++
++}  // namespace
++
++Version parse(const char* text) {
++  Version v;
++  if (text == nullptr) return v;
++  const char* p = text;
++  if (*p == 'v' || *p == 'V') ++p;
++
++  for (int i = 0; i < 3; ++i) {
++    if (*p < '0' || *p > '9') break;
++    char* end = nullptr;
++    v.base[i] = static_cast<int>(std::strtol(p, &end, 10));
++    p = end;
++    if (*p != '.') break;
++    ++p;
++  }
++
++  const char* revision = std::strstr(text, "-paperdiy.");
++  if (revision != nullptr) v.revision = readNumber(revision + std::strlen("-paperdiy."));
++
++  const char* rc = std::strstr(text, "-rc");
++  if (rc != nullptr) {
++    v.preRelease = rc[3] == '.' ? readNumber(rc + 4) : 0;
++  } else if (std::strstr(text, "-dev") != nullptr) {
++    v.preRelease = 0;
++  }
++  return v;
++}
++
++bool isNewer(const Version& a, const Version& b) {
++  for (int i = 0; i < 3; ++i) {
++    if (a.base[i] != b.base[i]) return a.base[i] > b.base[i];
++  }
++  if (a.revision != b.revision) return a.revision > b.revision;
++  return a.preRelease > b.preRelease;
++}
++
++}  // namespace firmware_version
+diff --git a/src/network/FirmwareVersion.h b/src/network/FirmwareVersion.h
+new file mode 100644
+index 00000000..6a9001ec
+--- /dev/null
++++ b/src/network/FirmwareVersion.h
+@@ -0,0 +1,26 @@
++#pragma once
++
++// PaperDIY release versions: <CrossPoint X.Y.Z>-paperdiy.<N>[-rc.<M>], with an
++// optional leading "v" on tags (see .agents/rules/release-versioning.md).
++// Ordering: CrossPoint version, then the port revision N, then a release
++// candidate before its final release. A missing segment or revision is 0, and
++// any "-rc"/"-dev" suffix counts as a pre-release of that version.
++namespace firmware_version {
++
++struct Version {
++  int base[3] = {0, 0, 0};
++  int revision = 0;
++  // Pre-release order: rc.M sorts as M; a final release sorts above any rc.
++  int preRelease = FINAL;
++
++  static constexpr int FINAL = 0x7fffffff;
++};
++
++Version parse(const char* text);
++
++// True when `a` is a later release than `b`.
++bool isNewer(const Version& a, const Version& b);
++
++inline bool isNewer(const char* a, const char* b) { return isNewer(parse(a), parse(b)); }
++
++}  // namespace firmware_version
 diff --git a/src/network/OtaUpdater.cpp b/src/network/OtaUpdater.cpp
-index 1f64b229..26c8df33 100644
+index 1f64b229..5ae45b26 100644
 --- a/src/network/OtaUpdater.cpp
 +++ b/src/network/OtaUpdater.cpp
-@@ -17,12 +17,22 @@
+@@ -11,18 +11,151 @@
+ #include <esp_ota_ops.h>
+ // clang-format on
+ 
++#include <ArduinoJson.h>
++#include <HalMemory.h>
++#include <strings.h>
++
+ #include <algorithm>
++#include <cstdio>
+ #include <cstring>
+ #include <string>
  
  #include "FirmwareBoardTag.h"
  #include "FirmwareFlasher.h"
++#include "FirmwareVersion.h"
 +#include "platform/LauncherEnv.h"
  
  namespace {
@@ -1306,34 +1554,192 @@ index 1f64b229..26c8df33 100644
 +#define CROSSPOINT_OTA_RELEASES_URL "https://api.github.com/repos/crosspoint-reader/crosspoint-reader/releases/latest"
 +#endif
 +constexpr char latestReleaseUrl[] = CROSSPOINT_OTA_RELEASES_URL;
++
++// Under M5Launcher, updates come from LauncherHub, the catalog Launcher's OTA
++// menu installs from. It mirrors M5Burner, where the app is published under
++// this name (matched ignoring case).
++constexpr char launcherHubUrl[] = "https://api.launcherhub.net/firmwares";
++constexpr char launcherHubCategory[] = "paper-diy";
++constexpr char launcherHubAppName[] = "CrossPoint for PaperDIY (community port)";
++// A 100-item category page is ~10 KB; each published version adds ~350 bytes
++// to the fid response, so this holds ~180 versions. PSRAM only, so it never
++// takes the internal RAM the TLS session needs.
++constexpr size_t MAX_LAUNCHER_HUB_RESPONSE = 64 * 1024;
++// Each page is a separate TLS fetch with a 60 s socket timeout; the paper-diy
++// category fits in one page of 100.
++constexpr int MAX_LAUNCHER_HUB_PAGES = 3;
++
++// `body` must hold MAX_LAUNCHER_HUB_RESPONSE bytes; it is reused across fetches.
++bool fetchLauncherHubJson(const std::string& url, char* body, JsonDocument& doc, const JsonDocument& filter) {
++  size_t used = 0;
++  bool tooLarge = false;
++  const bool ok = HttpDownloader::fetchUrl(url, [&](const uint8_t* data, size_t len) {
++    if (used + len > MAX_LAUNCHER_HUB_RESPONSE) {
++      tooLarge = true;
++      return false;
++    }
++    std::memcpy(body + used, data, len);
++    used += len;
++    return true;
++  });
++  if (tooLarge) {
++    LOG_ERR("OTA", "LauncherHub response over %u bytes", static_cast<unsigned>(MAX_LAUNCHER_HUB_RESPONSE));
++    return false;
++  }
++  if (!ok) {
++    LOG_ERR("OTA", "LauncherHub fetch failed (status %d): %s", HttpDownloader::lastStatus(), url.c_str());
++    return false;
++  }
++  const DeserializationError err = deserializeJson(doc, body, used, DeserializationOption::Filter(filter));
++  if (err) {
++    LOG_ERR("OTA", "LauncherHub JSON: %s", err.c_str());
++    return false;
++  }
++  return true;
++}
++
  }  // namespace
  
- OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
-+  if (launcher_env::isUnderLauncher()) {
-+    LOG_INF("OTA", "Managed by M5Launcher; skipping in-app update check");
-+    return LAUNCHER_MANAGED;
++OtaUpdater::OtaUpdaterError OtaUpdater::checkLauncherCatalog() {
++  LOG_DBG("OTA", "Checking LauncherHub for update (current: %s)", CROSSPOINT_VERSION);
++  if (ESP.getFreeHeap() < HttpDownloader::MIN_TLS_FREE_HEAP ||
++      ESP.getMaxAllocHeap() < HttpDownloader::MIN_TLS_MAX_ALLOC) {
++    LOG_ERR("OTA", "Not enough heap for TLS: free %u, max block %u", static_cast<unsigned>(ESP.getFreeHeap()),
++            static_cast<unsigned>(ESP.getMaxAllocHeap()));
++    return OOM_ERROR;
 +  }
++  HalMemory::PsramBuffer buffer = HalMemory::allocatePsram(MAX_LAUNCHER_HUB_RESPONSE);
++  if (!buffer) {
++    LOG_ERR("OTA", "OOM: LauncherHub PSRAM buffer (%u bytes)", static_cast<unsigned>(MAX_LAUNCHER_HUB_RESPONSE));
++    return OOM_ERROR;
++  }
++  char* body = reinterpret_cast<char*>(buffer.get());
++
++  // Walk the whole category and compare names here: the server's free-text
++  // search is not documented, so it is not trusted to find the entry.
++  JsonDocument listFilter;
++  listFilter["total"] = true;
++  listFilter["page_size"] = true;
++  listFilter["items"][0]["fid"] = true;
++  listFilter["items"][0]["name"] = true;
++  std::string fid;
++  for (int page = 1; page <= MAX_LAUNCHER_HUB_PAGES && fid.empty(); ++page) {
++    const std::string url =
++        std::string(launcherHubUrl) + "?category=" + launcherHubCategory + "&page=" + std::to_string(page);
++    JsonDocument list;
++    if (!fetchLauncherHubJson(url, body, list, listFilter)) return HTTP_ERROR;
++    for (JsonObjectConst item : list["items"].as<JsonArrayConst>()) {
++      const char* name = item["name"] | "";
++      if (strcasecmp(name, launcherHubAppName) == 0) {
++        fid = item["fid"] | "";
++        break;
++      }
++    }
++    const int total = list["total"] | 0;
++    const int pageSize = list["page_size"] | 0;
++    if (pageSize <= 0 || page * pageSize >= total) break;
++  }
++  if (fid.empty()) {
++    LOG_INF("OTA", "\"%s\" is not in the LauncherHub %s catalog yet", launcherHubAppName, launcherHubCategory);
++    return NO_UPDATE;
++  }
++
++  const std::string url = std::string(launcherHubUrl) + "?fid=" + fid;
++  JsonDocument versionFilter;
++  versionFilter["versions"][0]["version"] = true;
++  JsonDocument versions;
++  if (!fetchLauncherHubJson(url, body, versions, versionFilter)) return HTTP_ERROR;
++
++  // Pick the highest version rather than trusting the response order.
++  const char* best = nullptr;
++  firmware_version::Version bestVersion;
++  for (JsonObjectConst entry : versions["versions"].as<JsonArrayConst>()) {
++    const char* version = entry["version"] | "";
++    if (*version == '\0') continue;
++    const firmware_version::Version parsed = firmware_version::parse(version);
++    if (best == nullptr || firmware_version::isNewer(parsed, bestVersion)) {
++      best = version;
++      bestVersion = parsed;
++    }
++  }
++  if (best == nullptr) {
++    LOG_ERR("OTA", "LauncherHub entry %s lists no versions", fid.c_str());
++    return JSON_PARSE_ERROR;
++  }
++
++  latestVersion = best;
++  otaUrl.clear();
++  otaSize = 0;
++  totalSize = 0;
++  updateAvailable = true;
++  LOG_DBG("OTA", "LauncherHub latest: %s (fid %s)", latestVersion.c_str(), fid.c_str());
++  return OK;
++}
++
+ OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
++  if (launcher_env::isUnderLauncher()) return checkLauncherCatalog();
    LOG_DBG("OTA", "Checking for update (current: %s)", CROSSPOINT_VERSION);
  
    // Stream the ~32KB release JSON straight into the parser as it arrives.
-@@ -101,8 +111,12 @@ bool OtaUpdater::isUpdateNewer() const {
+@@ -46,7 +179,7 @@ OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
+     snprintf(assetSuffix, sizeof(assetSuffix), "-%.*s", static_cast<int>(board_tag::boardNameLen()),
+              board_tag::boardName());
+   }
+-  char assetName[48] = {};
++  char assetName[64] = {};
+   bool assetNameSet = false;
+   const bool ok = HttpDownloader::fetchUrl(latestReleaseUrl, [&](const uint8_t* data, size_t len) {
+     size_t offset = 0;
+@@ -96,47 +229,20 @@ bool OtaUpdater::isUpdateNewer() const {
+     return false;
+   }
  
-   const auto currentVersion = CROSSPOINT_VERSION;
- 
-+  // GitHub tags are commonly vX.Y.Z; the version parser only wants X.Y.Z.
-+  const char* latest = latestVersion.c_str();
-+  if (*latest == 'v' || *latest == 'V') ++latest;
-+
-   // semantic version check (only match on 3 segments)
+-  int currentMajor, currentMinor, currentPatch;
+-  int latestMajor, latestMinor, latestPatch;
+-
+-  const auto currentVersion = CROSSPOINT_VERSION;
+-
+-  // semantic version check (only match on 3 segments)
 -  sscanf(latestVersion.c_str(), "%d.%d.%d", &latestMajor, &latestMinor, &latestPatch);
-+  sscanf(latest, "%d.%d.%d", &latestMajor, &latestMinor, &latestPatch);
-   sscanf(currentVersion, "%d.%d.%d", &currentMajor, &currentMinor, &currentPatch);
+-  sscanf(currentVersion, "%d.%d.%d", &currentMajor, &currentMinor, &currentPatch);
+-
+-  /*
+-   * Compare major versions.
+-   * If they differ, return true if latest major version greater than current major version
+-   * otherwise return false.
+-   */
+-  if (latestMajor != currentMajor) return latestMajor > currentMajor;
+-
+-  /*
+-   * Compare minor versions.
+-   * If they differ, return true if latest minor version greater than current minor version
+-   * otherwise return false.
+-   */
+-  if (latestMinor != currentMinor) return latestMinor > currentMinor;
+-
+-  /*
+-   * Check patch versions.
+-   */
+-  if (latestPatch != currentPatch) return latestPatch > currentPatch;
+-
+-  // If we reach here, it means all segments are equal.
+-  // One final check, if we're on an RC build (contains "-rc"), we should consider the latest version as newer even if
+-  // the segments are equal, since RC builds are pre-release versions.
+-  if (strstr(currentVersion, "-rc") != nullptr) {
+-    return true;
+-  }
+-
+-  return false;
++  // Orders by CrossPoint version, port revision, then release candidates
++  // before their release (FirmwareVersion.h).
++  return firmware_version::isNewer(latestVersion.c_str(), CROSSPOINT_VERSION);
+ }
  
-   /*
-@@ -137,6 +151,10 @@ bool OtaUpdater::isUpdateNewer() const {
  const std::string& OtaUpdater::getLatestVersion() const { return latestVersion; }
  
  OtaUpdater::OtaUpdaterError OtaUpdater::installUpdate(ProgressCallback onProgress, void* ctx) {
++  // Also the only guard against installing from a catalog check, which leaves
++  // otaUrl empty: under Launcher the update is installed by Launcher.
 +  if (launcher_env::isUnderLauncher()) {
 +    LOG_INF("OTA", "Managed by M5Launcher; refusing to write another app slot");
 +    return LAUNCHER_MANAGED;
@@ -1342,17 +1748,25 @@ index 1f64b229..26c8df33 100644
      return UPDATE_OLDER_ERROR;
    }
 diff --git a/src/network/OtaUpdater.h b/src/network/OtaUpdater.h
-index 5015a54c..5134a31c 100644
+index 5015a54c..0d678a62 100644
 --- a/src/network/OtaUpdater.h
 +++ b/src/network/OtaUpdater.h
-@@ -22,6 +22,7 @@ class OtaUpdater {
+@@ -22,8 +22,15 @@ class OtaUpdater {
      INTERNAL_UPDATE_ERROR,
      OOM_ERROR,
      WRONG_DEVICE_ERROR,
 +    LAUNCHER_MANAGED,
    };
  
++ private:
++  // Under M5Launcher: reads the latest version from LauncherHub. Sets no
++  // download URL; Launcher installs the update.
++  OtaUpdaterError checkLauncherCatalog();
++
++ public:
    size_t getOtaSize() const { return otaSize; }
+ 
+   size_t getProcessedSize() const { return processedSize; }
 diff --git a/src/platform/LauncherEnv.cpp b/src/platform/LauncherEnv.cpp
 new file mode 100644
 index 00000000..9712b033
@@ -1530,3 +1944,35 @@ index 00000000..81040cff
 +[[noreturn]] void restartWithKeyHeld();
 +
 +}  // namespace launcher_env
+diff --git a/src/vocabulary/VocabularyStore.cpp b/src/vocabulary/VocabularyStore.cpp
+index 4f217aff..b3f3b1b4 100644
+--- a/src/vocabulary/VocabularyStore.cpp
++++ b/src/vocabulary/VocabularyStore.cpp
+@@ -80,7 +80,7 @@ class RecordWriter {
+       }
+     }
+     put('"');
+-    return i < text.size();
++    return i < std::min(text.size(), maxInputBytes);
+   }
+ 
+   bool finish() { return flush() && good; }
+@@ -288,10 +288,14 @@ bool VocabularyStore::append(const VocabularyContext& context, const std::string
+   record.quoted(headword, MAX_WORD_BYTES);
+   record.raw(",\"definition\":");
+   const auto& text = *exportedDefinition;
+-  size_t definitionBytes = std::min(text.size(), MAX_DEFINITION_BYTES);
+-  if (definitionBytes < text.size()) definitionBytes = utf8SafeTruncateBuffer(text.data(), definitionBytes);
+-  bool definitionTruncated = sourceTruncated || definitionBytes < text.size();
+-  if (definitionBytes < text.size() && definitionBytes > 0) {
++  // StarDict "m" fields are NUL-terminated; do not persist the terminator in
++  // the JSONL record.
++  size_t textSize = text.size();
++  while (textSize > 0 && text[textSize - 1] == '\0') --textSize;
++  size_t definitionBytes = std::min(textSize, MAX_DEFINITION_BYTES);
++  if (definitionBytes < textSize) definitionBytes = utf8SafeTruncateBuffer(text.data(), definitionBytes);
++  bool definitionTruncated = sourceTruncated || definitionBytes < textSize;
++  if (definitionBytes < textSize && definitionBytes > 0) {
+     const size_t lastLine = text.rfind('\n', definitionBytes - 1);
+     if (lastLine != std::string::npos && lastLine >= definitionBytes / 2) {
+       definitionBytes = lastLine;
