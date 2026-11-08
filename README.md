@@ -198,8 +198,9 @@ make launcher LAUNCHER_VERSION=2.1.0
 ```
 
 Usa siempre el alias estable `PaperDIYReader-launcher.bin` para instalar y
-actualizar: Launcher crea una app por nombre de archivo, así que el archivo
-versionado crearía una app nueva en cada actualización. Cópialo a la SD y usa
+actualizar: Launcher nombra la app según el archivo, así que el archivo
+versionado crearía una app nueva en cada actualización (que el alias estable
+reemplace la app existente aún no está verificado; ver la guía). Cópialo a la SD y usa
 `SD > Install` en Launcher.
 
 > **OTA bajo Launcher:** el lector no se actualiza a sí mismo bajo

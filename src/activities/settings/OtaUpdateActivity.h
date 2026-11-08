@@ -31,6 +31,9 @@ class OtaUpdateActivity : public Activity {
   OptionPopup confirmPopup;
   // Under M5Launcher the check reads Launcher's catalog and Launcher installs.
   bool launcherManaged = false;
+  // Set when exiting to Launcher failed after Wi-Fi was stopped; onExit still
+  // restarts to clear the TLS heap fragmentation.
+  bool launcherExitFailed = false;
 
   void onWifiSelectionComplete(bool success);
   void runUpdateInstall();

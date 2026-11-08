@@ -23,5 +23,8 @@ free-form revision to the version.
   Launcher alias `PaperDIYReader-launcher.bin` unchanged.
 - The release workflow validates the tag and version with
   `scripts/check_release_version.py`. Do not bypass that check.
-- Release notes must warn that in-app OTA is disabled under M5Launcher and
-  link to `docs/paperdiy/13-m5launcher.md`.
+- Release notes must warn that the reader does not install updates under
+  M5Launcher (`Check for Updates` only notifies; install from
+  `M5Launcher > OTA`) and link to `docs/paperdiy/13-m5launcher.md`. Publish
+  each release on M5Burner as `CrossPoint for PaperDIY (community port)` so
+  the notice finds it.

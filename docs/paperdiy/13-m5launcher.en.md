@@ -89,8 +89,8 @@ partition could overwrite another installed app or corrupt Launcher's
 registry, so the reader never writes flash: the updater refuses the write even
 if reached another way.
 
-The notice looks up the app named exactly
-**`CrossPoint for PaperDIY (community port)`** in
+The notice looks up the app named
+**`CrossPoint for PaperDIY (community port)`** (ignoring case) in
 `https://api.launcherhub.net/firmwares?category=paper-diy` (LauncherHub mirrors
 M5Burner, where it is published under that name) and takes the highest version
 from `?fid=<fid>`. Until the app is in the catalog the reader reports no update.
@@ -120,9 +120,11 @@ Requirements:
 4. Launch the reader from the Launcher menu.
 
 Use the same file name (`PaperDIYReader-launcher.bin`) for installs and
-updates. Launcher creates one app per file name: installing
+updates. Launcher names the app after the file: installing
 `PaperDIYReader-<version>-launcher.bin` creates a new app instead of replacing
-the existing one. The versioned file is only an archive.
+the existing one. The versioned file is only an archive. Even with the same
+name, it is not yet verified that an SD or catalog install replaces `paperd`:
+see [OTA and updates](#ota-and-updates).
 
 ### From the WebUI or Favorites
 
@@ -159,7 +161,10 @@ publishes `PaperDIYReader-<tag>-launcher.bin` and the stable
 
 1. Download the new `PaperDIYReader-launcher.bin` (the stable alias).
 2. Install it from Launcher (SD, WUI or Favorites) over the existing app.
-3. Launcher replaces the app partition contents; SD data is untouched.
+3. SD data is untouched. Serial `flash overwrite` reuses the `paperd`
+   partition; from SD, WUI or the catalog, Launcher may create a second app
+   (`paper1`) when there is free space (not yet verified). If it shows up
+   twice, delete the old version from Launcher.
 
 Do not use `make flash` or `esptool ... write_flash 0x10000` while Launcher is
 installed: that writes to Launcher's resident partition. To return to a
@@ -191,7 +196,9 @@ first if you want to remove the dynamic partitions.
 
 ## Validation status
 
-Validated on 2026-11-07 on a PaperDIY with M5Launcher 3.0.0:
+Validated on 2026-11-07 on a PaperDIY with M5Launcher 3.0.0, before
+`Check for Updates` returned under Launcher as a notice (hence the entries
+saying in-app updates are hidden):
 
 - [x] The `paperdiy` environment builds with the changes.
 - [x] The packager validates the ESP header, ESP32-S3 chip id and asset name.
@@ -217,3 +224,19 @@ Validated on 2026-11-07 on a PaperDIY with M5Launcher 3.0.0:
   directly.
 - [ ] Installation from WUI/Favorites: it uses the same Launcher installer but
   was not tested separately on this unit.
+
+Update notice, validated on 2026-11-08 with M5Launcher 3.0.0 (reader installed
+with `flash firmware` and `flash overwrite`):
+
+- [x] Under Launcher, `System` shows `Check for Updates` and
+  `Exit to M5Launcher`, and hides the SD firmware update.
+- [x] With a temporary 1.0.0 build looking up the catalog app
+  `PaperDIY Reader`: shows current 1.0.0, new 1.0.1, the
+  "Install it from M5Launcher > OTA" hint and Cancel / Exit to M5Launcher.
+- [x] Exit to M5Launcher from the notice, with key A configured: opens the
+  hold-A screen and reaches Launcher's menu.
+- [ ] Exit to M5Launcher from the notice with no key configured (deep sleep or
+  PM1 reset).
+- [ ] Notice against the real app published on M5Burner.
+- [ ] Updating from the catalog or SD replaces `paperd` instead of creating
+  `paper1`.

@@ -89,7 +89,7 @@ del lector (`nvs.net80211`); hay que volver a introducirlas.
 
 | Instalación | OTA interna | Cómo actualizar |
 |---|---|---|
-| Standalone | Sí, `crosspoint-<tag>-paperdiy.bin` desde `Buscar actualizaciones` | OTA o SD |
+| Standalone | Sí, `crosspoint-<tag>-paperdiy.bin` desde `Verificar actualizaciones` | OTA o SD |
 | Bajo M5Launcher | Solo aviso: `Verificar actualizaciones` consulta LauncherHub | `M5Launcher > OTA` (catálogo) o `PaperDIYReader-launcher.bin` desde SD/WUI |
 
 Bajo Launcher la app corre en una partición OTA dinámica. Escribir la
@@ -98,7 +98,8 @@ de Launcher, así que el lector nunca escribe en la flash: el actualizador
 rechaza la escritura aunque se llegue por otra vía.
 
 El aviso busca en `https://api.launcherhub.net/firmwares?category=paper-diy`
-la app llamada exactamente **`CrossPoint for PaperDIY (community port)`**, que
+la app llamada **`CrossPoint for PaperDIY (community port)`** (sin distinguir
+mayúsculas), que
 es el nombre publicado en M5Burner (LauncherHub replica M5Burner), y toma la
 versión más alta de `?fid=<fid>`. Si la app aún no está en el catálogo, el
 lector dice que no hay actualizaciones. Si se renombra en M5Burner, hay que
@@ -127,9 +128,11 @@ Requisitos:
 4. Arranca el lector desde el menú de Launcher.
 
 Usa siempre el mismo nombre de archivo (`PaperDIYReader-launcher.bin`) para
-instalar y actualizar. Launcher crea una app por nombre de archivo: instalar
+instalar y actualizar. Launcher nombra la app según el archivo: instalar
 `PaperDIYReader-<versión>-launcher.bin` crea una app nueva en vez de
-sobrescribir la existente. El archivo versionado es solo para archivar.
+sobrescribir la existente. El archivo versionado es solo para archivar. Aun
+con el mismo nombre, no está verificado que una instalación desde SD o desde
+el catálogo reemplace `paperd`: ver [OTA y actualizaciones](#ota-y-actualizaciones).
 
 ### Desde el WebUI o Favoritos
 
@@ -167,8 +170,10 @@ publica además `PaperDIYReader-<tag>-launcher.bin` y el alias estable
 
 1. Descarga el nuevo `PaperDIYReader-launcher.bin` (el alias estable).
 2. Instálalo desde Launcher (SD, WUI o Favoritos) sobre la app existente.
-3. Launcher reemplaza el contenido de la partición de la app; los datos de la
-   SD no se tocan.
+3. Los datos de la SD no se tocan. `flash overwrite` por consola serie
+   reutiliza la partición `paperd`; desde SD, WUI o el catálogo, Launcher
+   puede crear una segunda app (`paper1`) si hay espacio libre (sin verificar).
+   Si aparece duplicada, borra la versión antigua desde Launcher.
 
 No uses `make flash` ni `esptool ... write_flash 0x10000` con Launcher
 instalado: escribirías en la partición residente de Launcher. Para volver a
@@ -200,7 +205,9 @@ flash antes si quieres eliminar las particiones dinámicas.
 
 ## Estado de validación
 
-Validado el 07/11/2026 en un PaperDIY con M5Launcher 3.0.0:
+Validado el 07/11/2026 en un PaperDIY con M5Launcher 3.0.0, antes de que
+`Verificar actualizaciones` volviera a mostrarse bajo Launcher como aviso (por
+eso varias entradas dicen que las actualizaciones internas están ocultas):
 
 - [x] Compila el entorno `paperdiy` con los cambios.
 - [x] El empaquetador valida cabecera ESP, chip ESP32-S3 y genera el asset.
@@ -227,3 +234,19 @@ Validado el 07/11/2026 en un PaperDIY con M5Launcher 3.0.0:
   lector.
 - [ ] Instalación desde WUI/Favoritos: usa el mismo instalador de Launcher, pero
   no se probó por separado en esta unidad.
+
+Aviso de actualización, validado el 08/11/2026 con M5Launcher 3.0.0 (lector
+instalado con `flash firmware` y `flash overwrite`):
+
+- [x] Bajo Launcher, `Sistema` muestra `Verificar actualizaciones` y
+  `Salir a M5Launcher`, y oculta la actualización por SD.
+- [x] Con un build temporal 1.0.0 que buscaba la app `PaperDIY Reader` del
+  catálogo: muestra `Versión actual: 1.0.0`, `Nueva versión: 1.0.1`,
+  `Instálala desde M5Launcher > OTA` y `Cancelar` / `Salir a M5Launcher`.
+- [x] `Salir a M5Launcher` desde el aviso, con tecla A configurada: abre la
+  pantalla de mantener A y llega al menú de Launcher.
+- [ ] `Salir a M5Launcher` desde el aviso sin tecla configurada (deep sleep o
+  reset del PM1).
+- [ ] Aviso con la app real publicada en M5Burner.
+- [ ] Actualizar desde el catálogo o la SD reemplaza `paperd` en vez de crear
+  `paper1`.

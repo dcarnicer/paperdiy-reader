@@ -80,7 +80,9 @@ Favorites. For Favorites, use the stable release URL:
 Use the same stable file name for every update. Launcher names the app after
 the file, so installing a versioned file such as
 `{FIRMWARE_SLUG}-{version}-launcher.bin` creates a second app instead of
-replacing the existing one. Keep the versioned file only as an archive.
+replacing the existing one. Keep the versioned file only as an archive. Even
+with the stable name, Launcher may add a second app when there is free space;
+if the reader shows up twice, delete the older one from Launcher.
 
 ## Wake straight into the reader (recommended)
 

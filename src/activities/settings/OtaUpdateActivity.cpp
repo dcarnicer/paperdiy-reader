@@ -84,9 +84,13 @@ void OtaUpdateActivity::exitToLauncher() {
                            [this](const ActivityResult&) { finish(); });
     return;
   }
+  // Deep sleep and the PM1 reset expect the radio stopped first.
+  WiFi.disconnect(false);
+  WiFi.mode(WIFI_OFF);
   if (!launcher_env::exitToLauncher()) {
     LOG_ERR("OTA", "Could not restart into M5Launcher");
     RenderLock lock(*this);
+    launcherExitFailed = true;
     failedDetail = tr(STR_LAUNCHER_UPDATE_HINT);
     state = FAILED;
   }
@@ -119,6 +123,8 @@ void OtaUpdateActivity::onExit() {
     delay(30);
     silentRestart();
   }
+  // A failed exit to Launcher already stopped Wi-Fi after its TLS fetches.
+  if (launcherExitFailed) silentRestart();
 }
 
 void OtaUpdateActivity::render(RenderLock&&) {

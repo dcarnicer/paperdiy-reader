@@ -194,8 +194,9 @@ make launcher LAUNCHER_VERSION=2.1.0
 ```
 
 Always use the stable alias `PaperDIYReader-launcher.bin` for installs and
-updates: Launcher creates one app per file name, so the versioned file would
-create a new app on every update. Copy it to the SD card and use
+updates: Launcher names the app after the file, so the versioned file would
+create a new app on every update (whether the stable alias replaces the
+existing app is not yet verified; see the guide). Copy it to the SD card and use
 `SD > Install` in Launcher.
 
 > **OTA under Launcher:** the reader does not update itself under M5Launcher.

@@ -77,5 +77,5 @@ differs, update `firmware_category.device` in `m5burner.json`.
 - **M5Launcher is a separate package**: install
   `dist/launcher/PaperDIYReader-launcher.bin` (the stable alias from
   `make launcher`), not this combined factory image. Keep the stable file name
-  so Launcher overwrites the same app on updates. See
+  so updates do not add one app per version. See
   `docs/paperdiy/13-m5launcher.md`.

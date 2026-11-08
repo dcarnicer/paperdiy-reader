@@ -1,5 +1,15 @@
 # Changelog
 
+## Sin publicar — aviso de actualización bajo M5Launcher
+
+- Bajo M5Launcher vuelve `Verificar actualizaciones`, solo como aviso: busca
+  `CrossPoint for PaperDIY (community port)` en LauncherHub (réplica de
+  M5Burner) y, si hay versión nueva, ofrece `Salir a M5Launcher` para
+  instalarla desde `OTA`. El lector sigue sin escribir en la flash bajo
+  Launcher; la actualización por SD sigue oculta.
+- Validado en un PaperDIY con M5Launcher 3.0.0 con un build temporal; falta
+  probarlo con la app publicada y la salida sin tecla configurada.
+
 ## 2.1.0 — 2026-11-08
 
 Primera release sobre CrossPoint `818a1540`. Incluye el sync del motor, la

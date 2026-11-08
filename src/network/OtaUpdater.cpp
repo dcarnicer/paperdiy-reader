@@ -12,6 +12,7 @@
 // clang-format on
 
 #include <ArduinoJson.h>
+#include <HalMemory.h>
 #include <strings.h>
 
 #include <algorithm>
@@ -33,21 +34,20 @@ constexpr char latestReleaseUrl[] = CROSSPOINT_OTA_RELEASES_URL;
 
 // Under M5Launcher, updates come from LauncherHub, the catalog Launcher's OTA
 // menu installs from. It mirrors M5Burner, where the app is published under
-// this exact name.
+// this name (matched ignoring case).
 constexpr char launcherHubUrl[] = "https://api.launcherhub.net/firmwares";
 constexpr char launcherHubCategory[] = "paper-diy";
 constexpr char launcherHubAppName[] = "CrossPoint for PaperDIY (community port)";
 // A 100-item category page is ~10 KB; each published version adds ~350 bytes
-// to the fid response.
-constexpr size_t MAX_LAUNCHER_HUB_RESPONSE = 24 * 1024;
-constexpr int MAX_LAUNCHER_HUB_PAGES = 10;
+// to the fid response, so this holds ~180 versions. PSRAM only, so it never
+// takes the internal RAM the TLS session needs.
+constexpr size_t MAX_LAUNCHER_HUB_RESPONSE = 64 * 1024;
+// Each page is a separate TLS fetch with a 60 s socket timeout; the paper-diy
+// category fits in one page of 100.
+constexpr int MAX_LAUNCHER_HUB_PAGES = 3;
 
-bool fetchLauncherHubJson(const std::string& url, JsonDocument& doc, const JsonDocument& filter) {
-  auto body = makeUniqueNoThrow<char[]>(MAX_LAUNCHER_HUB_RESPONSE);
-  if (!body) {
-    LOG_ERR("OTA", "OOM: LauncherHub response buffer (%u bytes)", static_cast<unsigned>(MAX_LAUNCHER_HUB_RESPONSE));
-    return false;
-  }
+// `body` must hold MAX_LAUNCHER_HUB_RESPONSE bytes; it is reused across fetches.
+bool fetchLauncherHubJson(const std::string& url, char* body, JsonDocument& doc, const JsonDocument& filter) {
   size_t used = 0;
   bool tooLarge = false;
   const bool ok = HttpDownloader::fetchUrl(url, [&](const uint8_t* data, size_t len) {
@@ -55,7 +55,7 @@ bool fetchLauncherHubJson(const std::string& url, JsonDocument& doc, const JsonD
       tooLarge = true;
       return false;
     }
-    std::memcpy(body.get() + used, data, len);
+    std::memcpy(body + used, data, len);
     used += len;
     return true;
   });
@@ -67,7 +67,7 @@ bool fetchLauncherHubJson(const std::string& url, JsonDocument& doc, const JsonD
     LOG_ERR("OTA", "LauncherHub fetch failed (status %d): %s", HttpDownloader::lastStatus(), url.c_str());
     return false;
   }
-  const DeserializationError err = deserializeJson(doc, body.get(), used, DeserializationOption::Filter(filter));
+  const DeserializationError err = deserializeJson(doc, body, used, DeserializationOption::Filter(filter));
   if (err) {
     LOG_ERR("OTA", "LauncherHub JSON: %s", err.c_str());
     return false;
@@ -92,8 +92,20 @@ bool versionGreater(const int a[3], const int b[3]) {
 
 OtaUpdater::OtaUpdaterError OtaUpdater::checkLauncherCatalog() {
   LOG_DBG("OTA", "Checking LauncherHub for update (current: %s)", CROSSPOINT_VERSION);
+  if (ESP.getFreeHeap() < HttpDownloader::MIN_TLS_FREE_HEAP ||
+      ESP.getMaxAllocHeap() < HttpDownloader::MIN_TLS_MAX_ALLOC) {
+    LOG_ERR("OTA", "Not enough heap for TLS: free %u, max block %u", static_cast<unsigned>(ESP.getFreeHeap()),
+            static_cast<unsigned>(ESP.getMaxAllocHeap()));
+    return OOM_ERROR;
+  }
+  HalMemory::PsramBuffer buffer = HalMemory::allocatePsram(MAX_LAUNCHER_HUB_RESPONSE);
+  if (!buffer) {
+    LOG_ERR("OTA", "OOM: LauncherHub PSRAM buffer (%u bytes)", static_cast<unsigned>(MAX_LAUNCHER_HUB_RESPONSE));
+    return OOM_ERROR;
+  }
+  char* body = reinterpret_cast<char*>(buffer.get());
 
-  // Walk the whole category and match the exact name: the server's free-text
+  // Walk the whole category and compare names here: the server's free-text
   // search is not documented, so it is not trusted to find the entry.
   JsonDocument listFilter;
   listFilter["total"] = true;
@@ -105,7 +117,7 @@ OtaUpdater::OtaUpdaterError OtaUpdater::checkLauncherCatalog() {
     const std::string url =
         std::string(launcherHubUrl) + "?category=" + launcherHubCategory + "&page=" + std::to_string(page);
     JsonDocument list;
-    if (!fetchLauncherHubJson(url, list, listFilter)) return HTTP_ERROR;
+    if (!fetchLauncherHubJson(url, body, list, listFilter)) return HTTP_ERROR;
     for (JsonObjectConst item : list["items"].as<JsonArrayConst>()) {
       const char* name = item["name"] | "";
       if (strcasecmp(name, launcherHubAppName) == 0) {
@@ -126,7 +138,7 @@ OtaUpdater::OtaUpdaterError OtaUpdater::checkLauncherCatalog() {
   JsonDocument versionFilter;
   versionFilter["versions"][0]["version"] = true;
   JsonDocument versions;
-  if (!fetchLauncherHubJson(url, versions, versionFilter)) return HTTP_ERROR;
+  if (!fetchLauncherHubJson(url, body, versions, versionFilter)) return HTTP_ERROR;
 
   // Pick the highest version rather than trusting the response order.
   const char* best = nullptr;
@@ -230,42 +242,17 @@ bool OtaUpdater::isUpdateNewer() const {
     return false;
   }
 
-  int currentMajor, currentMinor, currentPatch;
-  int latestMajor, latestMinor, latestPatch;
-
-  const auto currentVersion = CROSSPOINT_VERSION;
-
-  // GitHub tags are commonly vX.Y.Z; the version parser only wants X.Y.Z.
-  const char* latest = latestVersion.c_str();
-  if (*latest == 'v' || *latest == 'V') ++latest;
-
-  // semantic version check (only match on 3 segments)
-  sscanf(latest, "%d.%d.%d", &latestMajor, &latestMinor, &latestPatch);
-  sscanf(currentVersion, "%d.%d.%d", &currentMajor, &currentMinor, &currentPatch);
-
-  /*
-   * Compare major versions.
-   * If they differ, return true if latest major version greater than current major version
-   * otherwise return false.
-   */
-  if (latestMajor != currentMajor) return latestMajor > currentMajor;
-
-  /*
-   * Compare minor versions.
-   * If they differ, return true if latest minor version greater than current minor version
-   * otherwise return false.
-   */
-  if (latestMinor != currentMinor) return latestMinor > currentMinor;
-
-  /*
-   * Check patch versions.
-   */
-  if (latestPatch != currentPatch) return latestPatch > currentPatch;
+  int latest[3];
+  int current[3];
+  parseVersion(latestVersion.c_str(), latest);
+  parseVersion(CROSSPOINT_VERSION, current);
+  if (versionGreater(latest, current)) return true;
+  if (versionGreater(current, latest)) return false;
 
   // If we reach here, it means all segments are equal.
   // One final check, if we're on an RC build (contains "-rc"), we should consider the latest version as newer even if
   // the segments are equal, since RC builds are pre-release versions.
-  if (strstr(currentVersion, "-rc") != nullptr) {
+  if (strstr(CROSSPOINT_VERSION, "-rc") != nullptr) {
     return true;
   }
 
@@ -275,6 +262,8 @@ bool OtaUpdater::isUpdateNewer() const {
 const std::string& OtaUpdater::getLatestVersion() const { return latestVersion; }
 
 OtaUpdater::OtaUpdaterError OtaUpdater::installUpdate(ProgressCallback onProgress, void* ctx) {
+  // Also the only guard against installing from a catalog check, which leaves
+  // otaUrl empty: under Launcher the update is installed by Launcher.
   if (launcher_env::isUnderLauncher()) {
     LOG_INF("OTA", "Managed by M5Launcher; refusing to write another app slot");
     return LAUNCHER_MANAGED;
