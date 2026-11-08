@@ -25,6 +25,12 @@ class OtaUpdater {
     LAUNCHER_MANAGED,
   };
 
+ private:
+  // Under M5Launcher: reads the latest version from LauncherHub. Sets no
+  // download URL; Launcher installs the update.
+  OtaUpdaterError checkLauncherCatalog();
+
+ public:
   size_t getOtaSize() const { return otaSize; }
 
   size_t getProcessedSize() const { return processedSize; }

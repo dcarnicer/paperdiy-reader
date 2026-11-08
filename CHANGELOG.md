@@ -1,6 +1,28 @@
 # Changelog
 
-## 2.1.0 — 2026-11-08
+## 2.0.0-paperdiy.1 — 2026-11-08
+
+Primera release con el esquema de versión `<CrossPoint X.Y.Z>-paperdiy.<N>`:
+CrossPoint `2.0.0` (`818a1540`) y revisión 1 del port. Sustituye a `v2.1.0`,
+que se retiró porque su número no correspondía a ninguna versión de
+CrossPoint. Un PaperDIY en 2.1.0, standalone o bajo M5Launcher, ve 2.1.0
+como más nueva: hay que actualizarlo una vez a mano.
+
+- La OTA de GitHub y el aviso de Launcher comparan versión de CrossPoint,
+  revisión del port y RC (`FirmwareVersion`, con tests de host).
+
+### Aviso de actualización bajo M5Launcher
+
+- Bajo M5Launcher vuelve `Verificar actualizaciones`, solo como aviso: busca
+  `CrossPoint for PaperDIY (community port)` en LauncherHub (réplica de
+  M5Burner) y, si hay versión nueva, ofrece `Salir a M5Launcher` para
+  instalarla desde `OTA`. El lector sigue sin escribir en la flash bajo
+  Launcher; la actualización por SD sigue oculta.
+- Validado en un PaperDIY con M5Launcher 3.0.0 con un build temporal: aviso,
+  salida con tecla A, por deep sleep y por reset del PM1. Falta probarlo con la
+  app publicada en M5Burner.
+
+## 2.1.0 — 2026-11-08 (retirada, ver 2.0.0-paperdiy.1)
 
 Primera release sobre CrossPoint `818a1540`. Incluye el sync del motor, la
 actualización de expat/ArduinoJson/NimBLE/M5GFX y las correcciones encontradas

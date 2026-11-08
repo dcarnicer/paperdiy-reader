@@ -9,6 +9,6 @@
     "device": ["M5Stack PaperDIY"],
     "default_baud": 921600
   },
-  "version": "2.1.0",
+  "version": "2.0.0-paperdiy.1",
   "framework": "Arduino"
 }

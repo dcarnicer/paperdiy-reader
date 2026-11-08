@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """Validate a PaperDIY release tag against the project version.
 
-Public releases use clean semver: tag vMAJOR.MINOR.PATCH (or
-vMAJOR.MINOR.PATCH-rc.N), and ``[crosspoint] version`` in platformio.ini must
-be the same string without the leading ``v``. The ``-paperdiy`` suffix belongs
-to the OTA asset/board tag, never to the version.
+Releases are versioned <CrossPoint X.Y.Z>-paperdiy.<N>: tag
+vX.Y.Z-paperdiy.N (or vX.Y.Z-paperdiy.N-rc.M), and ``[crosspoint] version`` in
+platformio.ini must be the same string without the leading ``v``. See
+.agents/rules/release-versioning.md.
 
 Usage:
-    python3 scripts/check_release_version.py v2.1.0
-    GITHUB_REF_NAME=v2.1.0 python3 scripts/check_release_version.py
+    python3 scripts/check_release_version.py v2.0.0-paperdiy.1
+    GITHUB_REF_NAME=v2.0.0-paperdiy.1 python3 scripts/check_release_version.py
 """
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
-RELEASE_RE = re.compile(r"^v(?P<version>\d+\.\d+\.\d+(?:-rc\.\d+)?)$")
+RELEASE_RE = re.compile(r"^v(?P<version>\d+\.\d+\.\d+-paperdiy\.[1-9]\d*(?:-rc\.[1-9]\d*)?)$")
 
 
 def read_project_version(path: Path) -> str:
@@ -49,8 +49,8 @@ def main() -> int:
     match = RELEASE_RE.fullmatch(tag)
     if match is None:
         raise SystemExit(
-            f"invalid release tag {tag!r}: expected vMAJOR.MINOR.PATCH or "
-            "vMAJOR.MINOR.PATCH-rc.N (no -paperdiy suffix)"
+            f"invalid release tag {tag!r}: expected vX.Y.Z-paperdiy.N or "
+            "vX.Y.Z-paperdiy.N-rc.M (X.Y.Z = CrossPoint version)"
         )
 
     tag_version = match.group("version")

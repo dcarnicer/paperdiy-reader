@@ -6,11 +6,12 @@ whose files are named <name>_<hex-address>.bin. We ship the combined factory
 image at 0x0 so bootloader, partition table and app stay together.
 
 Usage:
-    python3 scripts/make_m5burner_package.py --version 2.1.0
+    python3 scripts/make_m5burner_package.py  # version from platformio.ini
 """
 from __future__ import annotations
 
 import argparse
+import re
 import hashlib
 import json
 import shutil
@@ -53,14 +54,25 @@ def build_license(output: Path, repository: str) -> None:
     )
 
 
+def project_version() -> str:
+    text = (PROJECT_DIR / "platformio.ini").read_text(encoding="utf-8")
+    section = re.search(r"^\[crosspoint\]\s*$(.*?)(?=^\[|\Z)", text, re.MULTILINE | re.DOTALL)
+    match = section and re.search(r"^version\s*=\s*(\S+)\s*$", section.group(1), re.MULTILINE)
+    if not match:
+        raise SystemExit("missing [crosspoint] version in platformio.ini")
+    return match.group(1)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--version", default="2.1.0")
+    parser.add_argument("--version", help="defaults to [crosspoint] version in platformio.ini")
     parser.add_argument("--build-dir", type=Path, default=DEFAULT_BUILD)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--cover", type=Path, default=DEFAULT_COVER)
     parser.add_argument("--repository", default="dcarnicer/paperdiy-reader")
     args = parser.parse_args()
+    if not args.version:
+        args.version = project_version()
 
     factory = args.build_dir / "firmware.factory.bin"
     if not factory.is_file():

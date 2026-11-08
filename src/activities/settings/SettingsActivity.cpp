@@ -144,12 +144,14 @@ void SettingsActivity::rebuildSettings() {
   // OTA fetches this board's own release asset (see OtaUpdater); boards whose
   // asset isn't published yet just report no update available. The Picco's
   // stock layout has one app slot (partitions_picco.csv), so it cannot update
-  // itself either way. Under M5Launcher the launcher owns the app slot, so
-  // self-updating would target another installed app's partition.
+  // itself either way. Under M5Launcher the launcher owns the app slot: the
+  // check only reports a new version, and SD flashing is hidden.
   const bool underLauncher = launcher_env::isUnderLauncher();
-  if (!BoardConfig::isPicco() && !underLauncher) {
+  if (!BoardConfig::isPicco()) {
     addAction(SettingsSection::General, StrId::STR_CHECK_UPDATES, SettingAction::CheckForUpdates);
-    addAction(SettingsSection::General, StrId::STR_SD_FIRMWARE_UPDATE, SettingAction::SdFirmwareUpdate);
+    if (!underLauncher) {
+      addAction(SettingsSection::General, StrId::STR_SD_FIRMWARE_UPDATE, SettingAction::SdFirmwareUpdate);
+    }
   }
   addAction(SettingsSection::General, StrId::STR_ABOUT, SettingAction::About);
   if (underLauncher) {

@@ -6,7 +6,7 @@ by M5Burner. This script copies `.pio/build/paperdiy/firmware.bin` to a
 clearly named asset and writes install notes next to it.
 
 Usage:
-    python3 scripts/make_launcher_package.py --version 2.1.0
+    python3 scripts/make_launcher_package.py --version 2.0.0-paperdiy.1
 """
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def sha256(path: Path) -> str:
 
 def safe_version(value: str) -> str:
     cleaned = re.sub(r"[^A-Za-z0-9._+-]+", "-", value.strip()).strip("-")
-    return cleaned or "2.1.0"
+    return cleaned or "dev"
 
 
 def validate_app_image(path: Path) -> tuple[int, int]:
@@ -59,9 +59,9 @@ def write_readme(output_dir: Path, version: str, repository: str, digest: str) -
 App-only firmware for the **M5Stack PaperDIY** (ESP32-S3, 16 MB flash).
 This is not a full factory image and must not be flashed at `0x0`.
 
-> **In-app OTA does not work under M5Launcher.** The reader detects Launcher
-> and refuses to write OTA partitions. Update by installing the newer
-> `PaperDIYReader-launcher.bin` from Launcher. Do not flash `firmware.bin` at
+> **The reader does not update itself under M5Launcher.** `Check for Updates`
+> reports a newer version in Launcher's catalog; install it from
+> `M5Launcher > OTA` or with the newer `PaperDIYReader-launcher.bin`. Do not flash `firmware.bin` at
 > `0x10000` while Launcher is installed.
 
 ## Install
@@ -80,7 +80,9 @@ Favorites. For Favorites, use the stable release URL:
 Use the same stable file name for every update. Launcher names the app after
 the file, so installing a versioned file such as
 `{FIRMWARE_SLUG}-{version}-launcher.bin` creates a second app instead of
-replacing the existing one. Keep the versioned file only as an archive.
+replacing the existing one. Keep the versioned file only as an archive. Even
+with the stable name, Launcher may add a second app when there is free space;
+if the reader shows up twice, delete the older one from Launcher.
 
 ## Wake straight into the reader (recommended)
 
@@ -103,14 +105,14 @@ Open **Settings > General > Exit to M5Launcher**:
 
 ## Updates
 
-In-app OTA and SD firmware updates are intentionally disabled under
-M5Launcher: the reader runs from a dynamic OTA partition and writing the
-"next" slot could overwrite another installed app or Launcher's registry.
-`OtaUpdater` returns `LAUNCHER_MANAGED` and `FirmwareFlasher` refuses the
-write even if the UI is bypassed.
+Under M5Launcher the reader never writes flash: it runs from a dynamic OTA
+partition and writing the "next" slot could overwrite another installed app or
+Launcher's registry. `Check for Updates` only looks up the latest version in
+LauncherHub (the app is published on M5Burner as
+`CrossPoint for PaperDIY (community port)`) and offers `Exit to M5Launcher`.
 
-Update by installing a newer app-only `PaperDIYReader-launcher.bin` from
-Launcher (SD, WebUI or Favorites). Books, settings and caches live on the SD
+Install the update from `M5Launcher > OTA`, or install a newer app-only
+`PaperDIYReader-launcher.bin` from Launcher (SD, WebUI or Favorites). Books, settings and caches live on the SD
 card and are kept. See `docs/paperdiy/13-m5launcher.en.md`.
 
 ## Source and license
@@ -128,7 +130,7 @@ for the full license and third-party notices.
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--version", default="2.1.0")
+    parser.add_argument("--version", required=True)
     parser.add_argument("--build-dir", type=Path, default=DEFAULT_BUILD)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--repository", default="dcarnicer/paperdiy-reader")
