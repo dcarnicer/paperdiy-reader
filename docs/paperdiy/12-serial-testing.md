@@ -268,3 +268,39 @@ Notas:
 - Los ajustes de imagen/AA se cambiaron solo para medir; hay que restaurarlos
   (`Imágenes: Mostrar`, `Antialiasing: activado`) al terminar.
 
+
+## Tercera pasada — stack de dependencias (08/11/2026)
+
+Probado con `paperdiy-test` sobre `paperdiy-m5gfx`: upstream CrossPoint
+`818a1540`, expat 2.10.0, ArduinoJson 7.4.3, NimBLE-Arduino 2.5.2 y M5GFX
+0.2.36. La unidad tenía batería al 100 % y la SD original.
+
+- Arranque, Home, menú, Ajustes, Sistema, Lector, About, Biblioteca y lector:
+  correctos. La captura de Home mostró la portada y el libro reciente sin
+  artefactos.
+- About: `2.0.0-paperdiy`, ESP32-S3 rev 2, 16 MB, SD 7,4 GB (555 MB usados),
+  batería 4,14 V, `LovyanGFX EPD` a 960×540, sin táctil/frontlight/RTC/IMU.
+- Paginación: 1/31 → 2/31 → 6/31 → 4/31 con A/B, sin entradas perdidas.
+- Orientación: vertical, horizontal horario y horizontal antihorario. En
+  horizontal, la captura nativa sale derecha con `--rotate 0` para
+  antihorario y con `--rotate 180` para horario; el texto y los márgenes son
+  correctos en ambos.
+- USB MSC: monta `DABI`, expulsa desde el Mac y el lector vuelve solo a Home.
+- Diccionario StarDict de prueba (creado al efecto) y vocabulario:
+  - La búsqueda desde el lector y la pantalla de definición funcionan.
+  - `/Vocabulary.txt` se escribe con `v`, palabra, headword, definición,
+    capítulo, página, spine y offset correctos.
+  - Encontrados y corregidos dos defectos: el terminador NUL de StarDict se
+    guardaba como `\u0000` y `definition_truncated` quedaba en `true` aunque
+    solo se hubiera recortado ese byte.
+  - El ajuste nuevo salía en inglés; ahora es `Guardar vocabulario`.
+- Limitación de la inyección serie: en el lector, A/B cortos se enrutan a
+  `remoteTurn()` y solo pasan página; no mueven el cursor de selección de
+  palabras. B_LONG/CONFIRM y A_LONG/BACK sí funcionan. Para probar el
+  diccionario se añadió al diccionario de prueba la palabra que ya quedaba
+  seleccionada («entre»).
+- El diccionario y `/Vocabulary.txt` de prueba se borraron y los ajustes
+  tocados (archivos ocultos, diccionario, vocabulario) se restauraron. La SD
+  vuelve a mostrar solo las carpetas originales.
+- Queda pendiente: Wi-Fi/OPDS/OTA, BLE, ghosting físico, autonomía y ciclos de
+  suspensión con esta base.

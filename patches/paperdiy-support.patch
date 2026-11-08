@@ -1040,7 +1040,7 @@ index 7640f1df..d417b345 100644
  STR_LONG_PRESS_BEHAVIOR_OFF: "Desactivat"
  STR_LONG_PRESS_BEHAVIOR_SKIP: "Saltar capítols"
 diff --git a/lib/I18n/translations/english.yaml b/lib/I18n/translations/english.yaml
-index fddd238c..85d621c5 100644
+index 72d5bb5c..55cc8a94 100644
 --- a/lib/I18n/translations/english.yaml
 +++ b/lib/I18n/translations/english.yaml
 @@ -179,6 +179,12 @@ STR_MOVE_FINISHED_TO_READ: "Move Finished Books to Read Folder"
@@ -1395,7 +1395,7 @@ index fb30a5ab..bab677e3 100644
      needsResave = true;
    }
 diff --git a/src/CrossPointSettings.h b/src/CrossPointSettings.h
-index 513a2747..d7bc0659 100644
+index 68a1d99c..75f52b44 100644
 --- a/src/CrossPointSettings.h
 +++ b/src/CrossPointSettings.h
 @@ -2,6 +2,7 @@
@@ -1501,7 +1501,7 @@ index 06ecd724..9498d0a9 100644
    UiListActivity::render(std::move(lock));
  }
 diff --git a/src/activities/settings/AboutActivity.cpp b/src/activities/settings/AboutActivity.cpp
-index 953a815e..b4a9660c 100644
+index 9e61d0fe..f0e168b4 100644
 --- a/src/activities/settings/AboutActivity.cpp
 +++ b/src/activities/settings/AboutActivity.cpp
 @@ -1,5 +1,6 @@
@@ -1541,7 +1541,7 @@ index 953a815e..b4a9660c 100644
      "MAC Address",
  };
  
-@@ -139,6 +130,22 @@ void AboutActivity::onEnter() {
+@@ -143,6 +134,22 @@ void AboutActivity::onEnter() {
    const char* liveController = display.controllerName();
    rowValues_[ITEM_DISPLAY] =
        liveController ? liveController : displayControllerName(BoardConfig::ACTIVE.displayController);
@@ -1997,7 +1997,7 @@ index 550584bc..cf4f19e5 100644
    mutable std::atomic<bool> uiReady{false};
  };
 diff --git a/src/components/themes/BaseTheme.cpp b/src/components/themes/BaseTheme.cpp
-index 0854756b..834a089f 100644
+index 98d47fc4..947d4ebd 100644
 --- a/src/components/themes/BaseTheme.cpp
 +++ b/src/components/themes/BaseTheme.cpp
 @@ -82,7 +82,7 @@ void BaseTheme::drawBatteryLightningBolt(const GfxRenderer& renderer, int boltX,

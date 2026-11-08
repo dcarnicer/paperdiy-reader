@@ -3,8 +3,8 @@
 Este repo es un fork downstream de CrossPoint. La regla es simple: **el motor
 se sigue de upstream; el hardware y la UX PaperDIY viven en nuestro fork**.
 
-Última sincronización: CrossPoint `5d731041` / FreeInk SDK `fb7e926`
-(06/11/2026).
+Última sincronización: CrossPoint `818a1540` / FreeInk SDK `fb7e926`
+(08/11/2026).
 
 ## Ramas y remotos
 
@@ -86,7 +86,7 @@ git apply --3way patches/firmware.patch
 
 # docs/infra
 git checkout paperdiy -- README.md README.en.md README.ja.md README.zh-CN.md \
-  CHANGELOG.md Makefile NOTICE LICENSE .gitignore .gitattributes hardware \
+  CHANGELOG.md Makefile NOTICE LICENSE .gitignore .gitattributes hardware m5burner \
   docs/paperdiy docs/README.md docs/upstream scripts patches .github
 rm -f ROADMAP.md SCOPE.md GOVERNANCE.md AGENTS.md USER_GUIDE.md CLAUDE.md .gitmodules
 rm -rf .github && git checkout paperdiy -- .github
@@ -143,7 +143,7 @@ git add freeink-sdk && git commit -m "chore: vendor pristine SDK for patch basel
 | Patch | Base | Contenido |
 |---|---|---|
 | `patches/sdk.patch` | FreeInk SDK `fb7e926` | perfil, BoardPaperDiy, PM1, InputManager, PowerManager, driver LGFX |
-| `patches/firmware.patch` | CrossPoint `5d731041` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main |
+| `patches/firmware.patch` | CrossPoint `818a1540` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main |
 | `patches/paperdiy-support.patch` | ambos | concatenación de los dos anteriores |
 
 Orden de aplicación: `sdk.patch` y luego `firmware.patch`.

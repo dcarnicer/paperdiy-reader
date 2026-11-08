@@ -1,5 +1,48 @@
 # Changelog
 
+## 2.1.0-paperdiy.1 — 2026-11-08
+
+Primera release sobre CrossPoint `818a1540`. Incluye el sync del motor, la
+actualización de expat/ArduinoJson/NimBLE/M5GFX y las correcciones encontradas
+en la prueba de hardware. El detalle está en las entradas siguientes.
+
+- Build `paperdiy` correcto y 905/905 tests host.
+- Smoke validado en un PaperDIY real: arranque, Home, menús, About, lector,
+  paginación, orientación vertical/horizontal, USB MSC, diccionario StarDict y
+  `/Vocabulary.txt`.
+- Pendiente: Wi-Fi/OPDS/OTA, BLE, ghosting físico y autonomía.
+
+## 2026-11-08 — correcciones de la prueba en hardware
+
+- `VocabularyStore`: elimina el terminador NUL de las definiciones StarDict y
+  ya no marca `definition_truncated` cuando el único recorte era ese byte.
+- Traducido al español el nuevo ajuste `Guardar vocabulario`.
+- Verificado en un PaperDIY real: arranque, Home, menús, About, lector,
+  paginación, orientación vertical/horizontal y USB MSC. Diccionario StarDict
+  y `/Vocabulary.txt` probados con un diccionario de prueba.
+
+## 2026-11-08 — dependencias
+
+- expat vendorizado actualizado de 2.7.3 a 2.10.0. El firmware usa el RNG del
+  ESP32 para la sal del hash (`lib/expat/esp_random_shim.c`); los tests host
+  que compilan expat incluyen ahora `xcs.c`.
+- ArduinoJson 7.4.2 → 7.4.3 y NimBLE-Arduino 2.5.1 → 2.5.2.
+- M5GFX 0.2.33 → 0.2.36 dentro de la serie 0.2.x; no se sube a 0.3.0 por el
+  cambio de semántica de rotación. Build correcto; falta validar pantalla,
+  rotación y refresco en hardware.
+
+## 2026-11-08 — upstream `818a1540`
+
+- CrossPoint actualizado de `5d731041` a `818a1540` (9 commits): historial de
+  vocabulario del diccionario, `FtFont` compartido entre tamaños de la misma
+  fuente, exclusión de carpetas especiales de la Library, fixes de portadas en
+  Home/Classic y de navegación del diccionario.
+- SDK sin cambios: sigue en `fb7e926`; `patches/sdk.patch` no cambia.
+  `patches/firmware.patch` regenerado contra `818a1540`.
+- El overlay de `scripts/sync-upstream.sh` conserva ahora `m5burner/`.
+- Build `paperdiy` correcto: firmware 5.413.083 B, 82,6 % de la partición de
+  app. Falta el smoke test en una unidad real antes de mergear a `paperdiy`.
+
 ## 2026-11-07 — compatibilidad con M5Launcher
 
 - Añadido `src/platform/LauncherEnv`: detecta el firmware residente de
