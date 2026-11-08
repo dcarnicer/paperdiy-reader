@@ -92,6 +92,10 @@ class UiListActivity : public Activity, protected UiAppHost {
   freeink::ui::ListNav nav;
   ButtonNavigator buttonNavigator;
 
+  // Set by a screen that replaces a reader page and must scrub the previous
+  // ink on its first paint (the reader menu). Subsequent paints stay FAST.
+  bool cleanFirstRender = false;
+
  private:
   static void screenTrampoline(UiScreen& screen, void* user);
   static void rowActionTrampoline(const freeink::ui::ActionEvent& event, void* user);
