@@ -7,8 +7,9 @@
   M5Burner) y, si hay versión nueva, ofrece `Salir a M5Launcher` para
   instalarla desde `OTA`. El lector sigue sin escribir en la flash bajo
   Launcher; la actualización por SD sigue oculta.
-- Validado en un PaperDIY con M5Launcher 3.0.0 con un build temporal; falta
-  probarlo con la app publicada y la salida sin tecla configurada.
+- Validado en un PaperDIY con M5Launcher 3.0.0 con un build temporal: aviso,
+  salida con tecla A, por deep sleep y por reset del PM1. Falta probarlo con la
+  app publicada en M5Burner.
 
 ## 2.1.0 — 2026-11-08
 

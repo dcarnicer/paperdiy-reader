@@ -245,8 +245,9 @@ instalado con `flash firmware` y `flash overwrite`):
   `Instálala desde M5Launcher > OTA` y `Cancelar` / `Salir a M5Launcher`.
 - [x] `Salir a M5Launcher` desde el aviso, con tecla A configurada: abre la
   pantalla de mantener A y llega al menú de Launcher.
-- [ ] `Salir a M5Launcher` desde el aviso sin tecla configurada (deep sleep o
-  reset del PM1).
+- [x] `Salir a M5Launcher` desde el aviso sin tecla configurada: con
+  `DeepSleep starts Launcher` activado sale por deep sleep y, desactivado, por
+  reset del PM1; en ambos casos aparece Launcher y luego vuelve al lector.
 - [ ] Aviso con la app real publicada en M5Burner.
 - [ ] Actualizar desde el catálogo o la SD reemplaza `paperd` en vez de crear
   `paper1`.

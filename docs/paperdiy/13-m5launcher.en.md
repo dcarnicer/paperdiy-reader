@@ -235,8 +235,9 @@ with `flash firmware` and `flash overwrite`):
   "Install it from M5Launcher > OTA" hint and Cancel / Exit to M5Launcher.
 - [x] Exit to M5Launcher from the notice, with key A configured: opens the
   hold-A screen and reaches Launcher's menu.
-- [ ] Exit to M5Launcher from the notice with no key configured (deep sleep or
-  PM1 reset).
+- [x] Exit to M5Launcher from the notice with no key configured: with
+  `DeepSleep starts Launcher` on it exits via deep sleep, and with it off via
+  the PM1 reset; Launcher appears in both cases, then boots the reader.
 - [ ] Notice against the real app published on M5Burner.
 - [ ] Updating from the catalog or SD replaces `paperd` instead of creating
   `paper1`.
