@@ -77,6 +77,9 @@ differs, update `firmware_category.device` in `m5burner.json`.
   upload RCs.
 - The cover is `m5burner/cover.png` (1280×720) and is used by default by
   `scripts/make_m5burner_package.py`. Pass `--cover` to use another image.
+  It is rendered from `m5burner/cover.html` with headless Chrome (command in
+  the file's header); edit the HTML, not the PNG. Keep the license text in
+  line with the firmware (GPLv3).
 - Keep `README.md` and `LICENSE` inside the uploaded package.
 - The same full image serves M5Launcher: LauncherHub mirrors M5Burner and
   Launcher copies only the app at `0x10000`. Prefer uploading the GitHub
