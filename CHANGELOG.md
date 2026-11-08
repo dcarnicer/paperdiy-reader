@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-08 — dependencias (pendiente de smoke hardware)
+
+- expat vendorizado actualizado de 2.7.3 a 2.10.0. El firmware usa el RNG del
+  ESP32 para la sal del hash (`lib/expat/esp_random_shim.c`); los tests host
+  que compilan expat incluyen ahora `xcs.c`.
+- ArduinoJson 7.4.2 → 7.4.3 y NimBLE-Arduino 2.5.1 → 2.5.2.
+- M5GFX 0.2.33 → 0.2.36 dentro de la serie 0.2.x; no se sube a 0.3.0 por el
+  cambio de semántica de rotación. Build correcto; falta validar pantalla,
+  rotación y refresco en hardware.
+
 ## 2026-11-08 — upstream `818a1540` (pendiente de smoke hardware)
 
 - CrossPoint actualizado de `5d731041` a `818a1540` (9 commits): historial de
