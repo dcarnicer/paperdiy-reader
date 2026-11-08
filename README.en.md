@@ -188,9 +188,9 @@ With [M5Launcher](https://github.com/bmorcelli/Launcher) 3.0.0 or newer
 (PaperDIY port), install the **app-only** binary, not the M5Burner image:
 
 ```bash
-make launcher LAUNCHER_VERSION=2.1.0
+make launcher LAUNCHER_VERSION=2.0.0-paperdiy.1
 # dist/launcher/PaperDIYReader-launcher.bin        (stable alias)
-# dist/launcher/PaperDIYReader-2.1.0-launcher.bin  (versioned archive)
+# dist/launcher/PaperDIYReader-2.0.0-paperdiy.1-launcher.bin  (versioned archive)
 ```
 
 Always use the stable alias `PaperDIYReader-launcher.bin` for installs and

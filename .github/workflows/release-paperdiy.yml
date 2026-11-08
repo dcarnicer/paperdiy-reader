@@ -47,7 +47,7 @@ jobs:
           cp .pio/build/paperdiy/firmware.bin "dist/crosspoint-${GITHUB_REF_NAME}-paperdiy.bin"
           cp .pio/build/paperdiy/firmware.bin dist/firmware.bin
           cp .pio/build/paperdiy/firmware.factory.bin dist/firmware.factory.bin
-          python3 scripts/make_launcher_package.py --version "${GITHUB_REF_NAME}" --output-dir dist/launcher
+          python3 scripts/make_launcher_package.py --version "${GITHUB_REF_NAME#v}" --output-dir dist/launcher
           cp dist/launcher/*.bin dist/
           cp dist/launcher/README.md dist/launcher-README.md
           (cd dist && sha256sum *.bin *.md > SHA256SUMS.txt)
@@ -60,4 +60,5 @@ jobs:
             dist/*.md
             dist/SHA256SUMS.txt
           generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-rc.') }}
           fail_on_unmatched_files: true

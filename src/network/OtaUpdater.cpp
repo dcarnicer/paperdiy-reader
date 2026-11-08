@@ -22,6 +22,7 @@
 
 #include "FirmwareBoardTag.h"
 #include "FirmwareFlasher.h"
+#include "FirmwareVersion.h"
 #include "platform/LauncherEnv.h"
 
 namespace {
@@ -75,19 +76,6 @@ bool fetchLauncherHubJson(const std::string& url, char* body, JsonDocument& doc,
   return true;
 }
 
-// Missing segments stay 0, so "2.2" orders as 2.2.0.
-void parseVersion(const char* version, int out[3]) {
-  out[0] = out[1] = out[2] = 0;
-  if (*version == 'v' || *version == 'V') ++version;
-  sscanf(version, "%d.%d.%d", &out[0], &out[1], &out[2]);
-}
-
-bool versionGreater(const int a[3], const int b[3]) {
-  for (int i = 0; i < 3; ++i) {
-    if (a[i] != b[i]) return a[i] > b[i];
-  }
-  return false;
-}
 }  // namespace
 
 OtaUpdater::OtaUpdaterError OtaUpdater::checkLauncherCatalog() {
@@ -142,15 +130,14 @@ OtaUpdater::OtaUpdaterError OtaUpdater::checkLauncherCatalog() {
 
   // Pick the highest version rather than trusting the response order.
   const char* best = nullptr;
-  int bestParts[3] = {};
+  firmware_version::Version bestVersion;
   for (JsonObjectConst entry : versions["versions"].as<JsonArrayConst>()) {
     const char* version = entry["version"] | "";
     if (*version == '\0') continue;
-    int parts[3];
-    parseVersion(version, parts);
-    if (best == nullptr || versionGreater(parts, bestParts)) {
+    const firmware_version::Version parsed = firmware_version::parse(version);
+    if (best == nullptr || firmware_version::isNewer(parsed, bestVersion)) {
       best = version;
-      std::memcpy(bestParts, parts, sizeof(bestParts));
+      bestVersion = parsed;
     }
   }
   if (best == nullptr) {
@@ -192,7 +179,7 @@ OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
     snprintf(assetSuffix, sizeof(assetSuffix), "-%.*s", static_cast<int>(board_tag::boardNameLen()),
              board_tag::boardName());
   }
-  char assetName[48] = {};
+  char assetName[64] = {};
   bool assetNameSet = false;
   const bool ok = HttpDownloader::fetchUrl(latestReleaseUrl, [&](const uint8_t* data, size_t len) {
     size_t offset = 0;
@@ -242,21 +229,9 @@ bool OtaUpdater::isUpdateNewer() const {
     return false;
   }
 
-  int latest[3];
-  int current[3];
-  parseVersion(latestVersion.c_str(), latest);
-  parseVersion(CROSSPOINT_VERSION, current);
-  if (versionGreater(latest, current)) return true;
-  if (versionGreater(current, latest)) return false;
-
-  // If we reach here, it means all segments are equal.
-  // One final check, if we're on an RC build (contains "-rc"), we should consider the latest version as newer even if
-  // the segments are equal, since RC builds are pre-release versions.
-  if (strstr(CROSSPOINT_VERSION, "-rc") != nullptr) {
-    return true;
-  }
-
-  return false;
+  // Orders by CrossPoint version, port revision, then release candidates
+  // before their release (FirmwareVersion.h).
+  return firmware_version::isNewer(latestVersion.c_str(), CROSSPOINT_VERSION);
 }
 
 const std::string& OtaUpdater::getLatestVersion() const { return latestVersion; }

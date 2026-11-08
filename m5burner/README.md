@@ -7,7 +7,7 @@ checklist. Generated packages go to `dist/m5burner/` (ignored by git).
 
 ```bash
 make build ENV=paperdiy
-python3 scripts/make_m5burner_package.py --version 2.1.0
+python3 scripts/make_m5burner_package.py   # version from platformio.ini
 ```
 
 The script produces:
@@ -68,9 +68,12 @@ differs, update `firmware_category.device` in `m5burner.json`.
 
 - `m5burner.json` here is a template; the packaging script replaces
   `version` and normalizes `repository`.
-- M5Burner uses the same public semver as the GitHub release: `2.1.0`,
-  `2.1.1`, `2.2.0`. The upstream base (`818a1540` / SDK `fb7e926`) goes in
-  the description, not in the version.
+- M5Burner uses the same version as the GitHub release, without the `v`:
+  `2.0.0-paperdiy.1`, `2.0.0-paperdiy.2`… (CrossPoint version + port
+  revision; see `.agents/rules/release-versioning.md`). The reader's update
+  notice compares this field and picks the highest one, so type it exactly
+  and never leave an old-scheme version such as `2.1.0` in the entry. Do not
+  upload RCs.
 - The cover is `m5burner/cover.png` (1280×720) and is used by default by
   `scripts/make_m5burner_package.py`. Pass `--cover` to use another image.
 - Keep `README.md` and `LICENSE` inside the uploaded package.

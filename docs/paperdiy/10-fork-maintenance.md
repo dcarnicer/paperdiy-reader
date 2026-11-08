@@ -167,10 +167,9 @@ El workflow `.github/workflows/release-paperdiy.yml` ya compila y publica:
 - `firmware.bin` (actualización de app)
 - `firmware.factory.bin` (instalación completa/recuperación)
 
-Tag: `vMAJOR.MINOR.PATCH` (por ejemplo `v2.1.0`). El parser de OTA ignora el
-prefijo `v` y compara los tres primeros segmentos. El asset que consume la OTA
-se llama `crosspoint-v2.1.0-paperdiy.bin`: el sufijo `-paperdiy` es el board
-tag, no la versión.
+Tag: `v<versión>` (por ejemplo `v2.0.0-paperdiy.1`, ver Versionado). El asset
+que consume la OTA se llama `crosspoint-v2.0.0-paperdiy.1-paperdiy.bin`: el
+último `-paperdiy` es el board tag que busca la OTA, no la versión.
 
 Bajo M5Launcher el lector **no escribe en la flash**: `installUpdate` devuelve
 `LAUNCHER_MANAGED` y `FirmwareFlasher` rechaza escribir otra partición.
@@ -184,22 +183,30 @@ dual-boot de la PR de prateek; aquí no lo usamos.
 
 ## Versionado
 
-La versión pública es semver limpio del fork, sin sufijos:
+La versión es la de CrossPoint sobre la que se construye más una revisión del
+port, para que se vea de un vistazo qué upstream lleva cada release:
+`<CrossPoint X.Y.Z>-paperdiy.<N>`.
 
-- Release: tag `vMAJOR.MINOR.PATCH` y `[crosspoint] version` /
-  `CROSSPOINT_VERSION` igual a `MAJOR.MINOR.PATCH` (por ejemplo `v2.1.0` →
-  `2.1.0`).
-- MAJOR: cambios incompatibles (particiones, migración de ajustes, etc.).
-- MINOR: features nuevas o sync de upstream que las trae.
-- PATCH: fixes, dependencias y documentación.
-- RC: `v2.2.0-rc.1`; se publica como pre-release y no aparece en
-  `/releases/latest`.
-- Builds internos: sin tag, `2.2.0-dev.<sha>`.
-- Nunca se reutiliza un tag; para reconstruir una release se sube PATCH.
-- El commit upstream y el pin del SDK van en el CHANGELOG y en las notas de la
-  release, no en el tag.
-- `-paperdiy` solo queda en el nombre del asset OTA
-  (`crosspoint-v2.1.0-paperdiy.bin`), porque es el board tag que espera la OTA.
+- `X.Y.Z` es `[crosspoint] version` de upstream `main` en el commit
+  sincronizado (hoy `2.0.0`, `818a1540`). No se inventa ni se sube por libre.
+- `N` empieza en 1 y sube en cada release pública (fixes, features, docs).
+  Un sync a otra versión de CrossPoint lo reinicia: `2.1.0-paperdiy.1`.
+- Tag `v2.0.0-paperdiy.1`; `[crosspoint] version` / `CROSSPOINT_VERSION` es
+  la misma cadena sin la `v`.
+- RC: `v2.0.0-paperdiy.2-rc.1`; el workflow la publica como pre-release y no
+  aparece en `/releases/latest`. No se sube a M5Burner.
+- Los builds locales de `paperdiy` llevan la versión tal cual; no se publican.
+- Nunca se reutiliza un tag; para reconstruir una release se sube `N`.
+- Orden (`src/network/FirmwareVersion.h`, OTA de GitHub y aviso de
+  LauncherHub): versión de CrossPoint, luego `N`, y una RC antes de su release.
+- El commit upstream y el pin del SDK van en el CHANGELOG y en las notas.
+- Todas las versiones subidas a M5Burner siguen este esquema: el aviso coge la
+  más alta del catálogo, y una `2.1.0` suelta se ofrecería a todos los
+  `2.0.0-paperdiy.N`.
+- `v0.1.0` y `v2.1.0` son anteriores a este esquema; `v2.1.0` se retiró de
+  GitHub antes de publicar `v2.0.0-paperdiy.1`. Un aparato en 2.1.0
+  (standalone o bajo Launcher) la compara como más nueva y hay que
+  actualizarlo una vez a mano.
 - El workflow de release valida tag y versión con
   `scripts/check_release_version.py`.
 - Changelog con: upstream base, cambios PaperDIY, hardware validado, notas de

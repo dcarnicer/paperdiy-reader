@@ -151,19 +151,19 @@ cabecera ESP (`0xE9`).
 
 ```bash
 make build ENV=paperdiy
-python3 scripts/make_launcher_package.py --version 2.1.0
+python3 scripts/make_launcher_package.py --version 2.0.0-paperdiy.1
 ```
 
 El script genera:
 
 ```
 dist/launcher/
-├── PaperDIYReader-2.1.0-launcher.bin
+├── PaperDIYReader-2.0.0-paperdiy.1-launcher.bin
 └── README.md
 ```
 
-`make launcher LAUNCHER_VERSION=2.1.0` hace lo mismo. El workflow de release
-publica además `PaperDIYReader-<tag>-launcher.bin` y el alias estable
+`make launcher LAUNCHER_VERSION=2.0.0-paperdiy.1` hace lo mismo. El workflow de release
+publica además `PaperDIYReader-<versión>-launcher.bin` y el alias estable
 `PaperDIYReader-launcher.bin` junto al factory image.
 
 ## Actualizar

@@ -6,7 +6,7 @@ by M5Burner. This script copies `.pio/build/paperdiy/firmware.bin` to a
 clearly named asset and writes install notes next to it.
 
 Usage:
-    python3 scripts/make_launcher_package.py --version 2.1.0
+    python3 scripts/make_launcher_package.py --version 2.0.0-paperdiy.1
 """
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def sha256(path: Path) -> str:
 
 def safe_version(value: str) -> str:
     cleaned = re.sub(r"[^A-Za-z0-9._+-]+", "-", value.strip()).strip("-")
-    return cleaned or "2.1.0"
+    return cleaned or "dev"
 
 
 def validate_app_image(path: Path) -> tuple[int, int]:
@@ -130,7 +130,7 @@ for the full license and third-party notices.
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--version", default="2.1.0")
+    parser.add_argument("--version", required=True)
     parser.add_argument("--build-dir", type=Path, default=DEFAULT_BUILD)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--repository", default="dcarnicer/paperdiy-reader")

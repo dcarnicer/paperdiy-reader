@@ -192,9 +192,9 @@ Con [M5Launcher](https://github.com/bmorcelli/Launcher) 3.0.0 o superior
 M5Burner:
 
 ```bash
-make launcher LAUNCHER_VERSION=2.1.0
+make launcher LAUNCHER_VERSION=2.0.0-paperdiy.1
 # dist/launcher/PaperDIYReader-launcher.bin        (alias estable)
-# dist/launcher/PaperDIYReader-2.1.0-launcher.bin  (archivo versionado)
+# dist/launcher/PaperDIYReader-2.0.0-paperdiy.1-launcher.bin  (archivo versionado)
 ```
 
 Usa siempre el alias estable `PaperDIYReader-launcher.bin` para instalar y
