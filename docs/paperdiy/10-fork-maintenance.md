@@ -10,12 +10,14 @@ se sigue de upstream; el hardware y la UX PaperDIY viven en nuestro fork**.
 
 | Rama | Qué es |
 |---|---|
-| `main` | Espejo de `upstream/develop` (sin cambios nuestros) |
+| `main` | Espejo local de `upstream/develop` (sin cambios nuestros) |
 | `paperdiy` | Nuestro fork: `main` + FreeInk SDK vendorizado + port + docs |
-| `paperdiy-next` | Árbol de staging para el siguiente sync; no se publica |
 | `sdk-baseline` | Rama local con el SDK pristine del pin, solo para generar `sdk.patch` |
-| `backup/2026-10-28` | Historial anterior a la reestructuración (seguro) |
-| `master` | Historia antigua, conservada por si acaso |
+
+`paperdiy-next` es una rama temporal que crea `scripts/sync-upstream.sh` para
+preparar el siguiente sync; no se conserva entre sincronizaciones. El historial
+anterior a la reestructuración queda archivado en el tag
+`archive/pre-restructure-2026-10-28`.
 
 Remotos:
 
