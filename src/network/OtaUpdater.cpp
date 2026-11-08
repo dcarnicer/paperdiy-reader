@@ -37,8 +37,10 @@ constexpr char latestReleaseUrl[] = CROSSPOINT_OTA_RELEASES_URL;
 constexpr char launcherHubUrl[] = "https://api.launcherhub.net/firmwares";
 constexpr char launcherHubCategory[] = "paper-diy";
 constexpr char launcherHubAppName[] = "CrossPoint for PaperDIY (community port)";
-// Each published version adds ~350 bytes to the fid response.
+// A 100-item category page is ~10 KB; each published version adds ~350 bytes
+// to the fid response.
 constexpr size_t MAX_LAUNCHER_HUB_RESPONSE = 24 * 1024;
+constexpr int MAX_LAUNCHER_HUB_PAGES = 10;
 
 bool fetchLauncherHubJson(const std::string& url, JsonDocument& doc, const JsonDocument& filter) {
   auto body = makeUniqueNoThrow<char[]>(MAX_LAUNCHER_HUB_RESPONSE);
@@ -91,27 +93,36 @@ bool versionGreater(const int a[3], const int b[3]) {
 OtaUpdater::OtaUpdaterError OtaUpdater::checkLauncherCatalog() {
   LOG_DBG("OTA", "Checking LauncherHub for update (current: %s)", CROSSPOINT_VERSION);
 
-  std::string url = std::string(launcherHubUrl) + "?category=" + launcherHubCategory + "&q=CrossPoint";
+  // Walk the whole category and match the exact name: the server's free-text
+  // search is not documented, so it is not trusted to find the entry.
   JsonDocument listFilter;
+  listFilter["total"] = true;
+  listFilter["page_size"] = true;
   listFilter["items"][0]["fid"] = true;
   listFilter["items"][0]["name"] = true;
-  JsonDocument list;
-  if (!fetchLauncherHubJson(url, list, listFilter)) return HTTP_ERROR;
-
-  const char* fid = nullptr;
-  for (JsonObjectConst item : list["items"].as<JsonArrayConst>()) {
-    const char* name = item["name"] | "";
-    if (strcasecmp(name, launcherHubAppName) == 0) {
-      fid = item["fid"] | "";
-      break;
+  std::string fid;
+  for (int page = 1; page <= MAX_LAUNCHER_HUB_PAGES && fid.empty(); ++page) {
+    const std::string url =
+        std::string(launcherHubUrl) + "?category=" + launcherHubCategory + "&page=" + std::to_string(page);
+    JsonDocument list;
+    if (!fetchLauncherHubJson(url, list, listFilter)) return HTTP_ERROR;
+    for (JsonObjectConst item : list["items"].as<JsonArrayConst>()) {
+      const char* name = item["name"] | "";
+      if (strcasecmp(name, launcherHubAppName) == 0) {
+        fid = item["fid"] | "";
+        break;
+      }
     }
+    const int total = list["total"] | 0;
+    const int pageSize = list["page_size"] | 0;
+    if (pageSize <= 0 || page * pageSize >= total) break;
   }
-  if (fid == nullptr || *fid == '\0') {
+  if (fid.empty()) {
     LOG_INF("OTA", "\"%s\" is not in the LauncherHub %s catalog yet", launcherHubAppName, launcherHubCategory);
     return NO_UPDATE;
   }
 
-  url = std::string(launcherHubUrl) + "?fid=" + fid;
+  const std::string url = std::string(launcherHubUrl) + "?fid=" + fid;
   JsonDocument versionFilter;
   versionFilter["versions"][0]["version"] = true;
   JsonDocument versions;
@@ -131,7 +142,7 @@ OtaUpdater::OtaUpdaterError OtaUpdater::checkLauncherCatalog() {
     }
   }
   if (best == nullptr) {
-    LOG_ERR("OTA", "LauncherHub entry %s lists no versions", fid);
+    LOG_ERR("OTA", "LauncherHub entry %s lists no versions", fid.c_str());
     return JSON_PARSE_ERROR;
   }
 
@@ -140,7 +151,7 @@ OtaUpdater::OtaUpdaterError OtaUpdater::checkLauncherCatalog() {
   otaSize = 0;
   totalSize = 0;
   updateAvailable = true;
-  LOG_DBG("OTA", "LauncherHub latest: %s (fid %s)", latestVersion.c_str(), fid);
+  LOG_DBG("OTA", "LauncherHub latest: %s (fid %s)", latestVersion.c_str(), fid.c_str());
   return OK;
 }
 
