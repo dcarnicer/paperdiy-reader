@@ -1,0 +1,48 @@
+name: build-paperdiy
+
+on:
+  push:
+    branches:
+      - paperdiy
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Cache PlatformIO core + build
+        uses: actions/cache@v6
+        with:
+          path: |
+            .platformio-core
+            .pio
+          key: paperdiy-${{ hashFiles('platformio.ini') }}-${{ github.sha }}
+          restore-keys: |
+            paperdiy-${{ hashFiles('platformio.ini') }}-
+
+      - name: Build
+        env:
+          PLATFORMIO_CORE_DIR: ${{ github.workspace }}/.platformio-core
+        run: pio run -e paperdiy
+
+      - name: Check release images
+        run: python3 scripts/check_release_assets.py .pio/build/paperdiy/firmware.factory.bin .pio/build/paperdiy/firmware.bin
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v7
+        with:
+          name: paperdiy-firmware
+          path: |
+            .pio/build/paperdiy/firmware.bin
+            .pio/build/paperdiy/firmware.factory.bin
+          if-no-files-found: error

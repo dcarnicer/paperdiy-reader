@@ -80,7 +80,7 @@ class RecordWriter {
       }
     }
     put('"');
-    return i < text.size();
+    return i < std::min(text.size(), maxInputBytes);
   }
 
   bool finish() { return flush() && good; }
@@ -288,10 +288,14 @@ bool VocabularyStore::append(const VocabularyContext& context, const std::string
   record.quoted(headword, MAX_WORD_BYTES);
   record.raw(",\"definition\":");
   const auto& text = *exportedDefinition;
-  size_t definitionBytes = std::min(text.size(), MAX_DEFINITION_BYTES);
-  if (definitionBytes < text.size()) definitionBytes = utf8SafeTruncateBuffer(text.data(), definitionBytes);
-  bool definitionTruncated = sourceTruncated || definitionBytes < text.size();
-  if (definitionBytes < text.size() && definitionBytes > 0) {
+  // StarDict "m" fields are NUL-terminated; do not persist the terminator in
+  // the JSONL record.
+  size_t textSize = text.size();
+  while (textSize > 0 && text[textSize - 1] == '\0') --textSize;
+  size_t definitionBytes = std::min(textSize, MAX_DEFINITION_BYTES);
+  if (definitionBytes < textSize) definitionBytes = utf8SafeTruncateBuffer(text.data(), definitionBytes);
+  bool definitionTruncated = sourceTruncated || definitionBytes < textSize;
+  if (definitionBytes < textSize && definitionBytes > 0) {
     const size_t lastLine = text.rfind('\n', definitionBytes - 1);
     if (lastLine != std::string::npos && lastLine >= definitionBytes / 2) {
       definitionBytes = lastLine;
