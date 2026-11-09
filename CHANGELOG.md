@@ -1,6 +1,6 @@
 # Changelog
 
-## 2026-11-09 — upstream `f8db833f` (pendiente de smoke hardware)
+## 2026-11-09 — upstream `f8db833f` (validado en hardware)
 
 - CrossPoint actualizado de `818a1540` a `f8db833f` (3 commits): la selección
   de palabras para enlaces y footnotes reutiliza la del diccionario y respeta
@@ -23,7 +23,11 @@
   `git apply --check` limpio sobre `sdk-baseline` y `main`.
 - Build `paperdiy` correcto: `firmware.bin` 5.427.376 B y 82,7 % de uso de
   flash (5.422.079 / 6.553.600 B). Tests host 914/914 en serie.
-- Pendiente: smoke test en una unidad real antes del merge a `paperdiy`.
+- Smoke en un PaperDIY real (09/11): arranque, Home, lector, page turn,
+  recorte multipalabra con A/B, selector de enlaces con subrayado, TOC,
+  orientación, About y USB MSC. Sleep/wake no se repitió; el camino de
+  energía no cambia en este sync. Quedan pendientes ghosting físico,
+  autonomía y Wi-Fi/OPDS/OTA/BLE con esta base.
 
 ## 2.0.0-1 — 2026-11-08
 

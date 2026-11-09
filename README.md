@@ -16,8 +16,9 @@ a diario.
 > tamaño/usado/libre de SD y batería.
 > Smoke del sync `818a1540` y del stack de dependencias (08/11/2026): arranque,
 > Home, menús, lector, paginación, orientaciones, USB MSC y diccionario
-> StarDict. El sync `f8db833f` compila y pasa los tests host; pendiente de
-> smoke en hardware.
+> StarDict. Smoke del sync `f8db833f` (09/11/2026): arranque, Home, lector,
+> recorte multipalabra con A/B, selector de enlaces, orientación, About y
+> USB MSC. Sleep/wake no se repitió; el camino de energía no cambia.
 > La lectura EPUB, Wi-Fi, web UI y transferencia de libros ya se validaron el
 > 28/10/2026. Calibre wireless y OTA verificados el 04/11/2026. OPDS
 > (Project Gutenberg) verificado el 05/11/2026. Auto-suspensión y sleep screen
