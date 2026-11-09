@@ -1,6 +1,10 @@
 # Changelog
 
-## 2026-11-09 — upstream `f8db833f` (validado en hardware)
+## 2.0.0-2 — 2026-11-09
+
+Segunda revisión del port sobre CrossPoint `2.0.0` (`f8db833f`) y FreeInk SDK
+`ac146e4`. Mantiene el esquema de versión `<CrossPoint X.Y.Z>-<N>` y publica
+las mismas dos imágenes que `2.0.0-1`.
 
 - CrossPoint actualizado de `818a1540` a `f8db833f` (3 commits): la selección
   de palabras para enlaces y footnotes reutiliza la del diccionario y respeta
