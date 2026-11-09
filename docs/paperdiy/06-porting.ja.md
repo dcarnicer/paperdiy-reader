@@ -4,8 +4,8 @@
 
 ## CrossPoint 2.0 からの変更
 
-ベースコミット：`818a1540069fd2c736c20f9dcad4b44542d4eae2`（develop、2.0.0、
-2026-11-08）。`main` は上流のミラーで、`paperdiy` がフォークです。
+ベースコミット：`f8db833f16dc7adca81359eee74c6366a49bc0ce`（develop、2.0.0、
+2026-11-09）。`main` は上流のミラーで、`paperdiy` がフォークです。
 `freeink-sdk` はビルドを自己完結させるため同梱しています。移植内容は
 `patches/sdk.patch` + `patches/firmware.patch` にあります。
 
@@ -104,9 +104,9 @@ PLATFORMIO_CORE_DIR="$PWD/.platformio-core" pio run -e paperdiy
 Arduino-ESP32 3.3.11）：
 
 ```
-RAM:   33.9% (111,076 / 327,680 bytes)
-Flash: 81.6% (5,347,703 / 6,553,600 bytes)
-firmware.bin          5.1 MB
+RAM:   33.9% (110,924 / 327,680 bytes)
+Flash: 82.7% (5,422,079 / 6,553,600 bytes)
+firmware.bin          5.2 MB
 firmware.factory.bin  5.2 MB
 ```
 
@@ -351,8 +351,8 @@ CrossPoint へサポートを提案できます：
 3. PaperDIY プロファイルは小さく、既存アーキテクチャに合うため、PR の
    良い候補です。
 
-移植は `patches/sdk.patch`（SDK ベース `fb7e926`）と
-`patches/firmware.patch`（CrossPoint ベース `818a1540`）に分かれています。
+移植は `patches/sdk.patch`（SDK ベース `ac146e4`）と
+`patches/firmware.patch`（CrossPoint ベース `f8db833f`）に分かれています。
 生成と同期の手順は [`10-fork-maintenance.md`](10-fork-maintenance.md) を
 参照してください。
 

@@ -1,8 +1,8 @@
 diff --git a/lib/GfxRenderer/GfxRenderer.cpp b/lib/GfxRenderer/GfxRenderer.cpp
-index b00ee10c..8f66c8a9 100644
+index 4103dc70..9c5842d9 100644
 --- a/lib/GfxRenderer/GfxRenderer.cpp
 +++ b/lib/GfxRenderer/GfxRenderer.cpp
-@@ -1763,6 +1763,22 @@ void GfxRenderer::displayBuffer(HalDisplay::RefreshMode refreshMode) const {
+@@ -1776,6 +1776,22 @@ void GfxRenderer::displayBuffer(HalDisplay::RefreshMode refreshMode) const {
    display.displayBuffer(refreshMode, fadingFix);
  }
  
@@ -26,10 +26,10 @@ index b00ee10c..8f66c8a9 100644
    refreshMode = applyPromotedRefresh(refreshMode);
    // The async path has no turn-off-screen hook, which the sunlight fading fix
 diff --git a/lib/GfxRenderer/GfxRenderer.h b/lib/GfxRenderer/GfxRenderer.h
-index 93889dd9..536452d7 100644
+index c8bc8ab7..bd07d270 100644
 --- a/lib/GfxRenderer/GfxRenderer.h
 +++ b/lib/GfxRenderer/GfxRenderer.h
-@@ -260,8 +260,13 @@ class GfxRenderer {
+@@ -261,8 +261,13 @@ class GfxRenderer {
        HalDisplay::GrayscaleMode mode = HalDisplay::GrayscaleMode::Overlay) const;
    // Compatibility queries for Overlay mode.
    bool supportsAsyncGrayscaleBase() const;

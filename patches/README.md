@@ -3,11 +3,15 @@
 El port está separado en dos patches para poder reaplicarlo sobre nuevas
 versiones de upstream:
 
-| Archivo | Base | Contenido |
-|---|---|---|
-| `sdk.patch` | FreeInk SDK `fb7e926` | Perfil PaperDIY, `BoardPaperDiy`, PM1, InputManager, PowerManager, driver LGFX |
-| `firmware.patch` | CrossPoint `5d731041` | Env `paperdiy`, settings, UI, board tag, OTA, `GfxRenderer`, `HalGPIO`, `HalPowerManager`, `main` |
-| `paperdiy-support.patch` | ambos | Concatenación de `sdk.patch` + `firmware.patch` |
+| Archivo | Contenido |
+|---|---|
+| `sdk.patch` | Perfil PaperDIY, `BoardPaperDiy`, PM1, InputManager, PowerManager, driver LGFX |
+| `firmware.patch` | Env `paperdiy`, settings, UI, board tag, OTA, `GfxRenderer`, `HalGPIO`, `HalPowerManager`, `main` |
+| `paperdiy-support.patch` | Concatenación de `sdk.patch` + `firmware.patch` |
+
+Las bases de cada sync y la receta de generación están en
+[`docs/paperdiy/10-fork-maintenance.md`](../docs/paperdiy/10-fork-maintenance.md);
+no las dupliques aquí.
 
 Orden de aplicación:
 
@@ -36,7 +40,14 @@ cat patches/sdk.patch patches/firmware.patch > patches/paperdiy-support.patch
 ```
 
 `sdk-baseline` es una rama local con el SDK pristine vendorizado; ver
-`docs/paperdiy/10-fork-maintenance.md`. No se publica y no la mantiene
+[`docs/paperdiy/10-fork-maintenance.md`](../docs/paperdiy/10-fork-maintenance.md)
+para la receta y las bases de cada sync. No se publica y no la mantiene
 `scripts/sync-upstream.sh`: antes de regenerar `sdk.patch` hay que recrearla
 desde el pin actual del submódulo. Si la rama remota `fork/sdk-baseline` existe
 y apunta a un pin antiguo, no debe usarse como base.
+
+`lib/expat` (2.10.0), `.agents/rules/release-versioning.md` y
+`test/firmware_version` no viven en estos patches: son ficheros del fork que el
+overlay de `scripts/sync-upstream.sh` conserva. Las líneas del fork en
+`.agents/README.md` y en los `CMakeLists` las añade
+`scripts/apply_downstream_overlay.py`.

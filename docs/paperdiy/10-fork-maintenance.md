@@ -3,8 +3,8 @@
 Este repo es un fork downstream de CrossPoint. La regla es simple: **el motor
 se sigue de upstream; el hardware y la UX PaperDIY viven en nuestro fork**.
 
-Última sincronización: CrossPoint `818a1540` / FreeInk SDK `fb7e926`
-(08/11/2026).
+Última sincronización: CrossPoint `f8db833f` / FreeInk SDK `ac146e4`
+(09/11/2026).
 
 ## Ramas y remotos
 
@@ -32,7 +32,8 @@ git remote -v
 
 Upstream tiene `freeink-sdk` como submódulo. Para que el fork se clone y
 componga sin depender de un commit de submódulo, `paperdiy` lo vendoriza como
-archivos normales. Es la única divergencia estructural importante.
+archivos normales. Es la divergencia estructural principal; el pin de expat
+2.10.0 es la otra dependencia vendorizada que el fork mantiene por su cuenta.
 
 Ventaja: `make build` funciona en cualquier clon.
 Coste: al actualizar upstream hay que re-vendorizar el SDK y reaplicar
@@ -59,15 +60,33 @@ El script:
 2. Crea `paperdiy-next` desde `main`.
 3. Vendoriza el SDK del nuevo upstream.
 4. Aplica `patches/sdk.patch` y `patches/firmware.patch` con `--3way`.
-5. Copia docs, Makefile, scripts y workflows desde `paperdiy`.
-6. Compila `paperdiy`.
+5. Copia docs, Makefile, scripts, workflows y los ficheros con edición del fork
+   (`.agents/rules/release-versioning.md`, `lib/expat`, `test/firmware_version`,
+   `.gitattributes`, `.gitignore`, `LICENSE`) desde `paperdiy`; añade las líneas
+   downstream de `.agents/README.md` y los `CMakeLists` con
+   `scripts/apply_downstream_overlay.py`.
+6. Deja el árbol listo e imprime el comando `make build`; la compilación es
+   manual.
 
 Si hay conflictos, el script se detiene para resolverlos a mano. No borra
-`paperdiy`; la revisión y el cambio de rama son manuales.
+`paperdiy`; la revisión y el cambio de rama son manuales. Si upstream toca
+`lib/expat`, `.gitattributes`, `.gitignore` o `LICENSE` (ficheros compartidos que
+el overlay reemplaza), el script se detiene antes de mergear: hay que
+reconciliar la edición del fork con la versión nueva en vez de pisarla.
+
+`scripts/apply_downstream_overlay.py` solo añade las líneas propias del fork en
+`.agents/README.md`, `test/CMakeLists.txt` y
+`test/koreader_xpath_resolver/CMakeLists.txt`. Valida todas las anclas antes de
+escribir y falla sin tocar el árbol si upstream movió alguna. Los cambios en
+`scripts/` (incluido el propio helper) tienen que estar ya en `paperdiy` antes de
+ejecutar el sync: el overlay restaura `scripts/` desde esa rama.
 
 ### Actualización manual
 
 ```bash
+# debe estar vacío: si no, reconcilia el overlay del fork antes de seguir
+git diff --stat main..upstream/develop -- lib/expat .gitattributes .gitignore LICENSE
+
 git checkout main
 git merge --ff-only upstream/develop
 git checkout -b paperdiy-next main
@@ -84,12 +103,17 @@ git add freeink-sdk
 git apply --3way patches/sdk.patch
 git apply --3way patches/firmware.patch
 
-# docs/infra
+# docs/infra y ficheros enteros del fork
 git checkout paperdiy -- README.md README.en.md README.ja.md README.zh-CN.md \
   CHANGELOG.md Makefile NOTICE LICENSE .gitignore .gitattributes hardware m5burner \
+  .agents/rules/release-versioning.md lib/expat test/firmware_version \
   docs/paperdiy docs/README.md docs/upstream scripts patches .github
 rm -f ROADMAP.md SCOPE.md GOVERNANCE.md AGENTS.md USER_GUIDE.md CLAUDE.md .gitmodules
 rm -rf .github && git checkout paperdiy -- .github
+
+# Líneas del fork en ficheros que upstream también edita. Falla si el ancla
+# cambió, en vez de sustituir el fichero entero y perder cambios de upstream.
+python3 scripts/apply_downstream_overlay.py
 
 # Refrescar el snapshot de docs de upstream
 for doc in README AGENTS GOVERNANCE ROADMAP USER_GUIDE; do
@@ -131,6 +155,7 @@ antes de generar el patch:
 
 ```bash
 git checkout -B sdk-baseline main
+rm -rf freeink-sdk  # el árbol vendorizado tapa el checkout del submódulo
 git submodule update --init --recursive freeink-sdk
 rm -rf /tmp/sdk-pristine && cp -R freeink-sdk /tmp/sdk-pristine
 git rm -rf -q freeink-sdk
@@ -142,8 +167,8 @@ git add freeink-sdk && git commit -m "chore: vendor pristine SDK for patch basel
 
 | Patch | Base | Contenido |
 |---|---|---|
-| `patches/sdk.patch` | FreeInk SDK `fb7e926` | perfil, BoardPaperDiy, PM1, InputManager, PowerManager, driver LGFX |
-| `patches/firmware.patch` | CrossPoint `818a1540` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main |
+| `patches/sdk.patch` | FreeInk SDK `ac146e4` | perfil, BoardPaperDiy, PM1, InputManager, PowerManager, driver LGFX |
+| `patches/firmware.patch` | CrossPoint `f8db833f` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main |
 | `patches/paperdiy-support.patch` | ambos | concatenación de los dos anteriores |
 
 Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
@@ -191,7 +216,7 @@ campo de versión de M5Burner no admite cadenas largas y tiene que coincidir con
 la de la release.
 
 - `X.Y.Z` es `[crosspoint] version` de upstream `main` en el commit
-  sincronizado (hoy `2.0.0`, `818a1540`). No se inventa ni se sube por libre.
+  sincronizado (hoy `2.0.0`, `f8db833f`). No se inventa ni se sube por libre.
 - `N` empieza en 1 y sube en cada release pública (fixes, features, docs).
   Un sync a otra versión de CrossPoint lo reinicia: `2.1.0-1`.
 - Tag `v2.0.0-1`; `[crosspoint] version` / `CROSSPOINT_VERSION` es
@@ -221,6 +246,8 @@ la de la release.
 ## Qué se queda downstream
 
 - Perfil PaperDIY, PM1, botones, energía.
+- Pin de expat 2.10.0 (incluye `xcs.c` y el shim de RNG del ESP32) y los tests
+  de `FirmwareVersion`.
 - UX de dos botones y atajos.
 - BLE page turner, USB MSC (cuando se validen).
 - Diccionario español, colecciones/stats, exportar citas.

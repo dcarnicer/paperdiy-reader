@@ -4,8 +4,8 @@
 
 ## Cambios respecto a CrossPoint 2.0
 
-Commit base: `818a1540069fd2c736c20f9dcad4b44542d4eae2` (develop, 2.0.0,
-2026-11-08). `main` es el espejo de upstream; `paperdiy` es el fork. El SDK
+Commit base: `f8db833f16dc7adca81359eee74c6366a49bc0ce` (develop, 2.0.0,
+2026-11-09). `main` es el espejo de upstream; `paperdiy` es el fork. El SDK
 `freeink-sdk` está vendorizado para que el build sea autocontenido. El port se
 mantiene en `patches/sdk.patch` + `patches/firmware.patch`.
 
@@ -104,9 +104,9 @@ Resultado en la máquina de desarrollo (macOS, PlatformIO 6.1.19, pioarduino
 55.03.311, Arduino-ESP32 3.3.11):
 
 ```
-RAM:   33.9% (111.076 / 327.680 bytes)
-Flash: 81.6% (5.347.703 / 6.553.600 bytes)
-firmware.bin          5,1 MB
+RAM:   33.9% (110.924 / 327.680 bytes)
+Flash: 82.7% (5.422.079 / 6.553.600 bytes)
+firmware.bin          5,2 MB
 firmware.factory.bin  5,2 MB
 ```
 
@@ -356,8 +356,8 @@ El soporte se puede proponer a CrossPoint:
 3. El perfil PaperDIY es pequeño y encaja con la arquitectura existente; es un
    buen candidato a PR.
 
-El port está separado en `patches/sdk.patch` (base SDK `fb7e926`) y
-`patches/firmware.patch` (base CrossPoint `818a1540`). La generación y el
+El port está separado en `patches/sdk.patch` (base SDK `ac146e4`) y
+`patches/firmware.patch` (base CrossPoint `f8db833f`). La generación y el
 proceso de sync están en
 [`10-fork-maintenance.md`](10-fork-maintenance.md).
 

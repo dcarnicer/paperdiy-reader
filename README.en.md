@@ -14,6 +14,11 @@ usable every day.
 > SD and navigation OK after syncing to CrossPoint `308cd522`.
 > `5d731041` sync smoke (2026-11-06): boot, Home, A/B and About with SD
 > size/used/free and battery.
+> `818a1540` sync and dependency-stack smoke (2026-11-08): boot, Home, menus,
+> reader, pagination, orientations, USB MSC and StarDict dictionary.
+> `f8db833f` sync smoke (2026-11-09): boot, Home, reader, multi-word clipping
+> with A/B, link selector, orientation, About and USB MSC. Sleep/wake was not
+> repeated; the power path is unchanged.
 > EPUB reading, Wi-Fi, web UI and book transfer were validated on 2026-10-28.
 > Calibre wireless and OTA were validated on 2026-11-04. OPDS (Project
 > Gutenberg) was validated on 2026-11-05. Auto-sleep and the cover sleep

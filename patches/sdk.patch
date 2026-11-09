@@ -723,7 +723,7 @@ index 00000000..de106962
 +
 +}  // namespace freeink
 diff --git a/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp b/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
-index c4fca4bb..1cc45d58 100644
+index 7d1424ac..e3a63941 100644
 --- a/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
 +++ b/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
 @@ -1,5 +1,9 @@
@@ -746,7 +746,7 @@ index c4fca4bb..1cc45d58 100644
  #if FREEINK_DEVICE_METALIO_EINK4
    if (BoardConfig::isMetalioEInk4()) freeink::metalio::ensureBooted(METALIO_BOOT_WAIT_MS);
  #endif
-@@ -570,6 +577,11 @@ void InputManager::updateDigitalTwoButton(const unsigned long currentTime) {
+@@ -574,6 +581,11 @@ void InputManager::updateDigitalTwoButton(const unsigned long currentTime) {
      auxiliaryState |= static_cast<uint8_t>(1u << BTN_POWER);
    }
  #endif

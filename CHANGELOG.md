@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026-11-09 — upstream `f8db833f` (validado en hardware)
+
+- CrossPoint actualizado de `818a1540` a `f8db833f` (3 commits): la selección
+  de palabras para enlaces y footnotes reutiliza la del diccionario y respeta
+  el formato; corregido el subrayado al seleccionar en clipping; el catálogo
+  de Manage Fonts incluye `NotoSansCJKJP` (aparecerá cuando se republique el
+  manifiesto externo de fuentes).
+- FreeInk SDK actualizado de `fb7e926` a `ac146e4` (8 commits): correcciones
+  de EEGO A4 (pantalla grisácea en idle, estabilidad Gray3, toque en el borde
+  inferior, arranque del táctil en background y brillo del frontlight). No
+  cambia el comportamiento esperado del PaperDIY; los parches se reaplican
+  limpios.
+- El overlay de `scripts/sync-upstream.sh` conserva `.agents/rules/release-versioning.md`,
+  `lib/expat` y `test/firmware_version`; las líneas del fork en
+  `.agents/README.md` y los `CMakeLists` las añade
+  `scripts/apply_downstream_overlay.py`. Si upstream toca `lib/expat`,
+  `.gitattributes`, `.gitignore` o `LICENSE`, el sync se detiene en vez de
+  pisar la versión nueva.
+- `patches/sdk.patch`, `patches/firmware.patch` y
+  `patches/paperdiy-support.patch` regenerados contra `ac146e4` / `f8db833f`;
+  `git apply --check` limpio sobre `sdk-baseline` y `main`.
+- Build `paperdiy` correcto: `firmware.bin` 5.427.376 B y 82,7 % de uso de
+  flash (5.422.079 / 6.553.600 B). Tests host 914/914 en serie.
+- Smoke en un PaperDIY real (09/11): arranque, Home, lector, page turn,
+  recorte multipalabra con A/B, selector de enlaces con subrayado, TOC,
+  orientación, About y USB MSC. Sleep/wake no se repitió; el camino de
+  energía no cambia en este sync. Quedan pendientes ghosting físico,
+  autonomía y Wi-Fi/OPDS/OTA/BLE con esta base.
+
 ## 2.0.0-1 — 2026-11-08
 
 Primera release con el esquema de versión `<CrossPoint X.Y.Z>-<N>`:

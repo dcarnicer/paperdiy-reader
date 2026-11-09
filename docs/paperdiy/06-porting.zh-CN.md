@@ -4,8 +4,8 @@
 
 ## 相对 CrossPoint 2.0 的改动
 
-基础提交：`818a1540069fd2c736c20f9dcad4b44542d4eae2`（develop，2.0.0，
-2026-11-08）。`main` 是上游镜像；`paperdiy` 是分支。`freeink-sdk` 已内置，
+基础提交：`f8db833f16dc7adca81359eee74c6366a49bc0ce`（develop，2.0.0，
+2026-11-09）。`main` 是上游镜像；`paperdiy` 是分支。`freeink-sdk` 已内置，
 使构建自包含。移植修改保存在 `patches/sdk.patch` + `patches/firmware.patch`。
 
 ### `freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h`
@@ -103,9 +103,9 @@ PLATFORMIO_CORE_DIR="$PWD/.platformio-core" pio run -e paperdiy
 Arduino-ESP32 3.3.11）：
 
 ```
-RAM:   33.9% (111,076 / 327,680 bytes)
-Flash: 81.6% (5,347,703 / 6,553,600 bytes)
-firmware.bin          5.1 MB
+RAM:   33.9% (110,924 / 327,680 bytes)
+Flash: 82.7% (5,422,079 / 6,553,600 bytes)
+firmware.bin          5.2 MB
 firmware.factory.bin  5.2 MB
 ```
 
@@ -328,8 +328,8 @@ PaperDIY 在 GPIO48 上提供 `CARD_DET`，低电平有效。`SdPins.detect` 将
 2. `platformio.ini`、`FirmwareBoardTag.cpp` 和文档改动进入主仓库。
 3. PaperDIY 配置很小，符合现有架构，是很好的 PR 候选。
 
-移植分为 `patches/sdk.patch`（SDK 基础 `fb7e926`）和
-`patches/firmware.patch`（CrossPoint 基础 `818a1540`）。生成和同步流程见
+移植分为 `patches/sdk.patch`（SDK 基础 `ac146e4`）和
+`patches/firmware.patch`（CrossPoint 基础 `f8db833f`）。生成和同步流程见
 [`10-fork-maintenance.md`](10-fork-maintenance.md)。
 
 ## 状态

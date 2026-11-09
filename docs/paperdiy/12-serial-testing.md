@@ -305,3 +305,30 @@ Probado con `paperdiy-test` sobre `paperdiy-m5gfx`: upstream CrossPoint
   vuelve a mostrar solo las carpetas originales.
 - Queda pendiente: Wi-Fi/OPDS/OTA, BLE, ghosting físico, autonomía y ciclos de
   suspensión con esta base.
+
+## Sync `f8db833f` (09/11/2026)
+
+Probado con `paperdiy-test` sobre `paperdiy-next` (`2.0.0-1`, CrossPoint
+`f8db833f`, SDK `ac146e4`) y después con el build normal `paperdiy`.
+
+- Arranque, Home, lector y page turn: correctos.
+- `Crear recorte`: el cursor resalta palabras sin borrar el texto. Con los
+  botones físicos, A/B mueven el cursor, B largo fija el ancla y el segundo
+  B largo guarda un recorte de varias palabras. Confirmado por el usuario.
+- `Enlaces y notas al pie`: el selector abre con B largo; el resaltado
+  conserva el subrayado del enlace y B largo salta al destino.
+- TOC: selección y salto de capítulo con A/B.
+- Orientación: vertical, horizontal horario y vuelta a vertical, con la UI
+  correcta en las tres.
+- About: `2.0.0-1`, ESP32-S3, 16 MB, SD 7,4 GB (560 MB usados), batería
+  4,12 V 100 %, LovyanGFX EPD 960×540, sin táctil/frontlight/RTC/IMU.
+- USB MSC: monta `DABI`, copia de un EPUB de prueba, expulsión desde el Mac y
+  vuelta automática a Home.
+- Build `paperdiy`: flash correcto y arranque correcto.
+- Limitación del arnés: `CMD:KEY:A/B` se enrutan a `remoteTurn()` con el
+  lector en primer plano y no mueven el cursor dentro de recorte o enlaces;
+  esa parte se validó con los botones físicos.
+- No repetido con esta base: sleep/wake y botón power (el camino de energía no
+  cambia en este sync), ghosting físico, Wi-Fi/OPDS/OTA, BLE y autonomía.
+- Para la prueba se copió `PaperDIY-Link-Test.epub` a `Books/`; se puede
+  borrar cuando no haga falta.
