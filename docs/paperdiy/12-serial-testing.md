@@ -333,6 +333,6 @@ Probado con `paperdiy-test` sobre `paperdiy-next` (`2.0.0-1`, CrossPoint
 - Para la prueba se copió `PaperDIY-Link-Test.epub` a `Books/`; se puede
   borrar cuando no haga falta.
 - La release `2.0.0-2` solo cambia la cadena de versión respecto al build
-  `2.0.0-1` probado. El binario de release se compiló correctamente, pero no
-  se reflasheó en esta sesión porque la unidad se desconectó; conviene
-  confirmar `About` con `2.0.0-2` antes de publicar el tag.
+  `2.0.0-1` probado. El binario de release se flasheó y arrancó correctamente;
+  la cadena `2.0.0-2` está presente en el binario y la Home es correcta. No se
+  repitió el recorrido completo de ajustes/About sobre este binario.
