@@ -191,8 +191,9 @@ regenerados y verificados con `git apply --check` contra `8276d518` /
 - El «un solo refresco» del Home es con caché caliente. Con caché fría o cambio
   de altura de miniatura siguen los refrescos de popup por portada generada
   (comportamiento previo, no regresión); no se ha instrumentado el contador.
-- Smoke pendiente: ghosting/autonomía, sleep/wake, USB MSC, BLE, OPDS/Calibre y
-  una instalación OTA completa.
+- Smoke pendiente: ghosting/autonomía, sleep/wake, emparejamiento BLE real,
+  envío Calibre completo y una instalación OTA completa. OPDS (descarga), USB
+  MSC, escaneo BLE y arranque del servidor Calibre ya probados.
 
 ## OTA
 

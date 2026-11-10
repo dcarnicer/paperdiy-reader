@@ -341,19 +341,34 @@ Probado con `paperdiy-test` sobre `paperdiy-next` (`2.0.0-1`, CrossPoint
 
 Probado por serie con `paperdiy-test` sobre `paperdiy-next` (`2.0.0-3`,
 CrossPoint `8276d518`, SDK `6a208c0c`, commit `c50630b0`). Flash solo app,
-hash verificado; bootloader y particiones intactos.
+hash verificado; bootloader y particiones intactos. Al terminar se flasheó el
+build de producción `paperdiy` (`2.0.0-3`), que arranca en Home.
 
 - Arranque y Home: rejilla de portadas y menú correctos.
 - Navegación A/B y selección en Home y Ajustes.
-- Lector: apertura del último libro y page turn 1 → 2 → 1.
+- Lector: apertura del último libro; 10 intentos de page turn, 9 aceptados y
+  uno ignorado mientras el panel estaba ocupado. Llegó a la página 10/23 sin
+  errores.
 - OTA: conecta a la Wi-Fi guardada y responde «No hay actualizaciones
   disponibles».
 - Tipografías: catálogo de 35 fuentes; descarga e instalación de Alef correcta
   (valida el fix de cabeceras CSP del SDK).
 - Orientación: horizontal (horario) redibuja Home y vuelve a vertical sin
   restos.
+- OPDS: conecta a Shimokitazawa, lista el catálogo de Project Gutenberg y
+  descarga `Austen, Jane - Pride and Prejudice.epub` (609.138 B) en la raíz de
+  la SD. El fichero se verificó por USB y se borró después.
+- USB MSC: monta `DABI` (FAT32, 8 GB), escritura y lectura de un fichero de
+  prueba, expulsión desde el Mac y vuelta automática a Home. El puerto serie se
+  recupera al expulsar.
+- BLE: activación, escaneo con dispositivos visibles (L121240, LE_WH-1000XM5,
+  ELK-BLEDOM, etc.) y desactivación. No había mando para probar el
+  emparejamiento real.
+- Calibre inalámbrico: arranca el servidor en Shimokitazawa y muestra la IP
+  `192.168.1.154`; el plugin CrossPoint Reader está instalado en el Mac. No se
+  repitió un envío completo desde Calibre.
 - Observación: un `A_LONG` se ignoró durante una secuencia rápida de «atrás»;
   el reintento del arnés funcionó. No se reprodujo como fallo.
-- Pendiente: ghosting/autonomía, sleep/wake, USB MSC, BLE, OPDS/Calibre y una
-  instalación OTA completa. No se instrumentó el número exacto de refrescos
-  e-ink; el Home se validó visualmente con caché caliente.
+- Pendiente: ghosting/autonomía, sleep/wake, emparejamiento BLE real, envío
+  Calibre completo y una instalación OTA completa. No se instrumentó el número
+  exacto de refrescos e-ink; el Home se validó visualmente con caché caliente.

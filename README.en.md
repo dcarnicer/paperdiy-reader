@@ -19,10 +19,11 @@ usable every day.
 > `f8db833f` sync smoke (2026-11-09): boot, Home, reader, multi-word clipping
 > with A/B, link selector, orientation, About and USB MSC. Sleep/wake was not
 > repeated; the power path is unchanged.
-> `8276d518` sync smoke (2026-11-10): boot, Home, A/B, reader/page turn, OTA
-> check (no updates), font download/install, orientation and back to vertical.
-> Pending: ghosting/battery life, sleep/wake, USB MSC, BLE, OPDS/Calibre and a
-> full OTA install.
+> `8276d518` sync smoke (2026-11-10): boot, Home, A/B, reader page turns, OTA
+> check (no updates), font download/install, orientation, OPDS download, USB
+> MSC (DABI, write/eject), BLE enable/scan and Calibre server startup. Pending:
+> ghosting/battery life, sleep/wake, real BLE pairing, a full Calibre transfer
+> and a full OTA install.
 > EPUB reading, Wi-Fi, web UI and book transfer were validated on 2026-10-28.
 > Calibre wireless and OTA were validated on 2026-11-04. OPDS (Project
 > Gutenberg) was validated on 2026-11-05. Auto-sleep and the cover sleep

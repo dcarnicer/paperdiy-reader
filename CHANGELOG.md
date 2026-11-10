@@ -16,15 +16,17 @@ port `2.0.0-3`, todavía **sin publicar**. Commit de sync: `c50630b0` en
   (5.422.747 / 6.553.600 B) y 33,9 % de RAM.
 - Tests host 914/914; tests host de SecureNet OK.
 - Smoke por serie en PaperDIY real (`paperdiy-test`, `2.0.0-3`): arranque, Home,
-  navegación A/B, lector/page turn, OTA sin actualizaciones, catálogo de
-  tipografías y descarga/instalación de Alef, orientación horizontal y vuelta a
-  vertical.
+  navegación A/B, lector con 9 page turns, OTA sin actualizaciones, catálogo y
+  descarga/instalación de una fuente, orientación, OPDS con descarga y borrado
+  del EPUB, USB MSC (DABI, escritura/lectura y expulsión), BLE activado/escaneo
+  y servidor de Calibre inalámbrico. El build de producción `paperdiy` se
+  flasheó y arranca en Home.
 - `sdk-baseline` recreada en `6a208c0c`; `patches/sdk.patch`,
   `patches/firmware.patch` y `patches/paperdiy-support.patch` regenerados y
   verificados contra `8276d518` / `6a208c0c`.
 - Pendiente antes de release: completar el smoke de ghosting/autonomía,
-  sleep/wake, USB MSC, BLE, OPDS/Calibre y una instalación OTA completa.
-  Riesgos y estado en `docs/paperdiy/10-fork-maintenance.md`.
+  sleep/wake, emparejamiento BLE real, envío Calibre completo y una instalación
+  OTA completa. Riesgos y estado en `docs/paperdiy/10-fork-maintenance.md`.
 
 ## 2.0.0-2 — 2026-11-09
 
