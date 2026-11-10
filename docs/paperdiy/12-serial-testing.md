@@ -372,3 +372,11 @@ build de producción `paperdiy` (`2.0.0-3`), que arranca en Home.
 - Pendiente: ghosting/autonomía, sleep/wake, emparejamiento BLE real, envío
   Calibre completo y una instalación OTA completa. No se instrumentó el número
   exacto de refrescos e-ink; el Home se validó visualmente con caché caliente.
+
+## Regresión determinista
+
+`make smoke` ejecuta una secuencia fija con fixtures y aserciones OCR. Cubre
+Home, apertura por explorador, page turn, TOC, enlaces, entrada/cancelación de
+recorte y diccionario. Ver
+[`14-device-regression.md`](14-device-regression.md) para requisitos,
+limitaciones y el ciclo de power necesario para restaurar el estado.

@@ -23,6 +23,7 @@ CrossPoint sigue en `docs/` y `docs/upstream/`).
 12. [Borrador de comentario para la issue #4005](11-upstream-note.md)
 13. [Testing por USB](12-serial-testing.md)
 14. [M5Launcher](13-m5launcher.md) — [English](13-m5launcher.en.md)
+15. [Regresión determinista en hardware](14-device-regression.md)
 
 ## Estado en una frase
 

@@ -12,7 +12,7 @@ PORT      ?=
 PIO_RUN = PLATFORMIO_CORE_DIR="$(CORE_DIR)" $(PIO) run -e $(ENV)
 UPLOAD_PORT = $(if $(PORT),--upload-port "$(PORT)",)
 
-.PHONY: build flash flash-factory monitor clean size menuconfig
+.PHONY: build flash flash-factory monitor clean size menuconfig smoke
 
 build:
 	$(PIO_RUN)
@@ -28,6 +28,12 @@ flash-factory:
 
 monitor:
 	PLATFORMIO_CORE_DIR="$(CORE_DIR)" $(PIO) device monitor -e $(ENV) $(if $(PORT),--port "$(PORT)",)
+
+# Hardware regression. Requires a paperdiy-test build flashed and tesseract.
+# It installs fixtures over USB MSC, runs the OCR assertions, and restores the
+# user state it touched. Artifacts go to build/device-regression/<run>/.
+smoke:
+	python3 scripts/device_regression.py $(if $(PORT),--port "$(PORT)",)
 
 size:
 	$(PIO_RUN) -t size

@@ -255,6 +255,7 @@ disponibles en [English](docs/paperdiy/README.en.md),
 - [Borrador de comentario para la issue #4005](docs/paperdiy/11-upstream-note.md)
 - [Testing por USB](docs/paperdiy/12-serial-testing.md)
 - [M5Launcher](docs/paperdiy/13-m5launcher.md)
+- [Regresión determinista en hardware](docs/paperdiy/14-device-regression.md)
 
 ## Limitaciones conocidas
 

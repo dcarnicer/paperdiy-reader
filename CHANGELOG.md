@@ -24,6 +24,9 @@ port `2.0.0-3`, todavía **sin publicar**. Commit de sync: `c50630b0` en
 - `sdk-baseline` recreada en `6a208c0c`; `patches/sdk.patch`,
   `patches/firmware.patch` y `patches/paperdiy-support.patch` regenerados y
   verificados contra `8276d518` / `6a208c0c`.
+- Añadido `make smoke`: runner determinista con fixtures EPUB/StarDict,
+  aserciones OCR, backup/restore del estado y `--restore-hold` para el ciclo de
+  power. Ver `docs/paperdiy/14-device-regression.md`.
 - Pendiente antes de release: completar el smoke de ghosting/autonomía,
   sleep/wake, emparejamiento BLE real, envío Calibre completo y una instalación
   OTA completa. Riesgos y estado en `docs/paperdiy/10-fork-maintenance.md`.
