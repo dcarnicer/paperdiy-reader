@@ -1,10 +1,10 @@
 # Changelog
 
-## 2026-11-10 — upstream `8276d518` (sin release)
+## 2.0.0-3 — 2026-11-10
 
-Sincronización con CrossPoint `8276d518` y FreeInk SDK `6a208c0c`. Revisión de
-port `2.0.0-3`, todavía **sin publicar**. Commit de sync: `c50630b0` en
-`paperdiy-next`.
+Tercera revisión del port sobre CrossPoint `2.0.0` (`8276d518`) y FreeInk SDK
+`6a208c0c`. Sustituye a `2.0.0-2` y mantiene el esquema de versión
+`<CrossPoint X.Y.Z>-<N>`. Commit de sync: `c50630b0` en `paperdiy-next`.
 
 - CrossPoint `f8db833f` → `8276d518` (3 commits): Home pinta la rejilla de
   portadas en un solo refresco con caché caliente; TLS vuelve a pedir registros
@@ -27,9 +27,10 @@ port `2.0.0-3`, todavía **sin publicar**. Commit de sync: `c50630b0` en
 - Añadido `make smoke`: runner determinista con fixtures EPUB/StarDict,
   aserciones OCR, backup/restore del estado y `--restore-hold` para el ciclo de
   power. Ver `docs/paperdiy/14-device-regression.md`.
-- Pendiente antes de release: completar el smoke de ghosting/autonomía,
-  sleep/wake, emparejamiento BLE real, envío Calibre completo y una instalación
-  OTA completa. Riesgos y estado en `docs/paperdiy/10-fork-maintenance.md`.
+- Pendiente de validación física (no repetida en esta release):
+  ghosting/autonomía, sleep/wake, emparejamiento BLE real, envío Calibre
+  completo y una instalación OTA completa. Riesgos y estado en
+  `docs/paperdiy/10-fork-maintenance.md`.
 
 ## 2.0.0-2 — 2026-11-09
 

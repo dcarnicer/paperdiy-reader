@@ -175,11 +175,11 @@ Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
 
 ## Pendientes de la sync `8276d518` (10/11/2026)
 
-Estado: merge `a9cff597` en `paperdiy`, sin release. Hecho: pins de `NOTICE`,
+Estado: release `2.0.0-3` publicada (tag `v2.0.0-3`). Hecho: pins de `NOTICE`,
 `CHANGELOG.md` y `docs/paperdiy/06-porting.*`; smoke registrado en
 `12-serial-testing.md`; `sdk-baseline` recreada en `6a208c0c` y los tres parches
 regenerados y verificados con `git apply --check` contra `8276d518` /
-`6a208c0c`. Antes de publicar `2.0.0-3`:
+`6a208c0c`. Pendientes y riesgos conocidos tras la release:
 
 - El overlay de `sync-upstream.sh` restaura `NOTICE`, `CHANGELOG.md` y
   `docs/paperdiy` desde `paperdiy`; en el próximo sync hay que llevar estos
