@@ -1,0 +1,13 @@
+{
+  "name": "BoardPaperDiy",
+  "version": "0.1.0",
+  "description": "FreeInk board support for M5Stack PaperDIY: parallel-EPD pins, M5PM1 EPD rail, PMIC power-off.",
+  "keywords": "m5stack, paperdiy, epaper, board",
+  "authors": [{"name": "PaperDIY Reader contributors"}],
+  "dependencies": {
+    "BoardConfig": "*",
+    "EInkDisplay": "*"
+  },
+  "platforms": "espressif32",
+  "frameworks": ["arduino"]
+}

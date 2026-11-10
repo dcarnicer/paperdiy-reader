@@ -4,12 +4,14 @@
 #include <I18n.h>
 #include <WiFi.h>
 
+#include "LauncherExitActivity.h"
 #include "MappedInputManager.h"
 #include "SilentRestart.h"
 #include "activities/network/WifiSelectionActivity.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
 #include "network/OtaUpdater.h"
+#include "platform/LauncherEnv.h"
 
 void OtaUpdateActivity::onWifiSelectionComplete(const bool success) {
   if (!success) {
@@ -59,21 +61,45 @@ void OtaUpdateActivity::onWifiSelectionComplete(const bool success) {
     RenderLock lock(*this);
     state = WAITING_CONFIRMATION;
   }
-  const char* options[] = {tr(STR_CANCEL), tr(STR_UPDATE)};
-  // Default the selection to Update so the hardware Confirm button installs,
-  // matching the pre-popup layout (Back = cancel, Confirm = update).
+  // Under M5Launcher the second option leaves for Launcher, which installs the
+  // update; the selection defaults to it so Confirm acts, as with Update.
+  const char* options[] = {tr(STR_CANCEL), launcherManaged ? tr(STR_EXIT_TO_LAUNCHER) : tr(STR_UPDATE)};
   confirmPopup.show(tr(STR_NEW_UPDATE), options, 2, 1, [this](const int idx) {
-    if (idx == 1) {
-      runUpdateInstall();
-    } else {
+    if (idx != 1) {
       finish();
+    } else if (launcherManaged) {
+      exitToLauncher();
+    } else {
+      runUpdateInstall();
     }
   });
   requestUpdate();
 }
 
+void OtaUpdateActivity::exitToLauncher() {
+  // With CFG > GPIO on boot starts Launcher set, only that key held across a
+  // reset opens Launcher, so the user has to hold it.
+  if (launcher_env::bootConfig().hasKey()) {
+    startActivityForResult(std::make_unique<LauncherExitActivity>(renderer, mappedInput),
+                           [this](const ActivityResult&) { finish(); });
+    return;
+  }
+  // Deep sleep and the PM1 reset expect the radio stopped first.
+  WiFi.disconnect(false);
+  WiFi.mode(WIFI_OFF);
+  if (!launcher_env::exitToLauncher()) {
+    LOG_ERR("OTA", "Could not restart into M5Launcher");
+    RenderLock lock(*this);
+    launcherExitFailed = true;
+    failedDetail = tr(STR_LAUNCHER_UPDATE_HINT);
+    state = FAILED;
+  }
+  requestUpdate();
+}
+
 void OtaUpdateActivity::onEnter() {
   Activity::onEnter();
+  launcherManaged = launcher_env::isUnderLauncher();
 
   // Turn on WiFi immediately
   LOG_DBG("OTA", "Turning on WiFi...");
@@ -97,6 +123,8 @@ void OtaUpdateActivity::onExit() {
     delay(30);
     silentRestart();
   }
+  // A failed exit to Launcher already stopped Wi-Fi after its TLS fetches.
+  if (launcherExitFailed) silentRestart();
 }
 
 void OtaUpdateActivity::render(RenderLock&&) {
@@ -131,6 +159,13 @@ void OtaUpdateActivity::render(RenderLock&&) {
                       (std::string(tr(STR_CURRENT_VERSION)) + CROSSPOINT_VERSION).c_str());
     renderer.drawText(UI_10_FONT_ID, metrics.contentSidePadding, infoTop + height + metrics.verticalSpacing,
                       (std::string(tr(STR_NEW_VERSION)) + updater.getLatestVersion()).c_str());
+    if (launcherManaged) {
+      // Launcher installs the new version next to the old one.
+      renderer.drawText(UI_10_FONT_ID, metrics.contentSidePadding, infoTop + 2 * (height + metrics.verticalSpacing),
+                        tr(STR_LAUNCHER_UPDATE_HINT));
+      renderer.drawText(UI_10_FONT_ID, metrics.contentSidePadding, infoTop + 3 * (height + metrics.verticalSpacing),
+                        tr(STR_LAUNCHER_DELETE_OLD));
+    }
 
     if (confirmPopup.processRender(renderer, mappedInput)) return;
   } else if (state == UPDATE_IN_PROGRESS) {
@@ -192,7 +227,9 @@ void OtaUpdateActivity::runUpdateInstall() {
     LOG_DBG("OTA", "Update failed: %d", res);
     {
       RenderLock lock(*this);
-      failedDetail = res == OtaUpdater::WRONG_DEVICE_ERROR ? tr(STR_FIRMWARE_WRONG_DEVICE) : nullptr;
+      failedDetail = res == OtaUpdater::WRONG_DEVICE_ERROR ? tr(STR_FIRMWARE_WRONG_DEVICE)
+                     : res == OtaUpdater::LAUNCHER_MANAGED ? tr(STR_UPDATE_VIA_LAUNCHER)
+                                                           : nullptr;
       state = FAILED;
     }
     requestUpdate();

@@ -1,0 +1,201 @@
+<!doctype html>
+<!--
+  M5Burner cover (1280x720). Render with headless Chrome on macOS (uses the
+  system Avenir Next and Charter/Iowan fonts):
+
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new \
+    --hide-scrollbars --force-device-scale-factor=1 --window-size=1280,720 \
+    --screenshot=m5burner/cover.png "file://$PWD/m5burner/cover.html"
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1280px; height: 720px; overflow: hidden; }
+  body {
+    font-family: "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+    color: #e8edf6;
+    background:
+      radial-gradient(ellipse 620px 460px at 905px 350px, rgba(70, 104, 170, 0.28), transparent 70%),
+      radial-gradient(ellipse 900px 700px at 0px 0px, #18284a 0%, transparent 70%),
+      linear-gradient(160deg, #142240 0%, #0e1830 55%, #0b1428 100%);
+    position: relative;
+  }
+
+  /* Left column */
+  .left { position: absolute; left: 72px; top: 0; width: 470px; height: 720px; }
+  .eyebrow {
+    position: absolute; top: 85px; display: flex; align-items: center; gap: 12px;
+    font-size: 12.5px; font-weight: 600; letter-spacing: 2.6px; color: #a9b7cc;
+  }
+  .eyebrow .dot { color: #3b82f6; font-size: 9px; letter-spacing: 0; }
+  .eyebrow svg { width: 22px; height: 24px; }
+  h1 {
+    position: absolute; top: 122px; font-size: 80px; font-weight: 600;
+    letter-spacing: -2px; color: #f5f7fb; line-height: 1;
+  }
+  .sub {
+    position: absolute; top: 218px; font-size: 33px; font-weight: 500; color: #f0f3f9;
+    letter-spacing: -0.3px;
+  }
+  .sub .on { color: #9fb2cf; font-weight: 400; }
+  .bar { position: absolute; top: 285px; width: 96px; height: 5px; border-radius: 3px; background: #3b82f6; }
+  .lead {
+    position: absolute; top: 314px; width: 440px; font-size: 19.5px; line-height: 30px;
+    color: #a9b7cc;
+  }
+  .lead b { color: #eef2f8; font-weight: 600; }
+  .features {
+    position: absolute; top: 448px; font-size: 17px; line-height: 30px; color: #a9b7cc;
+  }
+  .features .sep { color: #5d6f8d; margin: 0 6px; }
+  .foot1 { position: absolute; top: 642px; font-size: 14px; font-weight: 500; color: #a9b7cc; }
+  .foot1 .sep { color: #5d6f8d; margin: 0 6px; }
+  .foot2 {
+    position: absolute; top: 670px; font-size: 11px; letter-spacing: 1.6px; color: #6c7d99;
+  }
+
+  /* Devices */
+  .device {
+    position: absolute; border-radius: 22px;
+    background: linear-gradient(145deg, #f3f1ec 0%, #e3e0d8 100%);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45), 0 4px 10px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+  .device .btn { position: absolute; width: 6px; height: 30px; border-radius: 3px; background: #d6d2c8; }
+  .device .slot {
+    position: absolute; bottom: 5px; left: 50%; width: 46px; height: 6px; margin-left: -23px;
+    border-radius: 3px; background: #c9c5ba; box-shadow: inset 0 1px 1px rgba(0,0,0,0.25);
+  }
+  .screen {
+    position: absolute; left: 12px; top: 12px; right: 12px; bottom: 16px; border-radius: 6px;
+    background: #f6f3ea; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+    color: #1d1d1b; overflow: hidden;
+  }
+
+  /* Reading page */
+  .reader { left: 606px; top: 96px; width: 294px; height: 503px; }
+  .reader .screen { padding: 20px 24px 0 26px; }
+  .rhead { display: flex; justify-content: space-between; font-size: 9px; letter-spacing: 1.6px; color: #555; }
+  .rhead .batt { letter-spacing: 0.3px; display: flex; align-items: center; gap: 5px; }
+  .rhead .batt i {
+    display: inline-block; width: 15px; height: 8px; border: 1px solid #333; border-radius: 1.5px; position: relative;
+  }
+  .rhead .batt i::after { content: ""; position: absolute; left: 1px; top: 1px; width: 10px; height: 4px; background: #333; }
+  .rtitle {
+    margin-top: 10px; padding-bottom: 8px; border-bottom: 1px solid #cfcabd;
+    font-family: Charter, "Iowan Old Style", Georgia, serif; font-size: 22px; color: #1a1a18;
+  }
+  .rtext {
+    margin-top: 14px; font-family: Charter, "Iowan Old Style", Georgia, serif;
+    font-size: 14.6px; line-height: 23px; text-align: justify; hyphens: auto; color: #222;
+  }
+  .rtext p + p { margin-top: 11px; }
+  .rtext .drop { float: left; font-size: 52px; line-height: 40px; padding: 4px 6px 0 0; }
+  .rfoot {
+    position: absolute; left: 26px; right: 24px; bottom: 12px; display: flex; align-items: center;
+    justify-content: space-between; font-size: 8.5px; color: #555;
+  }
+  .rfoot .prog { width: 76px; height: 2px; background: #d5d0c3; position: relative; }
+  .rfoot .prog::after { content: ""; position: absolute; left: 0; top: 0; width: 13px; height: 2px; background: #333; }
+
+  /* Library page */
+  .library { left: 936px; top: 124px; width: 264px; height: 453px; }
+  .library .screen { padding: 18px 16px 0 18px; }
+  .lhead { display: flex; justify-content: space-between; align-items: baseline; }
+  .lhead h2 { font-size: 19px; font-weight: 700; color: #1a1a18; }
+  .lhead span { font-size: 9.5px; color: #555; }
+  .tabs { display: flex; gap: 12px; margin-top: 8px; font-size: 9px; color: #666; }
+  .tabs b { color: #1a1a18; font-weight: 600; border-bottom: 1.5px solid #1a1a18; padding-bottom: 2px; }
+  .list { margin-top: 12px; }
+  .row { display: flex; align-items: center; gap: 9px; height: 47.5px; border-bottom: 1px solid #ddd8cc; }
+  .row .tile {
+    width: 26px; height: 38px; flex: none; display: flex; align-items: center; justify-content: center;
+    font-family: Charter, "Iowan Old Style", Georgia, serif; font-size: 13px; font-weight: 700;
+    color: #f6f3ea; background: #2a2a28;
+  }
+  .row .tile.light { background: #e2ddd0; color: #2a2a28; box-shadow: inset 0 0 0 1px #c9c3b4; }
+  .row .t { font-size: 11px; font-weight: 600; color: #1a1a18; }
+  .row .a { font-size: 8.5px; color: #555; margin-top: 2px; }
+  .row.sel { background: #1d1d1b; margin: 0 -6px; padding: 0 6px; border-bottom-color: #1d1d1b; }
+  .row.sel .t, .row.sel .a { color: #f6f3ea; }
+  .row.sel .tile { background: #f6f3ea; color: #1d1d1b; }
+  .lfoot {
+    position: absolute; left: 18px; right: 16px; bottom: 12px; display: flex; gap: 10px;
+    font-size: 8.5px; color: #444; align-items: center;
+  }
+  .lfoot .k {
+    display: inline-flex; align-items: center; justify-content: center; width: 11px; height: 11px;
+    border-radius: 2px; background: #1d1d1b; color: #f6f3ea; font-size: 7px; font-weight: 700; margin-right: 3px;
+  }
+  .lfoot .push { margin-left: auto; }
+</style>
+</head>
+<body>
+  <div class="left">
+    <div class="eyebrow">
+      <svg viewBox="0 0 22 24" fill="none" stroke="#a9b7cc" stroke-width="2" stroke-linejoin="round">
+        <path d="M2 3 L11 8 L20 3 V20 L11 15 L2 20 Z"/>
+        <path d="M11 8 V15"/>
+      </svg>
+      <span>COMMUNITY PORT</span><span class="dot">●</span><span>OPEN SOURCE</span><span class="dot">●</span><span>GPLv3</span>
+    </div>
+    <h1>CrossPoint</h1>
+    <div class="sub"><span class="on">on</span> M5Stack PaperDIY</div>
+    <div class="bar"></div>
+    <div class="lead">
+      A community port of <b>CrossPoint Reader 2.0</b> to M5Stack’s 4.7-inch E&nbsp;Ink kit.
+      Same engine, same features — new hardware.
+    </div>
+    <div class="features">
+      EPUB<span class="sep">·</span>Library<span class="sep">·</span>Dictionary<span class="sep">·</span>OPDS<br>
+      Calibre<span class="sep">·</span>KOReader Sync<span class="sep">·</span>Web UI<br>
+      35 languages<span class="sep">·</span>2-button UI<span class="sep">·</span>M5Launcher ready
+    </div>
+    <div class="foot1">M5Stack PaperDIY<span class="sep">·</span>4.7″ E Ink<span class="sep">·</span>960 × 540</div>
+    <div class="foot2">BUILT ON CROSSPOINT READER 2.0 · GPLv3 FIRMWARE</div>
+  </div>
+
+  <div class="device reader">
+    <div class="btn" style="left:-3px; top:156px"></div>
+    <div class="btn" style="left:-3px; top:206px"></div>
+    <div class="btn" style="right:-3px; top:388px; height:26px"></div>
+    <div class="screen">
+      <div class="rhead"><span>CHAPTER SEVEN</span><span class="batt">84% <i></i></span></div>
+      <div class="rtitle">The Quiet Hour</div>
+      <div class="rtext">
+        <p><span class="drop">T</span>he lamps along the harbour came on one by one, and the water took
+        each light and stretched it into a long, trembling line.</p>
+        <p>Tonight the wind had dropped. Gulls settled on the posts, and the
+        boats rocked so gently that their ropes barely creaked against the
+        stones.</p>
+        <p>She found her bench, opened the book where she had left it, and
+        read until the light was gone.</p>
+      </div>
+      <div class="rfoot"><span>54 / 318</span><span class="prog"></span><span>17%</span></div>
+    </div>
+    <div class="slot"></div>
+  </div>
+
+  <div class="device library">
+    <div class="btn" style="left:-3px; top:140px"></div>
+    <div class="btn" style="left:-3px; top:186px"></div>
+    <div class="btn" style="right:-3px; top:348px; height:26px"></div>
+    <div class="screen">
+      <div class="lhead"><h2>Library</h2><span>24 books</span></div>
+      <div class="tabs"><b>Recent</b><span>Title</span><span>Author</span></div>
+      <div class="list">
+        <div class="row"><div class="tile">P</div><div><div class="t">Pride and Prejudice</div><div class="a">Jane Austen</div></div></div>
+        <div class="row sel"><div class="tile">W</div><div><div class="t">Walden</div><div class="a">Henry David Thoreau</div></div></div>
+        <div class="row"><div class="tile">M</div><div><div class="t">Meditations</div><div class="a">Marcus Aurelius</div></div></div>
+        <div class="row"><div class="tile light">M</div><div><div class="t">Moby-Dick</div><div class="a">Herman Melville</div></div></div>
+        <div class="row"><div class="tile">D</div><div><div class="t">Dracula</div><div class="a">Bram Stoker</div></div></div>
+        <div class="row"><div class="tile light">E</div><div><div class="t">Essays</div><div class="a">Michel de Montaigne</div></div></div>
+      </div>
+      <div class="lfoot"><span><span class="k">A</span>up</span><span><span class="k">B</span>down</span><span class="push"><span class="k">B</span>hold to open</span></div>
+    </div>
+    <div class="slot"></div>
+  </div>
+</body>
+</html>
