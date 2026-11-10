@@ -19,10 +19,12 @@ port `2.0.0-3`, todavía **sin publicar**. Commit de sync: `c50630b0` en
   navegación A/B, lector/page turn, OTA sin actualizaciones, catálogo de
   tipografías y descarga/instalación de Alef, orientación horizontal y vuelta a
   vertical.
-- Pendiente antes de release: recrear `sdk-baseline` en `6a208c0c` y regenerar
-  parches; completar el smoke de ghosting/autonomía, sleep/wake, USB MSC, BLE,
-  OPDS/Calibre y una instalación OTA completa. Riesgos y estado en
-  `docs/paperdiy/10-fork-maintenance.md`.
+- `sdk-baseline` recreada en `6a208c0c`; `patches/sdk.patch`,
+  `patches/firmware.patch` y `patches/paperdiy-support.patch` regenerados y
+  verificados contra `8276d518` / `6a208c0c`.
+- Pendiente antes de release: completar el smoke de ghosting/autonomía,
+  sleep/wake, USB MSC, BLE, OPDS/Calibre y una instalación OTA completa.
+  Riesgos y estado en `docs/paperdiy/10-fork-maintenance.md`.
 
 ## 2.0.0-2 — 2026-11-09
 

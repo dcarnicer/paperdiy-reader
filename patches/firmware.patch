@@ -370,7 +370,7 @@ index bee6736b..692a5584 100644
    // the bus pads (no-op on SPI boards). Call only after all file users have
    // stopped; open HalFiles become invalid. A deep-sleep wake resets the MCU and
 diff --git a/platformio.ini b/platformio.ini
-index 53531bf7..873a4541 100644
+index f0068f87..94d7e77e 100644
 --- a/platformio.ini
 +++ b/platformio.ini
 @@ -4,7 +4,7 @@ build_cache_dir = .cache
@@ -378,11 +378,11 @@ index 53531bf7..873a4541 100644
  
  [crosspoint]
 -version = 2.0.0
-+version = 2.0.0-1
++version = 2.0.0-3
  
  [base]
  platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip
-@@ -171,7 +171,7 @@ lib_deps =
+@@ -175,7 +175,7 @@ lib_deps =
    ; .ttf/.otf rendering). Vendors only stb_truetype + FreeType (no expat), so it
    ; does not hit the FreeInkBook duplicate-XML_* symbol problem.
    FreeInkFont=symlink://freeink-sdk/libs/font/FreeInkFont
@@ -391,7 +391,7 @@ index 53531bf7..873a4541 100644
    ; Pinned for the reviewed cache patches in scripts/sdfat_patches/.
    greiman/SdFat @ 2.3.1
    ricmoo/QRCode @ 0.0.1
-@@ -278,7 +278,7 @@ custom_sdkconfig =
+@@ -282,7 +282,7 @@ custom_sdkconfig =
    CONFIG_BT_NIMBLE_TRANSPORT_ACL_FROM_LL_COUNT=8
  lib_deps =
    BleKeyboardHost=symlink://freeink-sdk/libs/network/BleKeyboardHost
@@ -400,7 +400,7 @@ index 53531bf7..873a4541 100644
  build_flags =
    -DFREEINK_CAP_BLE_HID_HOST=1
    -DCONFIG_BT_NIMBLE_ROLE_PERIPHERAL_DISABLED=1
-@@ -625,6 +625,45 @@ build_flags =
+@@ -629,6 +629,45 @@ build_flags =
    -DLOG_LEVEL=1 ; Set log level to info for release candidate builds
    -DUSE_BLOCK_DEVICE_INTERFACE=1
  

@@ -175,15 +175,12 @@ Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
 
 ## Pendientes de la sync `8276d518` (10/11/2026)
 
-Estado: commit `c50630b0` en `paperdiy-next`, sin release. Ya hecho en este
-commit: pins de `NOTICE`, `CHANGELOG.md` y `docs/paperdiy/06-porting.*`, y
-registro del smoke en `12-serial-testing.md`. Antes de mergear o publicar
-`2.0.0-3`:
+Estado: merge `a9cff597` en `paperdiy`, sin release. Hecho: pins de `NOTICE`,
+`CHANGELOG.md` y `docs/paperdiy/06-porting.*`; smoke registrado en
+`12-serial-testing.md`; `sdk-baseline` recreada en `6a208c0c` y los tres parches
+regenerados y verificados con `git apply --check` contra `8276d518` /
+`6a208c0c`. Antes de publicar `2.0.0-3`:
 
-- Recrear `sdk-baseline` en `6a208c0c` y regenerar los tres parches contra
-  `8276d518` / `6a208c0c`; comprobar `git apply --check` sobre ambos. La
-  `sdk-baseline` actual sigue en `ac146e4`, así que generar el patch antes de
-  recrearla absorbería el fix de SecureNet como si fuera código del fork.
 - El overlay de `sync-upstream.sh` restaura `NOTICE`, `CHANGELOG.md` y
   `docs/paperdiy` desde `paperdiy`; en el próximo sync hay que llevar estos
   cambios a `paperdiy` antes del overlay.
