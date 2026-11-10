@@ -336,3 +336,24 @@ Probado con `paperdiy-test` sobre `paperdiy-next` (`2.0.0-1`, CrossPoint
   `2.0.0-1` probado. El binario de release se flasheó y arrancó correctamente;
   la cadena `2.0.0-2` está presente en el binario y la Home es correcta. No se
   repitió el recorrido completo de ajustes/About sobre este binario.
+
+## Sync `8276d518` (10/11/2026)
+
+Probado por serie con `paperdiy-test` sobre `paperdiy-next` (`2.0.0-3`,
+CrossPoint `8276d518`, SDK `6a208c0c`, commit `c50630b0`). Flash solo app,
+hash verificado; bootloader y particiones intactos.
+
+- Arranque y Home: rejilla de portadas y menú correctos.
+- Navegación A/B y selección en Home y Ajustes.
+- Lector: apertura del último libro y page turn 1 → 2 → 1.
+- OTA: conecta a la Wi-Fi guardada y responde «No hay actualizaciones
+  disponibles».
+- Tipografías: catálogo de 35 fuentes; descarga e instalación de Alef correcta
+  (valida el fix de cabeceras CSP del SDK).
+- Orientación: horizontal (horario) redibuja Home y vuelve a vertical sin
+  restos.
+- Observación: un `A_LONG` se ignoró durante una secuencia rápida de «atrás»;
+  el reintento del arnés funcionó. No se reprodujo como fallo.
+- Pendiente: ghosting/autonomía, sleep/wake, USB MSC, BLE, OPDS/Calibre y una
+  instalación OTA completa. No se instrumentó el número exacto de refrescos
+  e-ink; el Home se validó visualmente con caché caliente.

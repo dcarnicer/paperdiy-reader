@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-11-10 — upstream `8276d518` (sin release)
+
+Sincronización con CrossPoint `8276d518` y FreeInk SDK `6a208c0c`. Revisión de
+port `2.0.0-3`, todavía **sin publicar**. Commit de sync: `c50630b0` en
+`paperdiy-next`.
+
+- CrossPoint `f8db833f` → `8276d518` (3 commits): Home pinta la rejilla de
+  portadas en un solo refresco con caché caliente; TLS vuelve a pedir registros
+  de 2 KB (`HAVE_MAX_FRAGMENT`) con fallback a 16 KB; actualización del SDK para
+  descargas de fuentes.
+- FreeInk SDK `ac146e4` → `6a208c0c` (1 commit): SecureNet descarta cabeceras
+  `Content-Security-Policy` sobredimensionadas de GitHub en vez de fallar.
+- Build `paperdiy`: `firmware.bin` 5.428.032 B, 82,7 % de flash
+  (5.422.747 / 6.553.600 B) y 33,9 % de RAM.
+- Tests host 914/914; tests host de SecureNet OK.
+- Smoke por serie en PaperDIY real (`paperdiy-test`, `2.0.0-3`): arranque, Home,
+  navegación A/B, lector/page turn, OTA sin actualizaciones, catálogo de
+  tipografías y descarga/instalación de Alef, orientación horizontal y vuelta a
+  vertical.
+- Pendiente antes de release: recrear `sdk-baseline` en `6a208c0c` y regenerar
+  parches; completar el smoke de ghosting/autonomía, sleep/wake, USB MSC, BLE,
+  OPDS/Calibre y una instalación OTA completa. Riesgos y estado en
+  `docs/paperdiy/10-fork-maintenance.md`.
+
 ## 2.0.0-2 — 2026-11-09
 
 Segunda revisión del port sobre CrossPoint `2.0.0` (`f8db833f`) y FreeInk SDK

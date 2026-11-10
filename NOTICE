@@ -6,14 +6,14 @@ This project is a hardware port and downstream fork of CrossPoint Reader.
 Upstream:
   CrossPoint Reader 2.0.0 (develop branch)
   https://github.com/crosspoint-reader/crosspoint-reader
-  Commit: f8db833f16dc7adca81359eee74c6366a49bc0ce (2026-11-09)
+  Commit: 8276d518b6562115016bc8b7fc52e66a4eeb9899 (2026-11-10)
   License: MIT
   Copyright (c) 2025 CrossPoint Reader organization
 
 Hardware abstraction:
   FreeInk SDK
   https://github.com/Free-Ink/freeink-sdk
-  Commit: ac146e472fdd688cedd39d6c247aa59dca983f02
+  Commit: 6a208c0c46cce99bafa334bc4f171f5e558c5195
   License: MIT
   Copyright (c) 2026 FreeInk
 
