@@ -3,8 +3,8 @@
 Este repo es un fork downstream de CrossPoint. La regla es simple: **el motor
 se sigue de upstream; el hardware y la UX PaperDIY viven en nuestro fork**.
 
-Última sincronización: CrossPoint `f8db833f` / FreeInk SDK `ac146e4`
-(09/11/2026).
+Última sincronización: CrossPoint `8276d518` / FreeInk SDK `6a208c0c`
+(10/11/2026).
 
 ## Ramas y remotos
 
@@ -167,11 +167,35 @@ git add freeink-sdk && git commit -m "chore: vendor pristine SDK for patch basel
 
 | Patch | Base | Contenido |
 |---|---|---|
-| `patches/sdk.patch` | FreeInk SDK `ac146e4` | perfil, BoardPaperDiy, PM1, InputManager, PowerManager, driver LGFX |
-| `patches/firmware.patch` | CrossPoint `f8db833f` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main |
+| `patches/sdk.patch` | FreeInk SDK `6a208c0c` | perfil, BoardPaperDiy, PM1, InputManager, PowerManager, driver LGFX |
+| `patches/firmware.patch` | CrossPoint `8276d518` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main |
 | `patches/paperdiy-support.patch` | ambos | concatenación de los dos anteriores |
 
 Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
+
+## Pendientes de la sync `8276d518` (10/11/2026)
+
+Estado: commit `c50630b0` en `paperdiy-next`, sin release. Ya hecho en este
+commit: pins de `NOTICE`, `CHANGELOG.md` y `docs/paperdiy/06-porting.*`, y
+registro del smoke en `12-serial-testing.md`. Antes de mergear o publicar
+`2.0.0-3`:
+
+- Recrear `sdk-baseline` en `6a208c0c` y regenerar los tres parches contra
+  `8276d518` / `6a208c0c`; comprobar `git apply --check` sobre ambos. La
+  `sdk-baseline` actual sigue en `ac146e4`, así que generar el patch antes de
+  recrearla absorbería el fix de SecureNet como si fuera código del fork.
+- El overlay de `sync-upstream.sh` restaura `NOTICE`, `CHANGELOG.md` y
+  `docs/paperdiy` desde `paperdiy`; en el próximo sync hay que llevar estos
+  cambios a `paperdiy` antes del overlay.
+- Riesgo upstream aceptado en `SecureHttpClient::readHeaderLine`: una respuesta
+  con exactamente 64 cabeceras, o cuyo presupuesto de 8 KB se agote en la línea
+  en blanco final, puede rechazarse. No divergir del SDK sin necesidad; si se
+  corrige, hacerlo como parche del fork y añadir test.
+- El «un solo refresco» del Home es con caché caliente. Con caché fría o cambio
+  de altura de miniatura siguen los refrescos de popup por portada generada
+  (comportamiento previo, no regresión); no se ha instrumentado el contador.
+- Smoke pendiente: ghosting/autonomía, sleep/wake, USB MSC, BLE, OPDS/Calibre y
+  una instalación OTA completa.
 
 ## OTA
 
@@ -216,7 +240,7 @@ campo de versión de M5Burner no admite cadenas largas y tiene que coincidir con
 la de la release.
 
 - `X.Y.Z` es `[crosspoint] version` de upstream `main` en el commit
-  sincronizado (hoy `2.0.0`, `f8db833f`). No se inventa ni se sube por libre.
+  sincronizado (hoy `2.0.0`, `8276d518`). No se inventa ni se sube por libre.
 - `N` empieza en 1 y sube en cada release pública (fixes, features, docs).
   Un sync a otra versión de CrossPoint lo reinicia: `2.1.0-1`.
 - Tag `v2.0.0-1`; `[crosspoint] version` / `CROSSPOINT_VERSION` es
