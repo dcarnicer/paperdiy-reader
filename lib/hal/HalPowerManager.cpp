@@ -19,8 +19,11 @@
 #include <driver/gpio.h>
 #endif
 
-#if FREEINK_DEVICE_PAPERMONO
+#if FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY
 #include <M5Pm1.h>
+#endif
+#if FREEINK_DEVICE_PAPERDIY
+#include <BoardPaperDiy.h>
 #endif
 
 HalPowerManager powerManager;  // Singleton instance
@@ -37,6 +40,22 @@ void HalPowerManager::begin() {
   // Board charger setup (Picco SGM41562: stock charge voltage and limits); a
   // no-op on boards without a configurable charger.
   if (BatteryMonitor::configureCharger()) LOG_INF("PWR", "Charger configured");
+#if FREEINK_DEVICE_PAPERDIY
+  // PaperDIY's PM1 exposes only voltage, not a coulomb counter. Log the raw
+  // rails once at boot so a percentage that looks stuck can be compared with
+  // the actual cell voltage and charge source.
+  if (BoardConfig::isPaperDiy()) {
+    const BatteryMonitor battery;
+    const auto status = battery.readStatus();
+    uint8_t pwrCfg = 0;
+    uint8_t gpioIn = 0;
+    freeink::m5pm1::readReg(freeink::m5pm1::REG_PWR_CFG, &pwrCfg);
+    freeink::m5pm1::readReg(freeink::m5pm1::REG_GPIO_IN, &gpioIn);
+    LOG_INF("PWR", "Battery: VBAT=%dmV VIN=%dmV 5VOUT=%dmV PWR_SRC=%d pct=%d chg=%d ext=%d cfg=%02x gpio=%02x",
+            status.millivolts, status.pm1VinMv, status.pm1VinOutMv, status.pm1PowerSource, status.percentage,
+            status.charging, status.externalPower, pwrCfg, gpioIn);
+  }
+#endif
   normalFreq = getCpuFrequencyMhz();
   modeMutex = xSemaphoreCreateMutex();
   assert(modeMutex != nullptr);
@@ -140,7 +159,7 @@ void HalPowerManager::startDeepSleep(HalGPIO& gpio, const bool wakeOnHeldButton)
   // guarantees that ordering).
   freeink::PowerManager::powerDownRailsForSleep();
 
-#if FREEINK_DEVICE_PAPERMONO
+#if FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY
   // Its power button is behind the M5PM1 PMIC rather than an ESP GPIO, so
   // normal GPIO deep sleep would have no wake source. Ask the PMIC to shut the
   // device down; a button click then restarts it through a cold boot.
@@ -152,6 +171,16 @@ void HalPowerManager::startDeepSleep(HalGPIO& gpio, const bool wakeOnHeldButton)
   // Deep sleep leaves the board, 4G modem and audio module powered, so cut
   // power instead; the button cold-boots it. Returns only on USB power.
   freeink::metalio::powerOff();
+#endif
+#if FREEINK_DEVICE_PAPERDIY
+  // If USB keeps the board powered after the PMIC shutdown request, fall back
+  // to deep sleep. Either navigation key wakes it (the PM1 power button is not
+  // an ESP32 GPIO).
+  BoardPaperDiy::powerDownEpdPower();
+  const auto& keys = BoardConfig::ACTIVE.input;
+  while (digitalRead(keys.up) == LOW || digitalRead(keys.down) == LOW) delay(10);
+  freeink::PowerManager::armWakeOnPins((1ULL << keys.up) | (1ULL << keys.down));
+  freeink::PowerManager::deepSleep();
 #endif
 
   if (wakeOnHeldButton) {

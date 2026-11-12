@@ -14,6 +14,7 @@
 
 #include "FirmwareBoardTag.h"
 #include "OtaBootSwitch.h"
+#include "platform/LauncherEnv.h"
 
 namespace firmware_flash {
 
@@ -65,6 +66,8 @@ const char* resultName(Result r) {
       return "WRITE_FAIL";
     case Result::OTADATA_FAIL:
       return "OTADATA_FAIL";
+    case Result::LAUNCHER_MANAGED:
+      return "LAUNCHER_MANAGED";
   }
   return "?";
 }
@@ -273,6 +276,14 @@ Result validateImageFile(const char* sdPath, size_t partitionSize) {
 }
 
 Result flashFromSdPath(const char* sdPath, ProgressCb onProgress, void* ctx, bool alreadyValidated) {
+  // Launcher owns the OTA slots and its app registry. The "next" OTA slot may
+  // belong to another installed app, so an in-app flash would overwrite it and
+  // corrupt Launcher's bookkeeping. Updates go through Launcher's installer.
+  if (launcher_env::isUnderLauncher()) {
+    LOG_ERR("FLASH", "Refusing to flash under M5Launcher; use Launcher to update");
+    return Result::LAUNCHER_MANAGED;
+  }
+
   // Resolve destination first so we can size-check during validation. The full image-integrity
   // pass below verifies header, segment table, XOR checksum and SHA256 trailer end-to-end before
   // we touch otadata, so a truncated/corrupted .bin can never become the next boot target.

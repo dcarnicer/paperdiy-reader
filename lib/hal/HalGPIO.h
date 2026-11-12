@@ -129,6 +129,9 @@ class HalGPIO {
   // Check if USB is connected
   bool isUsbConnected() const;
 
+  // Whether the charger is actively charging (not merely USB-present).
+  bool isCharging() const;
+
   // Whether a cold boot with no USB detected can be trusted to mean a held
   // power button (Xteink-style button-energized rail with reliable USB
   // detection). When false, cold boots always proceed to a normal boot.
