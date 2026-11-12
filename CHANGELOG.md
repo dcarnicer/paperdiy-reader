@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.0.0-5 — 2026-11-12
+
+Revisión de mantenimiento sobre CrossPoint `2.0.0` (`fa17b9ca`) y FreeInk SDK
+`6a208c0c`, sin cambios de firmware. Mantiene el esquema
+`<CrossPoint X.Y.Z>-<N>`.
+
+- Corrige `test/test_release_license.py` para el SDK vendorizado: el mock de
+  `git` incluye la llamada `cat-file -t` que distingue submódulo de árbol
+  vendorizado. `scripts/sync-upstream.sh` preserva el test como archivo propio
+  del fork.
+- Tests Python 15/15.
+- Build `paperdiy`: idéntico a `2.0.0-4` salvo la cadena de versión;
+  `firmware.bin` 5.432.192 B, 82,8 % de flash y 33,9 % de RAM.
+- Smoke de hardware repetido sobre las mismas fuentes (`paperdiy-test`, run
+  `20261112-124506`): **PASS, 25 pasos**. El build de producción `2.0.0-5` se
+  flasheó y arranca en Home.
+
 ## 2.0.0-4 — 2026-11-12
 
 Cuarta revisión del port sobre CrossPoint `2.0.0` (`fa17b9ca`) y FreeInk SDK

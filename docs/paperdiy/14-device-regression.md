@@ -60,10 +60,11 @@ falla con un mensaje que pide flashear `paperdiy-test`.
 
 ## Resultado actual
 
-`2026-11-12`, PaperDIY `2.0.0-4` (`paperdiy-test`), run
-`20261112-115404`: **PASS, 25 pasos**. Tras restaurar y hacer un ciclo de
-power, el dispositivo volvió a Home en español con los recents originales y
-sin `SmokeTest`.
+`2026-11-12`, PaperDIY `2.0.0-4` (`paperdiy-test`), run `20261112-124506`:
+**PASS, 25 pasos**. Es una repetición sobre las mismas fuentes que la release
+`2.0.0-5`, que solo cambia la versión y el test de licencias. Tras restaurar y
+hacer un ciclo de power, el dispositivo volvió a Home en español con los
+recents originales y sin `SmokeTest`.
 
 El guardado de un recorte no se valida por serie: el modo selección consume
 los `Confirm` de forma poco fiable con la inyección actual. El runner valida

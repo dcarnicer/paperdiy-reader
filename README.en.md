@@ -26,7 +26,7 @@ usable every day.
 > and a full OTA install.
 > `fa17b9ca` sync smoke (2026-11-12): `make smoke` PASS 25 steps (Home, file
 > browser, reader, TOC, links, footnote, clipping and dictionary); the
-> `2.0.0-4` production build was flashed and boots to Home. Pending:
+> `2.0.0-5` production build was flashed and boots to Home. Pending:
 > ghosting/battery life, sleep/wake, real BLE pairing, a full Calibre transfer
 > and a full OTA install.
 > EPUB reading, Wi-Fi, web UI and book transfer were validated on 2026-10-28.

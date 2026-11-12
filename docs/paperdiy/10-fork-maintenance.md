@@ -175,15 +175,20 @@ Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
 
 ## Pendientes de la sync `fa17b9ca` (12/11/2026)
 
-Estado: release `2.0.0-4` publicada (tag `v2.0.0-4`). Hecho: pins de `NOTICE`,
-`CHANGELOG.md` y `docs/paperdiy/06-porting.*`; `make smoke` PASS 25 pasos
-registrado en `12-serial-testing.md`; `sdk-baseline` sigue en `6a208c0c` y los
-tres parches regenerados y verificados con `git apply --check` contra
-`fa17b9ca` / `6a208c0c`. Pendientes y riesgos conocidos tras la release:
+Estado: release `2.0.0-5` publicada (tag `v2.0.0-5`); `2.0.0-5` no cambia
+firmware, solo corrige el test de licencias y lo preserva en
+`sync-upstream.sh`. Hecho: pins de `NOTICE`, `CHANGELOG.md` y
+`docs/paperdiy/06-porting.*`; `make smoke` PASS 25 pasos registrado en
+`12-serial-testing.md`; `sdk-baseline` sigue en `6a208c0c` y los tres parches
+regenerados y verificados con `git apply --check` contra `fa17b9ca` /
+`6a208c0c`. Pendientes y riesgos conocidos tras la release:
 
-- El overlay de `sync-upstream.sh` restaura `NOTICE`, `CHANGELOG.md` y
-  `docs/paperdiy` desde `paperdiy`; en el próximo sync hay que llevar estos
-  cambios a `paperdiy` antes del overlay.
+- El overlay de `sync-upstream.sh` restaura `NOTICE`, `CHANGELOG.md`,
+  `docs/paperdiy` y `test/test_release_license.py` desde `paperdiy`; en el
+  próximo sync hay que llevar estos cambios a `paperdiy` antes del overlay.
+- `test/test_release_license.py` es archivo propio del fork: su mock de `git`
+  cubre la rama de SDK vendorizado (`cat-file -t`). Actualizarlo si cambia
+  `scripts/build_release_license.py`.
 - SDK: CrossPoint sigue pinchando `6a208c0c`. `Free-Ink/freeink-sdk` `main` ya
   está en `e637713`, e incluye `d2600e9`, que corrige el límite de cabeceras de
   `SecureHttpClient` que teníamos como riesgo aceptado. No adelantarlo: seguir

@@ -396,7 +396,7 @@ index bee6736b..692a5584 100644
    // the bus pads (no-op on SPI boards). Call only after all file users have
    // stopped; open HalFiles become invalid. A deep-sleep wake resets the MCU and
 diff --git a/platformio.ini b/platformio.ini
-index f0068f87..6b814a96 100644
+index f0068f87..74ce4542 100644
 --- a/platformio.ini
 +++ b/platformio.ini
 @@ -4,7 +4,7 @@ build_cache_dir = .cache
@@ -404,7 +404,7 @@ index f0068f87..6b814a96 100644
  
  [crosspoint]
 -version = 2.0.0
-+version = 2.0.0-4
++version = 2.0.0-5
  
  [base]
  platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip

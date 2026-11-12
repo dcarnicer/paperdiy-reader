@@ -384,6 +384,10 @@ restaurada y el equipo en modo USB; tras el ciclo de power volvió a Home con el
 estado original. Después se flasheó el build de producción `paperdiy`
 (`2.0.0-4`), que arranca en Home.
 
+Repetido el 12/11/2026 sobre las mismas fuentes (`paperdiy-test`, run
+`20261112-124506`): **PASS, 25 pasos**. La release `2.0.0-5` no cambia
+firmware; solo corrige el test Python del fork.
+
 - Cambios de upstream incluidos: Controles en submenús, OPDS en File Transfer,
   ajuste «Mostrar extensiones de archivo» y corrección de rotación de capturas.
 - No repetido en esta base: ghosting/autonomía, sleep/wake, emparejamiento BLE

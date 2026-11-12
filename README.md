@@ -26,7 +26,7 @@ a diario.
 > emparejamiento BLE real, envío Calibre completo y OTA completa.
 > Smoke del sync `fa17b9ca` (12/11/2026): `make smoke` PASS 25 pasos (Home,
 > explorador, lector, TOC, enlaces, nota al pie, recorte y diccionario); build
-> de producción `2.0.0-4` flasheado y arranca en Home. Pendientes:
+> de producción `2.0.0-5` flasheado y arranca en Home. Pendientes:
 > ghosting/autonomía, sleep/wake, emparejamiento BLE real, envío Calibre
 > completo y OTA completa.
 > La lectura EPUB, Wi-Fi, web UI y transferencia de libros ya se validaron el
