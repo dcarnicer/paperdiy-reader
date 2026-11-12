@@ -36,9 +36,11 @@ the firmware. If you prefer the original behavior, build with
 In the reader, A/B turn pages. In lists, they move the selection; long B opens
 the item; long A goes back.
 
-In `Settings > Controls > Orient Side Buttons` you can make A/B reverse
-direction in landscape; in upside-down portrait they always reverse. It is off
-by default, including when upgrading from an older version.
+Controls are grouped under `Settings > Controls` into **Power button**,
+**Front buttons**, **Side buttons** and **Taps and gestures**. In
+`Settings > Controls > Side buttons > Orient Side Buttons` you can make A/B
+reverse direction in landscape; in upside-down portrait they always reverse. It
+is off by default, including when upgrading from an older version.
 
 Short clicks are registered **on release**, not on press: that is what makes
 it possible to tell a click from a long press with only two buttons. If it were
@@ -119,13 +121,15 @@ opening the menu; it is a UX trade-off still to be decided.
 
 ## Wi-Fi, Calibre, OPDS and web UI
 
-- **Settings → Network**: scan/join a Wi-Fi network (2.4 GHz).
+- **Settings → Connectivity**: scan/join a Wi-Fi network (2.4 GHz).
 - **Web UI**: the address appears on screen; from a browser you can upload
   books, view files, change settings and update.
 - **Calibre**: use "Connect to wireless device" in Calibre; the reader shows
   the flow.
-- **OPDS**: add catalogs (Project Gutenberg, Standard Ebooks, etc.) and browse
-  them from the reader.
+- **OPDS**: add catalogs (Project Gutenberg, Standard Ebooks, etc.) in
+  `Settings → Connectivity → OPDS Servers` and open them from
+  `File Transfer → OPDS Browser` (or from Home when the plugin system is off
+  and a server is already saved).
 - **KOReader Sync**: configure credentials and sync progress against the
   official server or a self-hosted one (KOSync).
 - **OTA**: check for updates from Settings; you can also flash over USB.

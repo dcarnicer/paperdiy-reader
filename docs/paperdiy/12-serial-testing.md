@@ -373,6 +373,24 @@ build de producción `paperdiy` (`2.0.0-3`), que arranca en Home.
   Calibre completo y una instalación OTA completa. No se instrumentó el número
   exacto de refrescos e-ink; el Home se validó visualmente con caché caliente.
 
+## Sync `fa17b9ca` (12/11/2026)
+
+Probado con `make smoke` sobre `paperdiy-test` (`2.0.0-4`, CrossPoint
+`fa17b9ca`, SDK `6a208c0c`, merge `1c420918`). Run
+`build/device-regression/20261112-115404`: **PASS, 25 pasos**. Cubre Home,
+apertura por el explorador, page turn, menú del lector, TOC, selector de
+enlaces, nota al pie, entrada/cancelación de recorte y diccionario. La SD quedó
+restaurada y el equipo en modo USB; tras el ciclo de power volvió a Home con el
+estado original. Después se flasheó el build de producción `paperdiy`
+(`2.0.0-4`), que arranca en Home.
+
+- Cambios de upstream incluidos: Controles en submenús, OPDS en File Transfer,
+  ajuste «Mostrar extensiones de archivo» y corrección de rotación de capturas.
+- No repetido en esta base: ghosting/autonomía, sleep/wake, emparejamiento BLE
+  real, envío Calibre completo ni instalación OTA completa. OPDS (descarga),
+  USB MSC, escaneo BLE y arranque del servidor Calibre siguen validados desde
+  `2.0.0-3`.
+
 ## Regresión determinista
 
 `make smoke` ejecuta una secuencia fija con fixtures y aserciones OCR. Cubre

@@ -36,10 +36,12 @@ firmware. Si prefieres el comportamiento original, compila con
 En el lector, A/B pasan página. En listas, mueven la selección; B largo abre el
 elemento; A largo vuelve.
 
-En `Ajustes > Controles > Orientar botones laterales` puedes hacer que A/B
-inviertan la dirección al pasar a horizontal; en vertical invertida se invierten
-siempre. Está desactivado por defecto, también al actualizar desde una versión
-anterior.
+Los controles están agrupados en `Ajustes > Controles` en **Botón de
+encendido**, **Botones frontales**, **Botones laterales** y **Toques y gestos**.
+En `Ajustes > Controles > Botones laterales > Orientar botones laterales` puedes
+hacer que A/B inviertan la dirección al pasar a horizontal; en vertical
+invertida se invierten siempre. Está desactivado por defecto, también al
+actualizar desde una versión anterior.
 
 Los clics cortos se registran **al soltar**, no al pulsar: es lo que permite
 distinguir un clic de una pulsación larga con solo dos botones. Si se cambia a
@@ -119,13 +121,15 @@ antes de abrir el menú; es un compromiso de UX pendiente de decidir.
 
 ## Wi-Fi, Calibre, OPDS y web UI
 
-- **Settings → Network**: escanea/une a Wi-Fi (2,4 GHz).
+- **Ajustes → Conectividad**: escanea/une a Wi-Fi (2,4 GHz).
 - **Web UI**: la dirección aparece en pantalla; desde el navegador puedes subir
   libros, ver archivos, cambiar ajustes y actualizar.
 - **Calibre**: usa "Connect to wireless device" en Calibre; el lector muestra
   el flujo.
-- **OPDS**: añade catálogos (Project Gutenberg, Standard Ebooks, etc.) y navega
-  desde el lector.
+- **OPDS**: añade catálogos (Project Gutenberg, Standard Ebooks, etc.) en
+  `Ajustes → Conectividad → Servidores OPDS` y ábrelos desde
+  `Transferir archivos → Navegador OPDS` (o desde Inicio si el sistema de
+  plugins está desactivado y ya hay un servidor guardado).
 - **KOReader Sync**: configura credenciales y sincroniza progreso contra el
   servidor oficial o uno propio (KOSync).
 - **OTA**: busca actualizaciones desde Settings; también puedes flashear por

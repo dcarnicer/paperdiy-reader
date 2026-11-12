@@ -24,6 +24,11 @@ usable every day.
 > MSC (DABI, write/eject), BLE enable/scan and Calibre server startup. Pending:
 > ghosting/battery life, sleep/wake, real BLE pairing, a full Calibre transfer
 > and a full OTA install.
+> `fa17b9ca` sync smoke (2026-11-12): `make smoke` PASS 25 steps (Home, file
+> browser, reader, TOC, links, footnote, clipping and dictionary); the
+> `2.0.0-4` production build was flashed and boots to Home. Pending:
+> ghosting/battery life, sleep/wake, real BLE pairing, a full Calibre transfer
+> and a full OTA install.
 > EPUB reading, Wi-Fi, web UI and book transfer were validated on 2026-10-28.
 > Calibre wireless and OTA were validated on 2026-11-04. OPDS (Project
 > Gutenberg) was validated on 2026-11-05. Auto-sleep and the cover sleep

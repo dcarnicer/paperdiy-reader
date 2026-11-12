@@ -24,6 +24,11 @@ a diario.
 > OPDS con descarga, USB MSC (DABI, escritura/expulsión), BLE activado/escaneo
 > y servidor Calibre. Quedan pendientes ghosting/autonomía, sleep/wake,
 > emparejamiento BLE real, envío Calibre completo y OTA completa.
+> Smoke del sync `fa17b9ca` (12/11/2026): `make smoke` PASS 25 pasos (Home,
+> explorador, lector, TOC, enlaces, nota al pie, recorte y diccionario); build
+> de producción `2.0.0-4` flasheado y arranca en Home. Pendientes:
+> ghosting/autonomía, sleep/wake, emparejamiento BLE real, envío Calibre
+> completo y OTA completa.
 > La lectura EPUB, Wi-Fi, web UI y transferencia de libros ya se validaron el
 > 28/10/2026. Calibre wireless y OTA verificados el 04/11/2026. OPDS
 > (Project Gutenberg) verificado el 05/11/2026. Auto-suspensión y sleep screen

@@ -6,7 +6,7 @@ This project is a hardware port and downstream fork of CrossPoint Reader.
 Upstream:
   CrossPoint Reader 2.0.0 (develop branch)
   https://github.com/crosspoint-reader/crosspoint-reader
-  Commit: 8276d518b6562115016bc8b7fc52e66a4eeb9899 (2026-11-10)
+  Commit: fa17b9ca794c798d925734af9cce2bc3bff644ec (2026-11-12)
   License: MIT
   Copyright (c) 2025 CrossPoint Reader organization
 

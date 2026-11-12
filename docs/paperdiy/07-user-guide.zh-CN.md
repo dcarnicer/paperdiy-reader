@@ -34,7 +34,7 @@
 在阅读器中，A/B 翻页。在列表中，它们移动选择；长按 B 打开项目；长按 A
 返回。
 
-在 `设置 > 控制 > Orient Side Buttons`（侧边按键随方向）中可以让 A/B 在
+在 `设置 > 控制 > 侧边按键 > Orient Side Buttons`（侧边按键随方向）中可以让 A/B 在
 横向时反向；在倒置竖屏中始终反向。默认关闭，从旧版本升级时也保持关闭。
 
 短按在**松开**时触发，而不是按下时：这是只用两个按键区分短按和长按的
@@ -107,13 +107,15 @@
 
 ## Wi-Fi、Calibre、OPDS 和网页界面
 
-- **Settings → Network**：扫描/连接 Wi-Fi（2.4 GHz）。
+- **Settings → Connectivity**：扫描/连接 Wi-Fi（2.4 GHz）。
 - **网页界面**：屏幕上会显示地址；可以在浏览器中上传图书、查看文件、
   修改设置和更新。
 - **Calibre**：在 Calibre 中使用“Connect to wireless device”；阅读器会
   显示流程。
-- **OPDS**：添加目录（Project Gutenberg、Standard Ebooks 等），然后在
-  阅读器中浏览。
+- **OPDS**：在 `Settings → Connectivity → OPDS Servers` 中添加目录
+  （Project Gutenberg、Standard Ebooks 等），然后从
+  `File Transfer → OPDS Browser`（插件关闭且已保存服务器时也可从主页）
+  打开。
 - **KOReader Sync**：配置凭据，并向官方或自建 KOSync 服务器同步进度。
 - **OTA**：在设置中检查更新；也可以通过 USB 烧录。
 

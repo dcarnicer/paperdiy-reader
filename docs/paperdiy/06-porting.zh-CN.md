@@ -4,8 +4,8 @@
 
 ## 相对 CrossPoint 2.0 的改动
 
-基础提交：`8276d518b6562115016bc8b7fc52e66a4eeb9899`（develop，2.0.0，
-2026-11-10）。`main` 是上游镜像；`paperdiy` 是分支。`freeink-sdk` 已内置，
+基础提交：`fa17b9ca794c798d925734af9cce2bc3bff644ec`（develop，2.0.0，
+2026-11-12）。`main` 是上游镜像；`paperdiy` 是分支。`freeink-sdk` 已内置，
 使构建自包含。移植修改保存在 `patches/sdk.patch` + `patches/firmware.patch`。
 
 ### `freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h`
@@ -329,7 +329,7 @@ PaperDIY 在 GPIO48 上提供 `CARD_DET`，低电平有效。`SdPins.detect` 将
 3. PaperDIY 配置很小，符合现有架构，是很好的 PR 候选。
 
 移植分为 `patches/sdk.patch`（SDK 基础 `6a208c0c`）和
-`patches/firmware.patch`（CrossPoint 基础 `8276d518`）。生成和同步流程见
+`patches/firmware.patch`（CrossPoint 基础 `fa17b9ca`）。生成和同步流程见
 [`10-fork-maintenance.md`](10-fork-maintenance.md)。
 
 ## 状态

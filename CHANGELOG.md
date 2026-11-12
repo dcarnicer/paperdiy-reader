@@ -1,5 +1,39 @@
 # Changelog
 
+## 2.0.0-4 — 2026-11-12
+
+Cuarta revisión del port sobre CrossPoint `2.0.0` (`fa17b9ca`) y FreeInk SDK
+`6a208c0c`. Mantiene el esquema `<CrossPoint X.Y.Z>-<N>`. Commit de sync:
+`f82a332f` en `paperdiy-next`; merge en `paperdiy`: `1c420918`.
+
+- CrossPoint `8276d518` → `fa17b9ca` (16 commits): Controles reorganizado en
+  submenús (botón de encendido, botones frontales, laterales y gestos), OPDS
+  movido a File Transfer, ajuste «Mostrar extensiones de archivo», corrección
+  de rotación de capturas, margen inferior del lector con barra de progreso,
+  contador de página en la última página, sin división de palabras en títulos,
+  redondeo de avances TTF, PageLink a cero, tokens de plugin, credenciales
+  WebDAV, Basic auth en clipping sync, marcas hebreas/árabes en el diccionario
+  y caché de portadas del Home.
+- FreeInk SDK sin cambios (`6a208c0c`). La `main` del SDK ya está en `e637713`
+  e incluye `d2600e9`, que corrige el límite de cabeceras de SecureNet; se
+  adopta cuando CrossPoint mueva el pin.
+- Traducciones nuevas al español para los grupos de Controles, extensiones de
+  archivo y descripción de OPDS; las guías recogen las rutas nuevas de
+  Controles y OPDS.
+- Build `paperdiy`: `firmware.bin` 5.432.192 B, 82,8 % de flash
+  (5.426.903 / 6.553.600 B) y 33,9 % de RAM (110.932 B).
+- Tests host 922/922.
+- Smoke determinista en PaperDIY real (`paperdiy-test`, `2.0.0-4`, run
+  `20261112-115404`): PASS 25 pasos (Home, explorador, page turn, menú, TOC,
+  enlaces, nota al pie, cancelación de recorte y diccionario). El build de
+  producción `paperdiy` (`2.0.0-4`) se flasheó y arranca en Home.
+- `patches/sdk.patch`, `patches/firmware.patch` y
+  `patches/paperdiy-support.patch` regenerados y verificados con
+  `git apply --check` contra `fa17b9ca` / `6a208c0c`.
+- Pendiente de validación física: ghosting/autonomía, sleep/wake, emparejamiento
+  BLE real, envío Calibre completo y una instalación OTA completa. Riesgos y
+  estado en `docs/paperdiy/10-fork-maintenance.md`.
+
 ## 2.0.0-3 — 2026-11-10
 
 Tercera revisión del port sobre CrossPoint `2.0.0` (`8276d518`) y FreeInk SDK

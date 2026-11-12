@@ -38,7 +38,7 @@
 リーダーでは A/B でページを送ります。リストでは選択を移動し、B 長押しで
 項目を開き、A 長押しで戻ります。
 
-`設定 > コントロール > Orient Side Buttons`（サイドボタンの向き）で、
+`設定 > コントロール > サイドボタン > Orient Side Buttons`（サイドボタンの向き）で、
 横向き時に A/B の方向を反転できます。上下逆の縦向きでは常に反転します。
 既定ではオフで、旧バージョンから更新した場合もオフのままです。
 
@@ -121,13 +121,15 @@
 
 ## Wi-Fi、Calibre、OPDS、Web UI
 
-- **Settings → Network**：Wi-Fi（2.4 GHz）をスキャン/接続します。
+- **Settings → Connectivity**：Wi-Fi（2.4 GHz）をスキャン/接続します。
 - **Web UI**：画面にアドレスが表示されます。ブラウザから本のアップロード、
   ファイル表示、設定変更、更新ができます。
 - **Calibre**：Calibre で「Connect to wireless device」を使います。リーダー
   に手順が表示されます。
-- **OPDS**：カタログ（Project Gutenberg、Standard Ebooks など）を追加し、
-  リーダーから閲覧します。
+- **OPDS**：カタログ（Project Gutenberg、Standard Ebooks など）を
+  `Settings → Connectivity → OPDS Servers` で追加し、
+  `File Transfer → OPDS Browser`（プラグイン無効でサーバー設定済みなら
+  ホーム）から開きます。
 - **KOReader Sync**：認証情報を設定し、公式または自前の KOSync
   サーバーと進捗を同期します。
 - **OTA**：設定から更新を確認できます。USB で書き込むこともできます。

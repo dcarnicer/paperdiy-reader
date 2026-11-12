@@ -60,8 +60,8 @@ falla con un mensaje que pide flashear `paperdiy-test`.
 
 ## Resultado actual
 
-`2026-11-10`, PaperDIY `2.0.0-3` (`paperdiy-test`), run
-`20261110-141305`: **PASS, 25 pasos**. Tras restaurar y hacer un ciclo de
+`2026-11-12`, PaperDIY `2.0.0-4` (`paperdiy-test`), run
+`20261112-115404`: **PASS, 25 pasos**. Tras restaurar y hacer un ciclo de
 power, el dispositivo volvió a Home en español con los recents originales y
 sin `SmokeTest`.
 

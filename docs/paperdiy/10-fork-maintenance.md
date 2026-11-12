@@ -3,8 +3,8 @@
 Este repo es un fork downstream de CrossPoint. La regla es simple: **el motor
 se sigue de upstream; el hardware y la UX PaperDIY viven en nuestro fork**.
 
-Última sincronización: CrossPoint `8276d518` / FreeInk SDK `6a208c0c`
-(10/11/2026).
+Última sincronización: CrossPoint `fa17b9ca` / FreeInk SDK `6a208c0c`
+(12/11/2026).
 
 ## Ramas y remotos
 
@@ -168,32 +168,35 @@ git add freeink-sdk && git commit -m "chore: vendor pristine SDK for patch basel
 | Patch | Base | Contenido |
 |---|---|---|
 | `patches/sdk.patch` | FreeInk SDK `6a208c0c` | perfil, BoardPaperDiy, PM1, InputManager, PowerManager, driver LGFX |
-| `patches/firmware.patch` | CrossPoint `8276d518` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main |
+| `patches/firmware.patch` | CrossPoint `fa17b9ca` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main |
 | `patches/paperdiy-support.patch` | ambos | concatenación de los dos anteriores |
 
 Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
 
-## Pendientes de la sync `8276d518` (10/11/2026)
+## Pendientes de la sync `fa17b9ca` (12/11/2026)
 
-Estado: release `2.0.0-3` publicada (tag `v2.0.0-3`). Hecho: pins de `NOTICE`,
-`CHANGELOG.md` y `docs/paperdiy/06-porting.*`; smoke registrado en
-`12-serial-testing.md`; `sdk-baseline` recreada en `6a208c0c` y los tres parches
-regenerados y verificados con `git apply --check` contra `8276d518` /
-`6a208c0c`. Pendientes y riesgos conocidos tras la release:
+Estado: release `2.0.0-4` publicada (tag `v2.0.0-4`). Hecho: pins de `NOTICE`,
+`CHANGELOG.md` y `docs/paperdiy/06-porting.*`; `make smoke` PASS 25 pasos
+registrado en `12-serial-testing.md`; `sdk-baseline` sigue en `6a208c0c` y los
+tres parches regenerados y verificados con `git apply --check` contra
+`fa17b9ca` / `6a208c0c`. Pendientes y riesgos conocidos tras la release:
 
 - El overlay de `sync-upstream.sh` restaura `NOTICE`, `CHANGELOG.md` y
   `docs/paperdiy` desde `paperdiy`; en el próximo sync hay que llevar estos
   cambios a `paperdiy` antes del overlay.
-- Riesgo upstream aceptado en `SecureHttpClient::readHeaderLine`: una respuesta
-  con exactamente 64 cabeceras, o cuyo presupuesto de 8 KB se agote en la línea
-  en blanco final, puede rechazarse. No divergir del SDK sin necesidad; si se
-  corrige, hacerlo como parche del fork y añadir test.
-- El «un solo refresco» del Home es con caché caliente. Con caché fría o cambio
-  de altura de miniatura siguen los refrescos de popup por portada generada
-  (comportamiento previo, no regresión); no se ha instrumentado el contador.
+- SDK: CrossPoint sigue pinchando `6a208c0c`. `Free-Ink/freeink-sdk` `main` ya
+  está en `e637713`, e incluye `d2600e9`, que corrige el límite de cabeceras de
+  `SecureHttpClient` que teníamos como riesgo aceptado. No adelantarlo: seguir
+  el pin de upstream y adoptarlo cuando CrossPoint lo mueva. Si hay que
+  corregirlo antes, hacerlo como parche del fork con tests.
+- UX de upstream a revisar en la próxima pasada: Controles reorganizado en
+  submenús, OPDS movido a File Transfer y el ajuste nuevo «Mostrar extensiones
+  de archivo». Las guías de usuario ya recogen las rutas nuevas.
 - Smoke pendiente: ghosting/autonomía, sleep/wake, emparejamiento BLE real,
-  envío Calibre completo y una instalación OTA completa. OPDS (descarga), USB
-  MSC, escaneo BLE y arranque del servidor Calibre ya probados.
+  envío Calibre completo y una instalación OTA completa. `make smoke` cubre
+  Home, explorador, lector, TOC, enlaces, nota al pie, cancelación de recorte y
+  diccionario; OPDS, USB MSC, BLE y servidor Calibre ya se probaron en
+  `2.0.0-3`.
 
 ## OTA
 
@@ -238,7 +241,7 @@ campo de versión de M5Burner no admite cadenas largas y tiene que coincidir con
 la de la release.
 
 - `X.Y.Z` es `[crosspoint] version` de upstream `main` en el commit
-  sincronizado (hoy `2.0.0`, `8276d518`). No se inventa ni se sube por libre.
+  sincronizado (hoy `2.0.0`, `fa17b9ca`). No se inventa ni se sube por libre.
 - `N` empieza en 1 y sube en cada release pública (fixes, features, docs).
   Un sync a otra versión de CrossPoint lo reinicia: `2.1.0-1`.
 - Tag `v2.0.0-1`; `[crosspoint] version` / `CROSSPOINT_VERSION` es
