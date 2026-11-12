@@ -42,7 +42,11 @@ class SourceReferenceTest(unittest.TestCase):
                 release_license.source_reference(Path(temporary))
 
     def test_sdk_mismatch_does_not_label_unrelated_sources_as_corresponding(self):
-        with patch.object(release_license, "git", side_effect=["reader-sha", "pinned-sdk", "other-sdk"]):
+        with patch.object(
+            release_license,
+            "git",
+            side_effect=["reader-sha", "commit", "pinned-sdk", "other-sdk"],
+        ):
             with self.assertRaisesRegex(ValueError, "SDK checkout differs"):
                 release_license.build_license("default", "owner/reader", Path("packages"))
 
