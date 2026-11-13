@@ -219,8 +219,7 @@ bool bq27220LoadStep(const uint8_t addr, const uint16_t mah, const unsigned long
     return next(s.step + 1, s.step == 5 ? 500 : 1500);
   }
   if (s.step == 6 || s.step == 8) {
-    const bool reached =
-        readReg16(addr, BQ27220_OPERATION_STATUS, status) && ((status & 0x0400) != 0) == (s.step == 6);
+    const bool reached = readReg16(addr, BQ27220_OPERATION_STATUS, status) && ((status & 0x0400) != 0) == (s.step == 6);
     if (!reached && now - s.since < 5000) return next(s.step, 500);
     // Learned FCC first, Design Capacity half a second later: the X3's gauge can miss
     // a block select sent right after a block write. If anything fails, Design
@@ -371,11 +370,11 @@ constexpr uint8_t CW2015_MODE_SLEEP = 0xC0;
 constexpr uint8_t CW2015_MODE_POR = 0x0F;
 
 // The profile stock uploads ("3.7V 2000mAh target profile", DROM 0x3c697280).
-constexpr uint8_t CW2015_BATINFO[64] = {
-    0x15, 0x7e, 0x7c, 0x5c, 0x64, 0x6a, 0x65, 0x5c, 0x55, 0x53, 0x56, 0x61, 0x6f, 0x66, 0x50, 0x48,
-    0x43, 0x42, 0x40, 0x43, 0x4b, 0x5f, 0x75, 0x7d, 0x52, 0x44, 0x07, 0xae, 0x11, 0x22, 0x40, 0x56,
-    0x6c, 0x7c, 0x85, 0x86, 0x3d, 0x19, 0x8d, 0x1b, 0x06, 0x34, 0x46, 0x79, 0x8d, 0x90, 0x90, 0x46,
-    0x67, 0x80, 0x97, 0xaf, 0x80, 0x9f, 0xae, 0xcb, 0x2f, 0x00, 0x64, 0xa5, 0xb5, 0x11, 0xd0, 0x11};
+constexpr uint8_t CW2015_BATINFO[64] = {0x15, 0x7e, 0x7c, 0x5c, 0x64, 0x6a, 0x65, 0x5c, 0x55, 0x53, 0x56, 0x61, 0x6f,
+                                        0x66, 0x50, 0x48, 0x43, 0x42, 0x40, 0x43, 0x4b, 0x5f, 0x75, 0x7d, 0x52, 0x44,
+                                        0x07, 0xae, 0x11, 0x22, 0x40, 0x56, 0x6c, 0x7c, 0x85, 0x86, 0x3d, 0x19, 0x8d,
+                                        0x1b, 0x06, 0x34, 0x46, 0x79, 0x8d, 0x90, 0x90, 0x46, 0x67, 0x80, 0x97, 0xaf,
+                                        0x80, 0x9f, 0xae, 0xcb, 0x2f, 0x00, 0x64, 0xa5, 0xb5, 0x11, 0xd0, 0x11};
 
 // Stock reads the profile in 8-byte bursts.
 bool cw2015ReadBatinfo(const uint8_t addr, uint8_t* out) {
@@ -529,7 +528,7 @@ bool readGaugeMillivolts(uint16_t& out) {
 
 uint8_t chargerStatusReg() {
   return BoardConfig::ACTIVE.batteryGauge.chargerType == BoardConfig::ChargerType::Sgm41562 ? SGM41562_REG_STATUS
-                                                                                          : BQ25896_REG_STATUS;
+                                                                                            : BQ25896_REG_STATUS;
 }
 
 // CHRG_STAT [4:3] from the charger IC: 01 pre-charge or 10 fast-charge means
@@ -677,9 +676,7 @@ namespace {
 // pull-up; an active-high STAT (X4 Pro GPIO21) is push-pull driven with no
 // pull — stock reads it bare, and a pull-up would fake "charging" if the
 // driver ever tri-states.
-int chargeActiveLevel() {
-  return BoardConfig::ACTIVE.batteryChargeStatusActiveHigh ? HIGH : LOW;
-}
+int chargeActiveLevel() { return BoardConfig::ACTIVE.batteryChargeStatusActiveHigh ? HIGH : LOW; }
 }  // namespace
 
 BatteryMonitor::BatteryMonitor(int8_t adcPin, float dividerMultiplier, int8_t chargeStatusPin)
@@ -689,9 +686,7 @@ BatteryMonitor::BatteryMonitor(int8_t adcPin, float dividerMultiplier, int8_t ch
   }
 }
 
-bool BatteryMonitor::hasAdcBackend() const {
-  return _adcPin >= 0;
-}
+bool BatteryMonitor::hasAdcBackend() const { return _adcPin >= 0; }
 
 bool BatteryMonitor::hasGaugeBackend() const {
 #if FREEINK_BATTERY_I2C_GAUGE
@@ -775,14 +770,13 @@ bool BatteryMonitor::configureCharger() {
   if (!readReg8(g.chargerAddr, 0x0B, gate) || gate != 0) return false;
   // {register, mask, value}, in stock order (FUN_4200a2d0, build 2912).
   static const uint8_t steps[][3] = {
-      {0x05, 0x60, 0x00},  // FUN_4200a1dc(0)
-      {0x02, 0x7F, 0x3E},
-      {0x06, 0x80, 0x80},  // FUN_4200a1c0(1)
-      {0x01, 0x08, 0x00},  // FUN_4200a17c(1)
-      {0x04, 0xFE, 0xAA},  // FUN_4200a260(4350): charge voltage code 85 = 4.35 V
-      {0x0C, 0x02, 0x00},  // FUN_4200a1a0(2800)
-      {0x0D, 0xF8, 0x48},  // FUN_4200a214(50)
-      {0x01, 0xE0, 0x00},  // FUN_4200a294(8, 2)
+      {0x05, 0x60, 0x00},                      // FUN_4200a1dc(0)
+      {0x02, 0x7F, 0x3E}, {0x06, 0x80, 0x80},  // FUN_4200a1c0(1)
+      {0x01, 0x08, 0x00},                      // FUN_4200a17c(1)
+      {0x04, 0xFE, 0xAA},                      // FUN_4200a260(4350): charge voltage code 85 = 4.35 V
+      {0x0C, 0x02, 0x00},                      // FUN_4200a1a0(2800)
+      {0x0D, 0xF8, 0x48},                      // FUN_4200a214(50)
+      {0x01, 0xE0, 0x00},                      // FUN_4200a294(8, 2)
   };
   for (const auto& s : steps) {
     uint8_t old = 0;
@@ -938,9 +932,7 @@ uint16_t BatteryMonitor::readMillivolts() const {
   return static_cast<uint16_t>(mv * _dividerMultiplier);
 }
 
-double BatteryMonitor::readVolts() const {
-  return static_cast<double>(readMillivolts()) / 1000.0;
-}
+double BatteryMonitor::readVolts() const { return static_cast<double>(readMillivolts()) / 1000.0; }
 
 bool BatteryMonitor::isCharging() const {
 #if FREEINK_BATTERY_I2C_GAUGE
@@ -1091,10 +1083,10 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
 };
 
 #if FREEINK_DEVICE_PAPERDIY
-// PaperDIY's LGS4056H charger terminates around 4.10 V. The generic 4.20 V
-// curve therefore reports 90% on a full pack and never reaches 100%. Keep the
-// same lower notches and move only the top anchor to the observed full-cell
-// voltage; a 4.10 V pack is full, not 90%.
+// PaperDIY's LGS4056H has a 4.2 V target. The original 140 mAh cell terminated
+// at ~4.10 V, while the 1500 mAh 604050 replacement reaches ~4.17 V; the top
+// anchor is the measured full voltage of the installed cell. Keep the lower
+// notches and recalibrate this anchor if a replacement charges differently.
 constexpr uint16_t PAPERDIY_LIION_NOTCH_MV[11] = {
     3450,  //   0%
     3680,  //  10%
@@ -1106,7 +1098,7 @@ constexpr uint16_t PAPERDIY_LIION_NOTCH_MV[11] = {
     3920,  //  70%
     3980,  //  80%
     4060,  //  90%
-    4100,  // 100%
+    4170,  // 100%
 };
 #endif
 

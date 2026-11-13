@@ -252,11 +252,12 @@ Medición en hardware con la celda original y USB conectado:
 VBAT=4110 mV  VIN=5082 mV  PWR_SRC=5  CHG_STAT=alto  PWR_CFG=0x03
 ```
 
-El cargador ya había terminado y la celda quedaba en ~4,10 V, no en 4,20 V.
-La curva genérica de `BatteryMonitor` asumía 4,20 V y mostraba 90 %. Se añadió
-`PAPERDIY_LIION_NOTCH_MV` con el mismo tramo inferior y **4,10 V = 100 %**.
-Si se cambia a una celda que cargue hasta 4,20 V, hay que recalibrar el ancla
-superior o volver a la curva genérica.
+La celda original de 140 mAh terminaba en ~4,10 V; la 604050 de 1500 mAh
+instalada después llega a ~4,17 V. La curva genérica de `BatteryMonitor` asumía
+4,20 V y mostraba 90 % en ambos casos. `PAPERDIY_LIION_NOTCH_MV` conserva el
+tramo inferior y usa **4,17 V = 100 %** para la celda actual. Si se cambia a una
+celda que cargue a otra tensión, hay que recalibrar el ancla superior o volver a
+la curva genérica.
 
 También se integran del ecosistema M5Stack:
 
@@ -265,6 +266,53 @@ También se integran del ecosistema M5Stack:
 - Muestreo de `VBAT`/`VIN` en `About` y log de arranque.
 - Referencias: `m5stack/M5PM1`, `m5stack/M5PaperDIY-UserDemo` y
   `m5stack/uiflow-micropython` (driver `m5pm1.py`).
+
+### Log de batería
+
+Para medir la autonomía y recalibrar la curva sin adivinar, el firmware
+escribe `/battery-log.csv` en la SD:
+
+- Una línea al arrancar, al dormir, en cada cambio de USB/carga y cada 5 min
+  mientras está despierto. No programa despertares.
+- Columnas: `epoch,uptime_s,event,mv,pct,chg,usb,reader,wifi,vin_mv,vout_mv,pwr_src,pages`.
+  `pages` es el número de páginas pasadas desde el arranque (modo de descarga).
+- Rota a `/battery-log.old.csv` al llegar a 1 MB y recorta una última línea
+  incompleta tras un corte de corriente.
+- Se copia por **File Transfer** (USB MSC), por el servidor web, sacando la SD
+  o por el puerto serie con `CMD:BATLOG`:
+
+```bash
+python3 scripts/paperdiy_serial.py batlog battery-log.csv
+```
+
+Análisis en el ordenador:
+
+```bash
+python3 scripts/battery_log.py battery-log.csv
+python3 scripts/battery_log.py battery-log.csv --capacity 1500
+python3 scripts/battery_log.py battery-log.csv --curve
+```
+
+`--capacity` estima la corriente media (el PM1 no mide corriente) y `--curve`
+propone 11 puntos `mV → %` a partir de una descarga completa. Sin RTC, `epoch`
+solo avanza cuando hay NTP/WiFi: para un test largo, conéctate a WiFi al
+empezar y de vez en cuando.
+
+Para una descarga larga sin pulsar botones, el build `paperdiy-test` incluye un
+modo que pasa páginas solo. Abre un libro (mejor uno de prueba, porque avanza
+la lectura) y arranca:
+
+```bash
+python3 scripts/paperdiy_serial.py drain --interval-ms 30000
+```
+
+El modo se queda en el libro, alterna el sentido al llegar al final y apunta
+cada página en la columna `pages`. Desenchufa el USB para que la batería se
+descargue de verdad; el modo mantiene el equipo despierto. Para pararlo:
+
+```bash
+python3 scripts/paperdiy_serial.py drain --stop
+```
 
 ### Refresco parcial
 

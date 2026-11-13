@@ -33,6 +33,30 @@ HalPowerManager powerManager;  // Singleton instance
 // X4 Pro display chip select.
 static constexpr gpio_num_t XTEINK_C3_GPIO13 = GPIO_NUM_13;
 
+namespace {
+BatteryMonitor& batteryMonitor() {
+  static BatteryMonitor battery;
+  return battery;
+}
+
+// Takes the battery mutex for the whole read. A null handle is allowed while
+// boot is still constructing the manager.
+class BatteryReadLock {
+ public:
+  explicit BatteryReadLock(const SemaphoreHandle_t mutex) : mutex_(mutex) {
+    if (mutex_) xSemaphoreTake(mutex_, portMAX_DELAY);
+  }
+  ~BatteryReadLock() {
+    if (mutex_) xSemaphoreGive(mutex_);
+  }
+  BatteryReadLock(const BatteryReadLock&) = delete;
+  BatteryReadLock& operator=(const BatteryReadLock&) = delete;
+
+ private:
+  SemaphoreHandle_t mutex_;
+};
+}  // namespace
+
 void HalPowerManager::begin() {
   if (BoardConfig::ACTIVE.batteryAdc >= 0) {
     pinMode(BoardConfig::ACTIVE.batteryAdc, INPUT);
@@ -59,6 +83,8 @@ void HalPowerManager::begin() {
   normalFreq = getCpuFrequencyMhz();
   modeMutex = xSemaphoreCreateMutex();
   assert(modeMutex != nullptr);
+  batteryMutex = xSemaphoreCreateMutex();
+  assert(batteryMutex != nullptr);
 }
 
 void HalPowerManager::setPowerSaving(bool enabled) {
@@ -229,8 +255,13 @@ bool HalPowerManager::holdWhileUsbPowered(HalGPIO& gpio, void (*onStatus)(bool c
 }
 #endif
 
+BatteryMonitor::Status HalPowerManager::getBatteryStatus() const {
+  const BatteryReadLock lock(batteryMutex);
+  return batteryMonitor().readStatus();
+}
+
 uint16_t HalPowerManager::getBatteryPercentage() const {
-  static const BatteryMonitor battery;
+  const BatteryReadLock lock(batteryMutex);
   if (BoardConfig::ACTIVE.batteryGauge.gaugeAddr != 0) {
     const unsigned long now = millis();
     if (_batteryLastPollMs != 0 && (now - _batteryLastPollMs) < BATTERY_POLL_MS) {
@@ -239,7 +270,7 @@ uint16_t HalPowerManager::getBatteryPercentage() const {
 
     _batteryLastPollMs = now;
     uint16_t percent = 0;
-    if (!battery.readPercentageChecked(percent)) {
+    if (!batteryMonitor().readPercentageChecked(percent)) {
       return _batteryCachedPercent;
     }
     _batteryCachedPercent = percent;
@@ -247,10 +278,11 @@ uint16_t HalPowerManager::getBatteryPercentage() const {
   }
 
   // smooth the battery %.
+  const uint16_t sample = batteryMonitor().readPercentage();
   if (_batteryCachedPercent == 0) {
-    _batteryCachedPercent = 10 * battery.readPercentage();
+    _batteryCachedPercent = 10 * sample;
   } else {
-    _batteryCachedPercent = (_batteryCachedPercent * 9 + battery.readPercentage() * 10) / 10;
+    _batteryCachedPercent = (_batteryCachedPercent * 9 + sample * 10) / 10;
   }
   return _batteryCachedPercent / 10;
 }

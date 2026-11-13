@@ -23,6 +23,9 @@ Con el puerto USB conectado (115200 baudios):
 | Comando | Efecto | Disponible en |
 |---|---|---|
 | `CMD:SCREENSHOT` | Devuelve el framebuffer 1 bpp por serie | `paperdiy` y `paperdiy-test` |
+| `CMD:BATLOG` | Devuelve `/battery-log.csv` por serie | `paperdiy` y `paperdiy-test` |
+| `CMD:DRAIN:START[:ms]` | Pasa páginas solo cada `ms` (30 s por defecto) | solo `paperdiy-test` |
+| `CMD:DRAIN:STOP` | Detiene el modo de descarga | solo `paperdiy-test` |
 | `CMD:KEY:A` | A corto: arriba / página anterior | solo `paperdiy-test` |
 | `CMD:KEY:B` | B corto: abajo / página siguiente | solo `paperdiy-test` |
 | `CMD:KEY:A_LONG` | A largo: atrás / salir | solo `paperdiy-test` |
@@ -50,6 +53,13 @@ físico; para un reset de prueba usa `esptool` o el modo descarga.
 ```bash
 # Captura la pantalla actual (rota a 540x960, como las capturas del lector)
 python3 scripts/paperdiy_serial.py screenshot /tmp/home.png
+
+# Descarga el log de batería sin entrar en File Transfer
+python3 scripts/paperdiy_serial.py batlog /tmp/battery-log.csv
+
+# Con un libro abierto: pasa una página cada 30 s para medir la batería
+python3 scripts/paperdiy_serial.py drain --interval-ms 30000
+python3 scripts/paperdiy_serial.py drain --stop
 
 # Pulsa B (siguiente) y luego confirma
 python3 scripts/paperdiy_serial.py key B

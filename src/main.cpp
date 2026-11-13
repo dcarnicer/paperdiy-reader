@@ -47,6 +47,7 @@
 #include "fontIds.h"
 #include "platform/LauncherEnv.h"
 #include "platform/UsbSerialJtagHandoff.h"
+#include "util/BatteryLog.h"
 #include "util/ButtonNavigator.h"
 #include "util/PluginEvents.h"
 #include "util/ScreenshotUtil.h"
@@ -68,8 +69,26 @@ MappedInputManager mappedInputManager(gpio, renderer);
 ActivityManager activityManager(renderer, mappedInputManager);
 FontDecompressor fontDecompressor;
 SdCardFontSystem sdFontSystem;
+BatteryLog batteryLog;
 FontCacheManager fontCacheManager(renderer.getFontMap(), renderer.getSdCardFonts(), renderer.getTtfFonts());
 static unsigned long allowSleepAt = 0;
+static unsigned long lastActivityTime = 0;
+
+static void noteActivity() { lastActivityTime = millis(); }
+
+#ifdef PAPERDIY_SERIAL_TEST
+// Autonomous reading-session driver for battery drain tests. It only sends
+// page turns; the reader keeps its normal rendering path. At the end of a book
+// it reverses direction, so the test can run for hours on one book.
+namespace drainTest {
+bool enabled = false;
+bool forward = true;
+unsigned long intervalMs = 30000;
+unsigned long lastTurnMs = 0;
+uint32_t turns = 0;
+uint8_t stalls = 0;
+}  // namespace drainTest
+#endif
 
 // A wake hold must never become an in-app power-button action.  Boot may continue
 // while the button is held; swallow the one release that ends that wake gesture.
@@ -446,6 +465,7 @@ void enterDeepSleep(bool fromTimeout = false) {
   // Sleep may end in a power-off (battery death, latch); persist the clock
   // floor now so a later cold boot resumes from it.
   trustedtime::note();
+  batteryLog.logSleep(APP_STATE.lastSleepFromReader, WiFi.getMode() != WIFI_MODE_NULL);
 
   // Stop Bluetooth before plugin delivery can start WiFi; a timeout defers delivery.
   deepSleepInProgress = true;
@@ -695,6 +715,7 @@ void setup() {
   // Restore the monotonic clock floor before anything reads time() (event
   // timestamps, loan-expiry checks).
   trustedtime::init();
+  batteryLog.begin();
   bleturner::begin(pageturner::host, SETTINGS.ble);
 
   // Brightness and warmth are always restored. A normal wake starts with the
@@ -851,6 +872,7 @@ void setup() {
   }
 
   allowSleepAt = millis() + 2000;
+  lastActivityTime = millis();
 }
 
 void loop() {
@@ -860,10 +882,6 @@ void loop() {
 
   gpio.setSharedConfirmPowerShortPressEmitsPower(SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP);
   mappedInputManager.update();
-
-
-
-
 
   // Bluetooth page turner, before the USB drive's early return: a card handed to USB stops the radio
   // before anything else.
@@ -898,6 +916,7 @@ void loop() {
 
   // After the exclusive-storage return: it saves settings to the SD card.
   handleSlideSwitch();
+  batteryLog.tick(activityManager.isReaderActivity(), WiFi.getMode() != WIFI_MODE_NULL);
   halTiltSensor.update(SETTINGS.tiltPageTurn, SETTINGS.orientation, activityManager.isReaderActivity());
 
   // Under the render lock, so a step never overlaps the themes' gauge reads.
@@ -935,6 +954,22 @@ void loop() {
         uint8_t* buf = display.getFrameBuffer();
         logSerial.write(buf, bufferSize);
         logSerial.printf("SCREENSHOT_END\n");
+      } else if (cmd == "BATLOG") {
+        // Stream the drain log over USB serial. Unlike CMD:KEY this stays in
+        // production builds: it needs no UI navigation and no USB MSC session.
+        HalFile file = Storage.open("/battery-log.csv");
+        if (!file || !file.isOpen()) {
+          logSerial.printf("BATLOG_START:0\nBATLOG_END\n");
+        } else {
+          const size_t size = file.fileSize();
+          logSerial.printf("BATLOG_START:%u\n", static_cast<unsigned>(size));
+          uint8_t buffer[256];
+          int read = 0;
+          while ((read = file.read(buffer, sizeof(buffer))) > 0) {
+            logSerial.write(buffer, read);
+          }
+          logSerial.printf("BATLOG_END\n");
+        }
       }
 #ifdef PAPERDIY_SERIAL_TEST
       else if (cmd.startsWith("KEY:")) {
@@ -947,26 +982,56 @@ void loop() {
         bool ok = false;
         if (key == "B" || key == "NEXT" || key == "DOWN") {
           ok = activityManager.isForegroundReader() ? activityManager.remoteTurn(true, false)
-                                                     : mappedInputManager.injectRemoteClick(RemoteButton::Next);
+                                                    : mappedInputManager.injectRemoteClick(RemoteButton::Next);
         } else if (key == "A" || key == "PREV" || key == "UP") {
           ok = activityManager.isForegroundReader() ? activityManager.remoteTurn(false, false)
-                                                     : mappedInputManager.injectRemoteClick(RemoteButton::Previous);
+                                                    : mappedInputManager.injectRemoteClick(RemoteButton::Previous);
         } else if (key == "B_LONG" || key == "CONFIRM" || key == "OK") {
           ok = mappedInputManager.injectRemoteClick(RemoteButton::Confirm);
         } else if (key == "A_LONG" || key == "BACK") {
           ok = mappedInputManager.injectRemoteClick(RemoteButton::Back);
         }
         logSerial.printf("KEY:%s:%d\n", key.c_str(), ok ? 1 : 0);
+      } else if (cmd.startsWith("OPEN:")) {
+        String path = cmd.substring(5);
+        path.trim();
+        if (!Storage.exists(path.c_str())) {
+          logSerial.printf("OPEN:NO_FILE\n");
+        } else {
+          activityManager.goToReader(path.c_str());
+          logSerial.printf("OPEN:OK\n");
+        }
+      } else if (cmd.startsWith("DRAIN")) {
+        if (cmd == "DRAIN:STOP") {
+          drainTest::enabled = false;
+          logSerial.printf("DRAIN:STOPPED:%lu\n", static_cast<unsigned long>(drainTest::turns));
+        } else {
+          int interval = 30000;
+          const int separator = cmd.indexOf(':', 6);
+          if (separator >= 0) interval = cmd.substring(separator + 1).toInt();
+          if (interval < 1000) interval = 1000;
+          if (activityManager.getScreenshotInfo().readerType == ScreenshotInfo::ReaderType::None) {
+            logSerial.printf("DRAIN:NO_READER\n");
+          } else {
+            drainTest::enabled = true;
+            drainTest::forward = true;
+            drainTest::intervalMs = static_cast<unsigned long>(interval);
+            drainTest::lastTurnMs = millis() - drainTest::intervalMs;
+            drainTest::turns = 0;
+            drainTest::stalls = 0;
+            noteActivity();
+            logSerial.printf("DRAIN:STARTED:%d\n", interval);
+          }
+        }
       }
 #endif
     }
   }
 
   // Check for any user activity (button press or release) or active background work
-  static unsigned long lastActivityTime = millis();
   if (gpio.wasAnyPressed() || gpio.wasAnyReleased() || gpio.wasTouchActivity() || halTiltSensor.hadActivity() ||
       remoteActed || activityManager.preventAutoSleep()) {
-    lastActivityTime = millis();         // Reset inactivity timer
+    noteActivity();                      // Reset inactivity timer
     powerManager.setPowerSaving(false);  // Restore normal CPU frequency on user activity
   }
 
@@ -1105,13 +1170,39 @@ void loop() {
   // flash, the AA pass re-running, and a frontlight dip under the refresh
   // load); the reader's status bar picks the charging state up on the next
   // page turn instead.
-  if (gpio.wasUsbStateChanged() && !activityManager.isReaderActivity()) {
-    activityManager.requestUpdate();
+  if (gpio.wasUsbStateChanged()) {
+    batteryLog.logEvent("usb", activityManager.isReaderActivity(), WiFi.getMode() != WIFI_MODE_NULL);
+    if (!activityManager.isReaderActivity()) activityManager.requestUpdate();
   }
 
   const unsigned long activityStartTime = millis();
   activityManager.loop();
   const unsigned long activityDuration = millis() - activityStartTime;
+
+#ifdef PAPERDIY_SERIAL_TEST
+  if (drainTest::enabled && millis() - drainTest::lastTurnMs >= drainTest::intervalMs) {
+    drainTest::lastTurnMs = millis();
+    if (activityManager.getScreenshotInfo().readerType == ScreenshotInfo::ReaderType::None) {
+      LOG_INF("DRAIN", "Reader lost; stopping");
+      drainTest::enabled = false;
+    } else if (activityManager.remoteTurn(drainTest::forward, false)) {
+      ++drainTest::turns;
+      drainTest::stalls = 0;
+      batteryLog.notePageTurn();
+      noteActivity();
+      if ((drainTest::turns % 10) == 0) {
+        LOG_INF("DRAIN", "Page turns: %lu", static_cast<unsigned long>(drainTest::turns));
+      }
+    } else if (++drainTest::stalls >= 3) {
+      // A real end-of-book/start-of-book refusal persists across retries; a
+      // render that is still busy clears on the next tick. Flip only after
+      // three consecutive refusals.
+      drainTest::stalls = 0;
+      drainTest::forward = !drainTest::forward;
+      LOG_INF("DRAIN", "Turn refused; direction=%s", drainTest::forward ? "forward" : "backward");
+    }
+  }
+#endif
 
   const unsigned long loopDuration = millis() - loopStartTime;
   if (loopDuration > maxLoopDuration) {

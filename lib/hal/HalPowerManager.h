@@ -19,6 +19,9 @@ class HalPowerManager {
 
   mutable int _batteryCachedPercent = 0;         // Last read battery percentage (0-100)
   mutable unsigned long _batteryLastPollMs = 0;  // Timestamp of last battery read in milliseconds
+  // Serializes battery reads: the render task paints the status bar while the
+  // main loop samples the same PM1/ADC for the battery log.
+  mutable SemaphoreHandle_t batteryMutex = nullptr;
 
   enum LockMode { None, NormalSpeed };
   LockMode currentLockMode = None;
@@ -55,6 +58,10 @@ class HalPowerManager {
 
   // Get battery percentage (range 0-100)
   uint16_t getBatteryPercentage() const;
+
+  // Full battery snapshot (voltage, percentage, charger/USB state). Serialized
+  // with the percentage path because both touch the same I2C/ADC backend.
+  BatteryMonitor::Status getBatteryStatus() const;
 
   // RAII helper class to manage power saving locks
   // Usage: create an instance of Lock in a scope to disable power saving, for example when running a task that needs

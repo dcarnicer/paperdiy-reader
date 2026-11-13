@@ -250,11 +250,12 @@ Hardware measurement with the original cell and USB connected:
 VBAT=4110 mV  VIN=5082 mV  PWR_SRC=5  CHG_STAT=high  PWR_CFG=0x03
 ```
 
-The charger had already finished and the cell was at ~4.10 V, not 4.20 V.
-`BatteryMonitor`'s generic curve assumed 4.20 V and showed 90%. A
-`PAPERDIY_LIION_NOTCH_MV` curve was added with the same lower segment and
-**4.10 V = 100%**. If the cell is changed to one that charges to 4.20 V, the
-upper anchor must be recalibrated or the generic curve restored.
+The original 140 mAh cell terminated at ~4.10 V; the 1500 mAh 604050
+replacement reaches ~4.17 V. `BatteryMonitor`'s generic curve assumed 4.20 V
+and showed 90% in both cases. `PAPERDIY_LIION_NOTCH_MV` keeps the same lower
+segment and uses **4.17 V = 100%** for the current cell. If the cell is changed
+to one that charges to another voltage, the upper anchor must be recalibrated
+or the generic curve restored.
 
 M5Stack ecosystem pieces are also integrated:
 
@@ -263,6 +264,53 @@ M5Stack ecosystem pieces are also integrated:
 - `VBAT`/`VIN` sampling in `About` and the boot log.
 - References: `m5stack/M5PM1`, `m5stack/M5PaperDIY-UserDemo` and
   `m5stack/uiflow-micropython` (`m5pm1.py` driver).
+
+### Battery log
+
+To measure runtime and recalibrate the curve without guessing, the firmware
+writes `/battery-log.csv` on the SD card:
+
+- One row at boot, at sleep, on every USB/charge transition, and every 5
+  minutes while awake. It never schedules a wakeup.
+- Columns: `epoch,uptime_s,event,mv,pct,chg,usb,reader,wifi,vin_mv,vout_mv,pwr_src,pages`.
+  `pages` is the page-turn count since boot (drain mode).
+- Rotates to `/battery-log.old.csv` at 1 MB and drops a torn final line after a
+  power loss.
+- Copy it through **File Transfer** (USB MSC), the web server, by removing the
+  SD card, or over the serial port with `CMD:BATLOG`:
+
+```bash
+python3 scripts/paperdiy_serial.py batlog battery-log.csv
+```
+
+Analyze it on the computer:
+
+```bash
+python3 scripts/battery_log.py battery-log.csv
+python3 scripts/battery_log.py battery-log.csv --capacity 1500
+python3 scripts/battery_log.py battery-log.csv --curve
+```
+
+`--capacity` estimates mean current (the PM1 has no current sense) and
+`--curve` proposes 11 `mV → %` points from a full discharge. Without an RTC,
+`epoch` only advances when NTP/WiFi is available: for a long test, connect to
+WiFi at the start and occasionally after that.
+
+For a long discharge without pressing buttons, the `paperdiy-test` build has an
+auto page-turn mode. Open a book (ideally a disposable one, because it advances
+the reading position) and start it:
+
+```bash
+python3 scripts/paperdiy_serial.py drain --interval-ms 30000
+```
+
+It stays in the book, reverses direction at the end, and records every turn in
+the `pages` column. Unplug USB so the battery actually discharges; the mode
+keeps the device awake. Stop it with:
+
+```bash
+python3 scripts/paperdiy_serial.py drain --stop
+```
 
 ### Partial refresh
 

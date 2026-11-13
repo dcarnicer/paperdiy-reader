@@ -7,9 +7,14 @@ Works with the `paperdiy-test` build, which exposes the development-only
 
 Examples:
     python3 scripts/paperdiy_serial.py screenshot /tmp/home.png
+    python3 scripts/paperdiy_serial.py batlog /tmp/battery-log.csv
     python3 scripts/paperdiy_serial.py key B
     python3 scripts/paperdiy_serial.py key B_LONG
     python3 scripts/paperdiy_serial.py key A_LONG
+    python3 scripts/paperdiy_serial.py open /DrainTest/battery-drain.epub
+    python3 scripts/paperdiy_serial.py drain --interval-ms 30000
+
+`batlog` works on production builds; `key`, `open` and `drain` need `paperdiy-test`.
 """
 
 from __future__ import annotations
@@ -236,6 +241,47 @@ def screenshot(args: argparse.Namespace, fd: int, reader: SerialReader) -> None:
     print(f"screenshot: {args.output} ({width}x{height}, rotate={rotation})")
 
 
+def batlog(args: argparse.Namespace, fd: int, reader: SerialReader) -> None:
+    reader.drain()
+    write_all(fd, b"CMD:BATLOG\n")
+    reader.wait_for(b"BATLOG_START:", args.timeout)
+    size_line = reader.read_until(b"\n", args.timeout).strip()
+    try:
+        size = int(size_line)
+    except ValueError as exc:
+        raise SystemExit(f"invalid battery log size: {size_line!r}") from exc
+    data = reader.read_exact(size, args.timeout)
+    reader.wait_for(b"BATLOG_END", args.timeout)
+    with open(args.output, "wb") as output:
+        output.write(data)
+    print(f"battery log: {args.output} ({size} bytes)")
+
+
+def open_book(args: argparse.Namespace, fd: int, reader: SerialReader) -> None:
+    reader.drain()
+    write_all(fd, f"CMD:OPEN:{args.path}\n".encode())
+    deadline = time.time() + args.timeout
+    while time.time() < deadline:
+        line = reader.read_until(b"\n", args.timeout).decode("utf-8", "replace").strip()
+        print(line)
+        if line.startswith("OPEN:"):
+            return
+    raise SystemExit("no OPEN response; is the paperdiy-test build running?")
+
+
+def drain(args: argparse.Namespace, fd: int, reader: SerialReader) -> None:
+    reader.drain()
+    command = b"CMD:DRAIN:STOP\n" if args.stop else f"CMD:DRAIN:START:{args.interval_ms}\n".encode()
+    write_all(fd, command)
+    deadline = time.time() + args.timeout
+    while time.time() < deadline:
+        line = reader.read_until(b"\n", args.timeout).decode("utf-8", "replace").strip()
+        print(line)
+        if line.startswith("DRAIN:"):
+            return
+    raise SystemExit("no DRAIN response; is the paperdiy-test build running?")
+
+
 def key(args: argparse.Namespace, fd: int, reader: SerialReader) -> None:
     name = args.key.upper()
     valid = {"A", "B", "A_LONG", "B_LONG", "NEXT", "PREV", "UP", "DOWN", "CONFIRM", "OK", "BACK"}
@@ -274,6 +320,19 @@ def build_parser() -> argparse.ArgumentParser:
     shot.add_argument("--no-rotate", action="store_true", help="alias for --rotate 0")
     shot.add_argument("--invert", action="store_true", help="invert black/white")
     shot.set_defaults(func=screenshot)
+
+    log = subparsers.add_parser("batlog", help="download /battery-log.csv over serial")
+    log.add_argument("output", help="output CSV path")
+    log.set_defaults(func=batlog)
+
+    book = subparsers.add_parser("open", help="open a book by SD path (paperdiy-test build)")
+    book.add_argument("path", help="absolute SD path, e.g. /DrainTest/battery-drain.epub")
+    book.set_defaults(func=open_book)
+
+    page = subparsers.add_parser("drain", help="start/stop the paperdiy-test auto page-turn drain mode")
+    page.add_argument("--interval-ms", type=int, default=30000, help="milliseconds between page turns (default: 30000)")
+    page.add_argument("--stop", action="store_true", help="stop the drain mode")
+    page.set_defaults(func=drain)
 
     press = subparsers.add_parser("key", help="inject one key (paperdiy-test build)")
     press.add_argument("key", help="A, B, A_LONG, B_LONG, NEXT, PREV, CONFIRM, BACK")

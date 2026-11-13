@@ -32,9 +32,9 @@ Objetivo: demostrar que el port funciona en un PaperDIY real y recoger datos.
 - [x] Probar A/B: navegación, página, back, confirm y A+B. Cortos y atajos
       back/confirm verificados; A+B con USB apaga vía PM1 (05/11). Falta
       validar la pulsación larga física sostenida.
-- [x] Batería: curva PaperDIY (4,10 V = 100 %), LVP a 3,4 V, `About` con
-      VBAT/estado de carga y rayo según `CHG_STAT`. Pendiente validar la nueva
-      604050 y medir autonomía.
+- [x] Batería: curva PaperDIY (4,17 V = 100 % con la 604050 de 1500 mAh), LVP
+      a 3,4 V, `About` con VBAT/estado de carga y rayo según `CHG_STAT`.
+      Pendiente medir autonomía y ajustar la curva con una descarga completa.
 - [x] SD: monta tras reiniciar, aparecen `Books/*.epub`, abre y lee.
 - [x] Libro grande / caché / cambios de fuente: EPUB de 7,3 MB y cambio de
       tamaño 14/16 pt con reflow verificados.

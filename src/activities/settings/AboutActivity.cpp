@@ -1,10 +1,10 @@
 #include "AboutActivity.h"
 
-#include <BatteryMonitor.h>
 #include <BoardConfig.h>
 #include <GfxRenderer.h>
 #include <HalClock.h>
 #include <HalFrontlight.h>
+#include <HalPowerManager.h>
 #include <HalStorage.h>
 #include <HalTiltSensor.h>
 #include <I18n.h>
@@ -138,8 +138,7 @@ void AboutActivity::onEnter() {
   // The PM1 has no coulomb counter, so show the raw rails next to the percentage.
   // This is also the quickest way to tell a full pack from a charger that has
   // already terminated. Fields are -1 when the board has no PM1 backend.
-  const BatteryMonitor battery;
-  const auto batteryStatus = battery.readStatus();
+  const auto batteryStatus = powerManager.getBatteryStatus();
   if (batteryStatus.millivoltsKnown) {
     const char* state =
         batteryStatus.chargingKnown
