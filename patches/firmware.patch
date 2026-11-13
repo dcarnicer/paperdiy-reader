@@ -1162,10 +1162,10 @@ index fdec5b46..152faee7 100644
    DownloadFonts,
    TextSettings,
 diff --git a/src/components/OptionPopup.h b/src/components/OptionPopup.h
-index 550584bc..cf4f19e5 100644
+index ce66bf4b..703b0393 100644
 --- a/src/components/OptionPopup.h
 +++ b/src/components/OptionPopup.h
-@@ -149,12 +149,27 @@ class OptionPopup {
+@@ -161,12 +161,27 @@ class OptionPopup {
      return true;
    }
  
@@ -1195,15 +1195,15 @@ index 550584bc..cf4f19e5 100644
      return true;
    }
  
-@@ -247,6 +262,7 @@ class OptionPopup {
-         fui::clampI16(std::min<int>(screen.width * 3 / 4, screen.width - metrics.optionPopupDialogSideMargin * 2));
-     const int16_t height = fui::clampI16(fui::optionDialogHeight(target, props, width), 0, screen.height);
+@@ -276,6 +291,7 @@ class OptionPopup {
+     props.visibleOptions = static_cast<uint8_t>(visibleCount);
+     const int16_t height = fui::optionDialogHeight(target, props, width);
      const fui::Rect dialogRect = fui::centeredRect(screen, fui::Size{width, height});
 +    lastDialogRect_ = dialogRect;
  
      // Chrome guard first, options after: route() scans newest-first, so the
      // option buttons win inside the dialog and the guard absorbs the rest.
-@@ -295,5 +311,6 @@ class OptionPopup {
+@@ -331,5 +347,6 @@ class OptionPopup {
    // Written by the render task (frame registration), routed by the loop task;
    // uiReady closes the rebuild window exactly like UiListActivity::uiReady.
    mutable freeink::ui::InteractionBuffer<INTERACTION_CAPACITY> interactions;

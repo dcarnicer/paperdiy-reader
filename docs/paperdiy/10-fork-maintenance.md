@@ -3,8 +3,8 @@
 Este repo es un fork downstream de CrossPoint. La regla es simple: **el motor
 se sigue de upstream; el hardware y la UX PaperDIY viven en nuestro fork**.
 
-Última sincronización: CrossPoint `fa17b9ca` / FreeInk SDK `6a208c0c`
-(12/11/2026).
+Última sincronización: CrossPoint `622e5de9` / FreeInk SDK `6a208c0c`
+(13/11/2026).
 
 ## Ramas y remotos
 
@@ -168,40 +168,30 @@ git add freeink-sdk && git commit -m "chore: vendor pristine SDK for patch basel
 | Patch | Base | Contenido |
 |---|---|---|
 | `patches/sdk.patch` | FreeInk SDK `6a208c0c` | perfil, BoardPaperDiy, PM1, InputManager, PowerManager, driver LGFX |
-| `patches/firmware.patch` | CrossPoint `fa17b9ca` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main |
+| `patches/firmware.patch` | CrossPoint `622e5de9` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main |
 | `patches/paperdiy-support.patch` | ambos | concatenación de los dos anteriores |
 
 Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
 
-## Pendientes de la sync `fa17b9ca` (12/11/2026)
+## Pendientes de la sync `622e5de9` (13/11/2026)
 
-Estado: release `2.0.0-5` publicada (tag `v2.0.0-5`); `2.0.0-5` no cambia
-firmware, solo corrige el test de licencias y lo preserva en
-`sync-upstream.sh`. Hecho: pins de `NOTICE`, `CHANGELOG.md` y
-`docs/paperdiy/06-porting.*`; `make smoke` PASS 25 pasos registrado en
-`12-serial-testing.md`; `sdk-baseline` sigue en `6a208c0c` y los tres parches
-regenerados y verificados con `git apply --check` contra `fa17b9ca` /
-`6a208c0c`. Pendientes y riesgos conocidos tras la release:
+Estado: sync mergeada en local (`paperdiy`), sin release todavía porque el
+lector está ocupado con el test de batería y no se puede probar en hardware.
 
-- El overlay de `sync-upstream.sh` restaura `NOTICE`, `CHANGELOG.md`,
-  `docs/paperdiy` y `test/test_release_license.py` desde `paperdiy`; en el
-  próximo sync hay que llevar estos cambios a `paperdiy` antes del overlay.
-- `test/test_release_license.py` es archivo propio del fork: su mock de `git`
-  cubre la rama de SDK vendorizado (`cat-file -t`). Actualizarlo si cambia
-  `scripts/build_release_license.py`.
-- SDK: CrossPoint sigue pinchando `6a208c0c`. `Free-Ink/freeink-sdk` `main` ya
-  está en `e637713`, e incluye `d2600e9`, que corrige el límite de cabeceras de
-  `SecureHttpClient` que teníamos como riesgo aceptado. No adelantarlo: seguir
-  el pin de upstream y adoptarlo cuando CrossPoint lo mueva. Si hay que
-  corregirlo antes, hacerlo como parche del fork con tests.
-- UX de upstream a revisar en la próxima pasada: Controles reorganizado en
-  submenús, OPDS movido a File Transfer y el ajuste nuevo «Mostrar extensiones
-  de archivo». Las guías de usuario ya recogen las rutas nuevas.
-- Smoke pendiente: ghosting/autonomía, sleep/wake, emparejamiento BLE real,
-  envío Calibre completo y una instalación OTA completa. `make smoke` cubre
-  Home, explorador, lector, TOC, enlaces, nota al pie, cancelación de recorte y
-  diccionario; OPDS, USB MSC, BLE y servidor Calibre ya se probaron en
-  `2.0.0-3`.
+- CrossPoint `622e5de9` trae `fix: group controls settings in web UI` y
+  `fix: scrolling in optionPopup`; el commit de CI (`libpcre3`) no aplica a
+  nuestros workflows.
+- El pin de FreeInk SDK no cambia (`6a208c0c`). No adelantar `main` (`c342aa5`).
+- `patches/sdk.patch`, `patches/firmware.patch` y
+  `patches/paperdiy-support.patch` regenerados y verificados con
+  `git apply --check` contra `622e5de9` / `6a208c0c`.
+- El log de batería y la curva de 4,17 V viven en la rama local
+  `feat/battery-log`, no en `paperdiy`. La curva es específica de la celda de
+  1500 mAh y no debe publicarse como valor por defecto sin un perfil de celda.
+- Pendiente: smoke de hardware del merge y decidir la release `2.0.0-6` cuando
+  el lector esté libre. No se ha creado tag ni publicado nada.
+- Smoke histórico pendiente: ghosting/autonomía, sleep/wake, BLE real, Calibre
+  completo y OTA completa.
 
 ## OTA
 
