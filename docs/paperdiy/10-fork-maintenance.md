@@ -175,7 +175,8 @@ Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
 
 ## Release `2.0.0-6` (15/11/2026)
 
-Estado: release preparada sobre CrossPoint `36b9430e` / FreeInk SDK `a8acebf`.
+Estado: release `2.0.0-6` publicada (tag `v2.0.0-6`) sobre CrossPoint
+`36b9430e` / FreeInk SDK `a8acebf`.
 
 - Upstream: mejoras de refresco EPD para todos los paneles, optimizaciones TTF,
   profundidad de bits XTC, chevron de página anterior y los fixes de la sync
@@ -188,9 +189,9 @@ Estado: release preparada sobre CrossPoint `36b9430e` / FreeInk SDK `a8acebf`.
 - `patches/sdk.patch`, `patches/firmware.patch` y
   `patches/paperdiy-support.patch` regenerados y verificados con
   `git apply --check` contra `36b9430e` / `a8acebf`.
-- Pendiente antes de publicar: smoke de hardware de la release (refresco y
-  ghosting del panel, botones, sleep/wake, perfil de batería). No se ha creado
-  tag ni publicado nada todavía.
+- Smoke básico de hardware de la release: Home, lector, giro de página, ajustes
+  y perfil de batería (Extendida) OK. Pendiente la revisión visual de ghosting
+  y sleep/wake.
 - Smoke histórico pendiente: BLE real, Calibre completo y OTA completa.
 
 ## OTA
