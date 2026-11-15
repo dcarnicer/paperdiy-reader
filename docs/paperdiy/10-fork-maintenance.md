@@ -173,6 +173,21 @@ git add freeink-sdk && git commit -m "chore: vendor pristine SDK for patch basel
 
 Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
 
+## Release `2.0.0-7` (15/11/2026)
+
+Corrección de la presentación de batería en carga sobre la `2.0.0-6`. Sin
+cambios upstream: sigue CrossPoint `36b9430e` / FreeInk SDK `a8acebf`.
+
+- Mientras hay USB, el porcentaje se congela en el último valor de descarga; al
+  completar la carga muestra 100 % y, tras desenchufar, espera ~2 min antes de
+  volver a la curva.
+- El último porcentaje se guarda en NVS para sobrevivir al apagado.
+- El hook `BATHOLD` es solo de `paperdiy-test`; no está en producción.
+- Verificado en el PaperDIY: con el cargador aún activo, `BATHOLD:55` muestra
+  55 % y el log registra `4168 mV / 55 % / chg=1`; el build de producción
+  `2.0.0-7` arranca en Home.
+- Build `paperdiy`: 5.438.679 B, 83,0 % de flash y 33,9 % de RAM.
+
 ## Release `2.0.0-6` (15/11/2026)
 
 Estado: release `2.0.0-6` publicada (tag `v2.0.0-6`) sobre CrossPoint
