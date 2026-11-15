@@ -3,6 +3,7 @@
 #include <BoardConfig.h>
 #include <Logging.h>
 #include <PowerManager.h>
+#include <Preferences.h>
 #include <WiFi.h>
 #include <esp_sleep.h>
 #include <soc/soc_caps.h>
@@ -34,6 +35,10 @@ HalPowerManager powerManager;  // Singleton instance
 static constexpr gpio_num_t XTEINK_C3_GPIO13 = GPIO_NUM_13;
 
 namespace {
+constexpr unsigned long PAPERDIY_SETTLE_MS = 2 * 60 * 1000;
+constexpr const char* BATTERY_PREFS_NAMESPACE = "cpbat";
+constexpr const char* BATTERY_PREFS_KEY = "lastpct";
+
 BatteryMonitor& batteryMonitor() {
   static BatteryMonitor battery;
   return battery;
@@ -85,6 +90,19 @@ void HalPowerManager::begin() {
   assert(modeMutex != nullptr);
   batteryMutex = xSemaphoreCreateMutex();
   assert(batteryMutex != nullptr);
+#if FREEINK_DEVICE_PAPERDIY
+  if (BoardConfig::isPaperDiy()) {
+    Preferences prefs;
+    if (prefs.begin(BATTERY_PREFS_NAMESPACE, /*readOnly=*/true)) {
+      const uint8_t value = prefs.getUChar(BATTERY_PREFS_KEY, 0xFF);
+      prefs.end();
+      if (value <= 100) {
+        _lastDischargePercent = value;
+        _hasLastDischargePercent = true;
+      }
+    }
+  }
+#endif
 }
 
 void HalPowerManager::setPowerSaving(bool enabled) {
@@ -255,9 +273,76 @@ bool HalPowerManager::holdWhileUsbPowered(HalGPIO& gpio, void (*onStatus)(bool c
 }
 #endif
 
+BatteryMonitor::Status HalPowerManager::readBatteryStatusLocked() const {
+  BatteryMonitor::Status status = batteryMonitor().readStatus();
+  applyPaperDiyBatteryPresentation(status);
+  return status;
+}
+
+void HalPowerManager::applyPaperDiyBatteryPresentation(BatteryMonitor::Status& status) const {
+#if FREEINK_DEVICE_PAPERDIY
+  if (!BoardConfig::isPaperDiy()) return;
+
+  const unsigned long now = millis();
+  const bool externalKnown = status.externalPowerKnown;
+  const bool external = externalKnown && status.externalPower;
+  bool full = status.chargeCompleteKnown && status.chargeComplete;
+#if defined(PAPERDIY_SERIAL_TEST)
+  if (_forceNotFullForTest) full = false;
+#endif
+
+  if (externalKnown && external) {
+    _lastExternalPowerKnown = true;
+    _lastExternalPower = true;
+    _batterySettling = false;
+    if (full) {
+      _lastDischargePercent = 100;
+      _hasLastDischargePercent = true;
+      status.percentage = 100;
+      status.percentageKnown = true;
+    } else if (_hasLastDischargePercent) {
+      // The charger raises the terminal voltage above the cell's OCV, so a
+      // voltage curve would reach 100% early. Keep the last discharge estimate
+      // until the charger reports completion.
+      status.percentage = _lastDischargePercent;
+      status.percentageKnown = true;
+    }
+    return;
+  }
+
+  if (!externalKnown) return;
+
+  // On battery. After unplugging, the cell relaxes from the charger voltage to
+  // its OCV; hold the last estimate for a settling window before trusting the
+  // discharge curve again.
+  if (_lastExternalPowerKnown && _lastExternalPower) {
+    _lastExternalPower = false;
+    _batterySettling = true;
+    _batterySettleStartMs = now;
+  }
+  if (_batterySettling) {
+    if (now - _batterySettleStartMs < PAPERDIY_SETTLE_MS) {
+      if (_hasLastDischargePercent) {
+        status.percentage = _lastDischargePercent;
+        status.percentageKnown = true;
+      }
+      return;
+    }
+    _batterySettling = false;
+  }
+
+  if (status.percentageKnown) {
+    _lastDischargePercent = status.percentage;
+    _hasLastDischargePercent = true;
+  }
+#else
+  (void)status;
+#endif
+}
+
 BatteryMonitor::Status HalPowerManager::getBatteryStatus() const {
   const BatteryReadLock lock(batteryMutex);
-  return batteryMonitor().readStatus();
+  return readBatteryStatusLocked();
 }
 
 void HalPowerManager::setPaperDiyBatteryProfile(const bool extended) const {
@@ -268,6 +353,28 @@ void HalPowerManager::setPaperDiyBatteryProfile(const bool extended) const {
   (void)extended;
 #endif
 }
+
+void HalPowerManager::persistBatteryEstimate() const {
+#if FREEINK_DEVICE_PAPERDIY
+  const BatteryReadLock lock(batteryMutex);
+  if (!BoardConfig::isPaperDiy() || !_hasLastDischargePercent) return;
+  Preferences prefs;
+  if (!prefs.begin(BATTERY_PREFS_NAMESPACE, /*readOnly=*/false)) return;
+  prefs.putUChar(BATTERY_PREFS_KEY, static_cast<uint8_t>(_lastDischargePercent));
+  prefs.end();
+#endif
+}
+
+#if defined(PAPERDIY_SERIAL_TEST)
+void HalPowerManager::setBatteryHoldForTest(const int percent, const bool forceNotFull) const {
+  const BatteryReadLock lock(batteryMutex);
+  if (percent >= 0 && percent <= 100) {
+    _lastDischargePercent = static_cast<uint16_t>(percent);
+    _hasLastDischargePercent = true;
+  }
+  _forceNotFullForTest = forceNotFull;
+}
+#endif
 
 uint16_t HalPowerManager::getBatteryPercentage() const {
   const BatteryReadLock lock(batteryMutex);
@@ -287,7 +394,8 @@ uint16_t HalPowerManager::getBatteryPercentage() const {
   }
 
   // smooth the battery %.
-  const uint16_t sample = batteryMonitor().readPercentage();
+  const BatteryMonitor::Status status = readBatteryStatusLocked();
+  const uint16_t sample = status.percentageKnown ? status.percentage : 0;
   if (_batteryCachedPercent == 0) {
     _batteryCachedPercent = 10 * sample;
   } else {

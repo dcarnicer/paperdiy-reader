@@ -19,9 +19,24 @@ class HalPowerManager {
 
   mutable int _batteryCachedPercent = 0;         // Last read battery percentage (0-100)
   mutable unsigned long _batteryLastPollMs = 0;  // Timestamp of last battery read in milliseconds
+  // PaperDIY has no coulomb counter, so charging voltage cannot estimate SoC.
+  // Hold the last discharge estimate while external power is present and wait
+  // for the cell to relax after unplugging.
+  mutable uint16_t _lastDischargePercent = 0;
+  mutable bool _hasLastDischargePercent = false;
+  mutable bool _batterySettling = false;
+  mutable unsigned long _batterySettleStartMs = 0;
+  mutable bool _lastExternalPowerKnown = false;
+  mutable bool _lastExternalPower = false;
+#if defined(PAPERDIY_SERIAL_TEST)
+  mutable bool _forceNotFullForTest = false;
+#endif
   // Serializes battery reads: the render task paints the status bar while the
   // main loop samples the same PM1/ADC for the battery log.
   mutable SemaphoreHandle_t batteryMutex = nullptr;
+
+  BatteryMonitor::Status readBatteryStatusLocked() const;
+  void applyPaperDiyBatteryPresentation(BatteryMonitor::Status& status) const;
 
   enum LockMode { None, NormalSpeed };
   LockMode currentLockMode = None;
@@ -66,6 +81,17 @@ class HalPowerManager {
   // PaperDIY only: select the original-kit or extended-cell discharge curve.
   // The profile changes the percentage mapping; it does not change charging.
   void setPaperDiyBatteryProfile(bool extended) const;
+
+  // Persist the last discharge estimate for the next boot. PaperDIY powers off
+  // on sleep and may boot while charging, where voltage cannot estimate SoC.
+  void persistBatteryEstimate() const;
+
+#if defined(PAPERDIY_SERIAL_TEST)
+  // Test-only: inject a discharge estimate and optionally make the filter
+  // ignore the charger's full signal, so the hold path can be exercised on a
+  // full battery. pass -1 to clear the override.
+  void setBatteryHoldForTest(int percent, bool forceNotFull) const;
+#endif
 
   // RAII helper class to manage power saving locks
   // Usage: create an instance of Lock in a scope to disable power saving, for example when running a task that needs

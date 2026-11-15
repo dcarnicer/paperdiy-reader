@@ -1048,6 +1048,10 @@ bool BatteryMonitor::readM5Pm1Status(Status& status) const {
     if (freeink::m5pm1::readReg(freeink::m5pm1::REG_GPIO_IN, &gpio)) {
       status.chargingKnown = true;
       status.charging = (gpio & freeink::m5pm1::GPIO3) == 0;
+      // With USB present and CHG_STAT high the LGS4056H has terminated (or is
+      // idle); there is no separate full flag on this board.
+      status.chargeCompleteKnown = status.externalPowerKnown;
+      status.chargeComplete = status.externalPower && !status.charging;
     }
   }
 #endif

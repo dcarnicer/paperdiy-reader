@@ -480,6 +480,7 @@ void enterDeepSleep(bool fromTimeout = false) {
   // floor now so a later cold boot resumes from it.
   trustedtime::note();
   batteryLog.logSleep(APP_STATE.lastSleepFromReader, WiFi.getMode() != WIFI_MODE_NULL);
+  powerManager.persistBatteryEstimate();
 
   // Stop Bluetooth before plugin delivery can start WiFi; a timeout defers delivery.
   deepSleepInProgress = true;
@@ -1017,6 +1018,20 @@ void loop() {
         } else {
           activityManager.goToReader(path.c_str());
           logSerial.printf("OPEN:OK\n");
+        }
+      } else if (cmd.startsWith("BATHOLD")) {
+        const int separator = cmd.indexOf(':');
+        if (separator < 0) {
+          powerManager.setBatteryHoldForTest(-1, false);
+          logSerial.printf("BATHOLD:CLEARED\n");
+        } else {
+          const int percent = cmd.substring(separator + 1).toInt();
+          if (percent >= 0 && percent <= 100) {
+            powerManager.setBatteryHoldForTest(percent, true);
+            logSerial.printf("BATHOLD:%d\n", percent);
+          } else {
+            logSerial.printf("BATHOLD:BAD\n");
+          }
         }
       } else if (cmd.startsWith("DRAIN")) {
         if (cmd == "DRAIN:STOP") {
