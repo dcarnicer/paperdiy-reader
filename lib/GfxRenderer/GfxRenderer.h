@@ -261,6 +261,9 @@ class GfxRenderer {
       HalDisplay::GrayscaleMode mode = HalDisplay::GrayscaleMode::Overlay) const;
   // Compatibility queries for Overlay mode.
   bool supportsAsyncGrayscaleBase() const;
+  // EXPERIMENTAL: Windowed update - display only a rectangular region
+  // Repaint a B/W rectangle over retained gray pixels; false means the caller must use its normal paint.
+  bool displayRetainedGrayscaleOverlay(int x, int y, int width, int height, bool restore = false) const;
   // Windowed update: display only a rectangular region in logical screen
   // coordinates. The rectangle is rotated to panel memory and x is aligned to
   // the panel's 8-pixel bus granularity before reaching the driver.
