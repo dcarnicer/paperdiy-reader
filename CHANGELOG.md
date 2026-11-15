@@ -1,5 +1,31 @@
 # Changelog
 
+## 2.0.0-6 — 2026-11-15
+
+Revisión sobre CrossPoint `2.0.0` (`36b9430e`) y FreeInk SDK `a8acebf`.
+Mantiene el esquema `<CrossPoint X.Y.Z>-<N>`.
+
+- CrossPoint `622e5de9` → `36b9430e`: mejoras de refresco EPD para todos los
+  paneles, optimizaciones TTF, profundidad de bits XTC, chevron de página
+  anterior y los fixes de la sync anterior (Controles agrupados en la web y
+  scroll de `OptionPopup`).
+- SDK: `6a208c0c` → `a8acebf`. Se reaplicó el port de PaperDIY y se resolvieron
+  los conflictos de la política PSRAM y de `GfxRenderer` (ventana de refresco).
+- Batería: log de descarga en `/battery-log.csv` (muestra cada 5 min, rotación
+  a 1 MB), descarga por serie con `CMD:BATLOG` y modo de page-turning autónomo
+  en `paperdiy-test` con contador `pages`.
+- Curva de la 604050 de 1500 mAh medida con una descarga real de **45,4 h y
+  5.448 páginas** (30 s/página, sin WiFi). Ancla superior en **4,10 V en
+  reposo** y anclajes inferiores ajustados para no mostrar 0 % durante horas.
+- Nuevo ajuste **Ajustes > General > Perfil de batería**: `Kit original
+  (140 mAh)` por defecto o `Extendida (1500 mAh)`. Solo cambia la curva del
+  porcentaje; la carga no cambia.
+- Lecturas de batería del PM1 serializadas en la HAL y `About` usando el mismo
+  camino.
+- Build `paperdiy`: `firmware.bin` 5.438.295 B, 83,0 % de flash y 33,9 % de
+  RAM. `paperdiy-test` compila. Tests de batería 5/5; test de selección y
+  `OptionPopup` OK.
+
 ## 2.0.0-5 — 2026-11-12
 
 Revisión de mantenimiento sobre CrossPoint `2.0.0` (`fa17b9ca`) y FreeInk SDK

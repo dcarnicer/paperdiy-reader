@@ -108,11 +108,324 @@ index 0646a9f5..c80e9f83 100644
  
    // 16-gray path: the facade streams LSB/MSB 1-bpp planes (whole or in strips);
    // displayGray combines them with the B/W base into the panel's 8-bit gray canvas.
+diff --git a/freeink-sdk/libs/hardware/BatteryMonitor/include/BatteryMonitor.h b/freeink-sdk/libs/hardware/BatteryMonitor/include/BatteryMonitor.h
+index af1d9a8d..956887cb 100644
+--- a/freeink-sdk/libs/hardware/BatteryMonitor/include/BatteryMonitor.h
++++ b/freeink-sdk/libs/hardware/BatteryMonitor/include/BatteryMonitor.h
+@@ -15,120 +15,126 @@
+ //     (gaugeAddr != 0), so X3 (gauge) and X4 (ADC) work from one C3 binary. A
+ //     CW2015 is probed once; when it does not answer, the ADC pin is used.
+ class BatteryMonitor {
+-public:
+-    static constexpr int8_t PIN_NONE = -1;
+-
+-    struct Status {
+-        bool supported = false;
+-        bool percentageKnown = false;
+-        bool millivoltsKnown = false;
+-        bool chargingKnown = false;
+-        bool externalPowerKnown = false;
+-        uint16_t percentage = 0;
+-        uint16_t millivolts = 0;
+-        bool charging = false;
+-        bool externalPower = false;
+-        bool chargeCompleteKnown = false;
+-        bool chargeComplete = false;
+-        int16_t chargerStatus = -1;  // Raw charger register, or -1 when not sampled/unknown.
+-        // Raw M5PM1 telemetry for diagnostics; -1 when not read (non-PM1 boards
+-        // or failed I/O). VIN is the DC input rail, 5VINOUT the bidirectional
+-        // USB-C rail, powerSource the PM1's PWR_SRC bitmap (reg 0x04 [2:0]:
+-        // bit0=5VIN, bit1=5VINOUT, bit2=BAT).
+-        int32_t pm1VinMv = -1;
+-        int32_t pm1VinOutMv = -1;
+-        int16_t pm1PowerSource = -1;
+-    };
+-
+-    // Uses BoardConfig::ACTIVE's battery pins/backend.
+-    BatteryMonitor();
+-
+-    // Optional divider multiplier defaults to 2.0; optional charge-status pin
+-    // defaults to unused.
+-    explicit BatteryMonitor(int8_t adcPin, float dividerMultiplier = 2.0f, int8_t chargeStatusPin = PIN_NONE);
+-
+-    // Read voltage and return percentage (0-100)
+-    uint16_t readPercentage() const;
+-
+-    // Like readPercentage(), but reports whether the read succeeded. An I2C gauge
+-    // can fail transiently; on failure this returns false and leaves `out`
+-    // unchanged, so a caller can keep its last good value. Picco also rejects
+-    // missing/implausible ADC voltage rather than interpreting it as empty.
+-    bool readPercentageChecked(uint16_t& out) const;
+-
+-    // Read every battery field the active board can report. `supported` is false
+-    // when the board profile has no battery telemetry path. Per-field `Known`
+-    // flags distinguish a valid false/zero value from unsupported or failed I/O.
+-    Status readStatus() const;
+-
+-    // Read the battery voltage in millivolts (accounts for divider)
+-    uint16_t readMillivolts() const;
+-
+-    // Read the battery voltage in volts (accounts for divider)
+-    double readVolts() const;
+-
+-    // True when the battery is actively charging. Sources by backend:
+-    //   * ADC boards: the MCP73832-style charge-status pin (LOW = charging),
+-    //     else an I2C charger IC's CHRG_STAT when one is configured (Picco's
+-    //     SGM41562); false when neither exists.
+-    //   * Gauge boards: a charger IC's status (BQ25896 CHRG_STAT) when present,
+-    //     else the gauge's own Current() sign (BQ27220, positive = charging), so
+-    //     a board with a gauge but no charger IC (e.g. X3) still reports it.
+-    bool isCharging() const;
+-
+-    // True when external power (a USB cable or charger) is physically present.
+-    //
+-    // This is NOT isCharging(): a full battery stops charging while still
+-    // plugged in, so isCharging() goes false with the cable still attached.
+-    // Only a source that reports the input rail itself can answer this: the
+-    // BQ25896's REG0B (VBUS_STAT[7:5] plus PG_STAT), the SGM41562's REG08
+-    // input-present bit, or the M5 PMIC. Boards without one of those cannot observe it.
+-    //
+-    // `known` (optional, out) is set false when the board has no way to tell,
+-    // or the read failed. Callers MUST branch on it: a bare false means "no
+-    // opinion" just as often as it means "unplugged", and treating the two the
+-    // same is how you get a device that thinks the cable is gone because it
+-    // never had a way to see it.
+-    bool isExternalPowerPresent(bool* known = nullptr) const;
+-
+-    // Percentage from a millivolt value, off a standard 1S Li-ion discharge
+-    // curve. The result is always a multiple of 10: voltage cannot resolve a
+-    // Li-ion pack any finer than that, and pretending otherwise just produces a
+-    // number that wanders while the battery sits still. 0 mV (a failed read)
+-    // maps to 0%, not 100%.
+-    static uint16_t percentageFromMillivolts(uint16_t millivolts);
+-
+-    // Same lookup, with a deadband around the notch boundaries so a reading that
+-    // hovers on a boundary keeps reporting `previousPercent` instead of
+-    // oscillating. Pass the last value this returned; pass > 100 for no history.
+-    static uint16_t percentageFromMillivolts(uint16_t millivolts, uint16_t previousPercent);
+-
+-    // Loads batteryGauge.designCapacityMah into a BQ27220 whose Design Capacity reads
+-    // TI's 3000 mAh default (it returns there whenever the gauge loses power) or whose
+-    // FullChargeCapacity() reads more than a quarter above it. One short step per call,
+-    // about 8 s in all: call from the task that owns the gauge until it returns false.
+-    static bool loadDesignCapacity();
+-
+-    // Cuts the battery off from the system through the charger IC's BATFET
+-    // (ship mode) — a full power-off the MCU cannot undo; what turns the device
+-    // back on is up to the charger. SGM41562 only (REG06 bit 5). Returns false
+-    // when the board has no such charger or the I2C write failed.
+-    static bool enterShipMode();
+-
+-    // One-time charger setup at boot. SGM41562 (Onyx Picco): replays the stock
+-    // firmware's init (FUN_4200a2d0) — including the 4.35 V charge voltage for the
+-    // Picco's high-voltage cell — and only when REG0B reads 0, as stock does.
+-    // Returns false (and changes nothing) on other boards, or if the charger
+-    // can't be reached.
+-    static bool configureCharger();
+-
+-private:
+-    bool hasAdcBackend() const;
+-    bool hasGaugeBackend() const;
+-    bool hasM5Pm1Backend() const;
+-    bool readM5Pm1Status(Status& status) const;
+-
+-    int8_t _adcPin;
+-    float _dividerMultiplier;
+-    int8_t _chargeStatusPin;
++ public:
++  static constexpr int8_t PIN_NONE = -1;
++
++  // PaperDIY discharge curves. Kit is the cell shipped with the kit; Extended
++  // is the measured 1500 mAh 604050 curve. The profile only changes the
++  // voltage-to-percentage mapping, not charging.
++  enum class PaperDiyBatteryProfile : uint8_t { Kit, Extended };
++  static void setPaperDiyBatteryProfile(PaperDiyBatteryProfile profile);
++
++  struct Status {
++    bool supported = false;
++    bool percentageKnown = false;
++    bool millivoltsKnown = false;
++    bool chargingKnown = false;
++    bool externalPowerKnown = false;
++    uint16_t percentage = 0;
++    uint16_t millivolts = 0;
++    bool charging = false;
++    bool externalPower = false;
++    bool chargeCompleteKnown = false;
++    bool chargeComplete = false;
++    int16_t chargerStatus = -1;  // Raw charger register, or -1 when not sampled/unknown.
++    // Raw M5PM1 telemetry for diagnostics; -1 when not read (non-PM1 boards
++    // or failed I/O). VIN is the DC input rail, 5VINOUT the bidirectional
++    // USB-C rail, powerSource the PM1's PWR_SRC bitmap (reg 0x04 [2:0]:
++    // bit0=5VIN, bit1=5VINOUT, bit2=BAT).
++    int32_t pm1VinMv = -1;
++    int32_t pm1VinOutMv = -1;
++    int16_t pm1PowerSource = -1;
++  };
++
++  // Uses BoardConfig::ACTIVE's battery pins/backend.
++  BatteryMonitor();
++
++  // Optional divider multiplier defaults to 2.0; optional charge-status pin
++  // defaults to unused.
++  explicit BatteryMonitor(int8_t adcPin, float dividerMultiplier = 2.0f, int8_t chargeStatusPin = PIN_NONE);
++
++  // Read voltage and return percentage (0-100)
++  uint16_t readPercentage() const;
++
++  // Like readPercentage(), but reports whether the read succeeded. An I2C gauge
++  // can fail transiently; on failure this returns false and leaves `out`
++  // unchanged, so a caller can keep its last good value. Picco also rejects
++  // missing/implausible ADC voltage rather than interpreting it as empty.
++  bool readPercentageChecked(uint16_t& out) const;
++
++  // Read every battery field the active board can report. `supported` is false
++  // when the board profile has no battery telemetry path. Per-field `Known`
++  // flags distinguish a valid false/zero value from unsupported or failed I/O.
++  Status readStatus() const;
++
++  // Read the battery voltage in millivolts (accounts for divider)
++  uint16_t readMillivolts() const;
++
++  // Read the battery voltage in volts (accounts for divider)
++  double readVolts() const;
++
++  // True when the battery is actively charging. Sources by backend:
++  //   * ADC boards: the MCP73832-style charge-status pin (LOW = charging),
++  //     else an I2C charger IC's CHRG_STAT when one is configured (Picco's
++  //     SGM41562); false when neither exists.
++  //   * Gauge boards: a charger IC's status (BQ25896 CHRG_STAT) when present,
++  //     else the gauge's own Current() sign (BQ27220, positive = charging), so
++  //     a board with a gauge but no charger IC (e.g. X3) still reports it.
++  bool isCharging() const;
++
++  // True when external power (a USB cable or charger) is physically present.
++  //
++  // This is NOT isCharging(): a full battery stops charging while still
++  // plugged in, so isCharging() goes false with the cable still attached.
++  // Only a source that reports the input rail itself can answer this: the
++  // BQ25896's REG0B (VBUS_STAT[7:5] plus PG_STAT), the SGM41562's REG08
++  // input-present bit, or the M5 PMIC. Boards without one of those cannot observe it.
++  //
++  // `known` (optional, out) is set false when the board has no way to tell,
++  // or the read failed. Callers MUST branch on it: a bare false means "no
++  // opinion" just as often as it means "unplugged", and treating the two the
++  // same is how you get a device that thinks the cable is gone because it
++  // never had a way to see it.
++  bool isExternalPowerPresent(bool* known = nullptr) const;
++
++  // Percentage from a millivolt value, off a standard 1S Li-ion discharge
++  // curve. The result is always a multiple of 10: voltage cannot resolve a
++  // Li-ion pack any finer than that, and pretending otherwise just produces a
++  // number that wanders while the battery sits still. 0 mV (a failed read)
++  // maps to 0%, not 100%.
++  static uint16_t percentageFromMillivolts(uint16_t millivolts);
++
++  // Same lookup, with a deadband around the notch boundaries so a reading that
++  // hovers on a boundary keeps reporting `previousPercent` instead of
++  // oscillating. Pass the last value this returned; pass > 100 for no history.
++  static uint16_t percentageFromMillivolts(uint16_t millivolts, uint16_t previousPercent);
++
++  // Loads batteryGauge.designCapacityMah into a BQ27220 whose Design Capacity reads
++  // TI's 3000 mAh default (it returns there whenever the gauge loses power) or whose
++  // FullChargeCapacity() reads more than a quarter above it. One short step per call,
++  // about 8 s in all: call from the task that owns the gauge until it returns false.
++  static bool loadDesignCapacity();
++
++  // Cuts the battery off from the system through the charger IC's BATFET
++  // (ship mode) — a full power-off the MCU cannot undo; what turns the device
++  // back on is up to the charger. SGM41562 only (REG06 bit 5). Returns false
++  // when the board has no such charger or the I2C write failed.
++  static bool enterShipMode();
++
++  // One-time charger setup at boot. SGM41562 (Onyx Picco): replays the stock
++  // firmware's init (FUN_4200a2d0) — including the 4.35 V charge voltage for the
++  // Picco's high-voltage cell — and only when REG0B reads 0, as stock does.
++  // Returns false (and changes nothing) on other boards, or if the charger
++  // can't be reached.
++  static bool configureCharger();
++
++ private:
++  bool hasAdcBackend() const;
++  bool hasGaugeBackend() const;
++  bool hasM5Pm1Backend() const;
++  bool readM5Pm1Status(Status& status) const;
++
++  int8_t _adcPin;
++  float _dividerMultiplier;
++  int8_t _chargeStatusPin;
+ };
 diff --git a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
-index 9781c2d5..990404a0 100644
+index 9781c2d5..ccaf2469 100644
 --- a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
 +++ b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
-@@ -702,7 +702,7 @@ bool BatteryMonitor::hasGaugeBackend() const {
+@@ -15,6 +15,7 @@
+ #endif
+ 
+ #include <algorithm>
++#include <atomic>
+ #include <cmath>
+ #include <cstring>
+ 
+@@ -219,8 +220,7 @@ bool bq27220LoadStep(const uint8_t addr, const uint16_t mah, const unsigned long
+     return next(s.step + 1, s.step == 5 ? 500 : 1500);
+   }
+   if (s.step == 6 || s.step == 8) {
+-    const bool reached =
+-        readReg16(addr, BQ27220_OPERATION_STATUS, status) && ((status & 0x0400) != 0) == (s.step == 6);
++    const bool reached = readReg16(addr, BQ27220_OPERATION_STATUS, status) && ((status & 0x0400) != 0) == (s.step == 6);
+     if (!reached && now - s.since < 5000) return next(s.step, 500);
+     // Learned FCC first, Design Capacity half a second later: the X3's gauge can miss
+     // a block select sent right after a block write. If anything fails, Design
+@@ -371,11 +371,11 @@ constexpr uint8_t CW2015_MODE_SLEEP = 0xC0;
+ constexpr uint8_t CW2015_MODE_POR = 0x0F;
+ 
+ // The profile stock uploads ("3.7V 2000mAh target profile", DROM 0x3c697280).
+-constexpr uint8_t CW2015_BATINFO[64] = {
+-    0x15, 0x7e, 0x7c, 0x5c, 0x64, 0x6a, 0x65, 0x5c, 0x55, 0x53, 0x56, 0x61, 0x6f, 0x66, 0x50, 0x48,
+-    0x43, 0x42, 0x40, 0x43, 0x4b, 0x5f, 0x75, 0x7d, 0x52, 0x44, 0x07, 0xae, 0x11, 0x22, 0x40, 0x56,
+-    0x6c, 0x7c, 0x85, 0x86, 0x3d, 0x19, 0x8d, 0x1b, 0x06, 0x34, 0x46, 0x79, 0x8d, 0x90, 0x90, 0x46,
+-    0x67, 0x80, 0x97, 0xaf, 0x80, 0x9f, 0xae, 0xcb, 0x2f, 0x00, 0x64, 0xa5, 0xb5, 0x11, 0xd0, 0x11};
++constexpr uint8_t CW2015_BATINFO[64] = {0x15, 0x7e, 0x7c, 0x5c, 0x64, 0x6a, 0x65, 0x5c, 0x55, 0x53, 0x56, 0x61, 0x6f,
++                                        0x66, 0x50, 0x48, 0x43, 0x42, 0x40, 0x43, 0x4b, 0x5f, 0x75, 0x7d, 0x52, 0x44,
++                                        0x07, 0xae, 0x11, 0x22, 0x40, 0x56, 0x6c, 0x7c, 0x85, 0x86, 0x3d, 0x19, 0x8d,
++                                        0x1b, 0x06, 0x34, 0x46, 0x79, 0x8d, 0x90, 0x90, 0x46, 0x67, 0x80, 0x97, 0xaf,
++                                        0x80, 0x9f, 0xae, 0xcb, 0x2f, 0x00, 0x64, 0xa5, 0xb5, 0x11, 0xd0, 0x11};
+ 
+ // Stock reads the profile in 8-byte bursts.
+ bool cw2015ReadBatinfo(const uint8_t addr, uint8_t* out) {
+@@ -529,7 +529,7 @@ bool readGaugeMillivolts(uint16_t& out) {
+ 
+ uint8_t chargerStatusReg() {
+   return BoardConfig::ACTIVE.batteryGauge.chargerType == BoardConfig::ChargerType::Sgm41562 ? SGM41562_REG_STATUS
+-                                                                                          : BQ25896_REG_STATUS;
++                                                                                            : BQ25896_REG_STATUS;
+ }
+ 
+ // CHRG_STAT [4:3] from the charger IC: 01 pre-charge or 10 fast-charge means
+@@ -677,9 +677,7 @@ namespace {
+ // pull-up; an active-high STAT (X4 Pro GPIO21) is push-pull driven with no
+ // pull — stock reads it bare, and a pull-up would fake "charging" if the
+ // driver ever tri-states.
+-int chargeActiveLevel() {
+-  return BoardConfig::ACTIVE.batteryChargeStatusActiveHigh ? HIGH : LOW;
+-}
++int chargeActiveLevel() { return BoardConfig::ACTIVE.batteryChargeStatusActiveHigh ? HIGH : LOW; }
+ }  // namespace
+ 
+ BatteryMonitor::BatteryMonitor(int8_t adcPin, float dividerMultiplier, int8_t chargeStatusPin)
+@@ -689,9 +687,7 @@ BatteryMonitor::BatteryMonitor(int8_t adcPin, float dividerMultiplier, int8_t ch
+   }
+ }
+ 
+-bool BatteryMonitor::hasAdcBackend() const {
+-  return _adcPin >= 0;
+-}
++bool BatteryMonitor::hasAdcBackend() const { return _adcPin >= 0; }
+ 
+ bool BatteryMonitor::hasGaugeBackend() const {
+ #if FREEINK_BATTERY_I2C_GAUGE
+@@ -702,7 +698,7 @@ bool BatteryMonitor::hasGaugeBackend() const {
  }
  
  bool BatteryMonitor::hasM5Pm1Backend() const {
@@ -121,7 +434,40 @@ index 9781c2d5..990404a0 100644
  }
  
  uint16_t BatteryMonitor::readPercentage() const {
-@@ -1047,9 +1047,22 @@ bool BatteryMonitor::readM5Pm1Status(Status& status) const {
+@@ -775,14 +771,13 @@ bool BatteryMonitor::configureCharger() {
+   if (!readReg8(g.chargerAddr, 0x0B, gate) || gate != 0) return false;
+   // {register, mask, value}, in stock order (FUN_4200a2d0, build 2912).
+   static const uint8_t steps[][3] = {
+-      {0x05, 0x60, 0x00},  // FUN_4200a1dc(0)
+-      {0x02, 0x7F, 0x3E},
+-      {0x06, 0x80, 0x80},  // FUN_4200a1c0(1)
+-      {0x01, 0x08, 0x00},  // FUN_4200a17c(1)
+-      {0x04, 0xFE, 0xAA},  // FUN_4200a260(4350): charge voltage code 85 = 4.35 V
+-      {0x0C, 0x02, 0x00},  // FUN_4200a1a0(2800)
+-      {0x0D, 0xF8, 0x48},  // FUN_4200a214(50)
+-      {0x01, 0xE0, 0x00},  // FUN_4200a294(8, 2)
++      {0x05, 0x60, 0x00},                      // FUN_4200a1dc(0)
++      {0x02, 0x7F, 0x3E}, {0x06, 0x80, 0x80},  // FUN_4200a1c0(1)
++      {0x01, 0x08, 0x00},                      // FUN_4200a17c(1)
++      {0x04, 0xFE, 0xAA},                      // FUN_4200a260(4350): charge voltage code 85 = 4.35 V
++      {0x0C, 0x02, 0x00},                      // FUN_4200a1a0(2800)
++      {0x0D, 0xF8, 0x48},                      // FUN_4200a214(50)
++      {0x01, 0xE0, 0x00},                      // FUN_4200a294(8, 2)
+   };
+   for (const auto& s : steps) {
+     uint8_t old = 0;
+@@ -938,9 +933,7 @@ uint16_t BatteryMonitor::readMillivolts() const {
+   return static_cast<uint16_t>(mv * _dividerMultiplier);
+ }
+ 
+-double BatteryMonitor::readVolts() const {
+-  return static_cast<double>(readMillivolts()) / 1000.0;
+-}
++double BatteryMonitor::readVolts() const { return static_cast<double>(readMillivolts()) / 1000.0; }
+ 
+ bool BatteryMonitor::isCharging() const {
+ #if FREEINK_BATTERY_I2C_GAUGE
+@@ -1047,9 +1040,22 @@ bool BatteryMonitor::readM5Pm1Status(Status& status) const {
      status.externalPower = (sources & (M5PM1_PWR_SRC_5VIN | M5PM1_PWR_SRC_5VINOUT)) != 0;
    }
  
@@ -147,16 +493,14 @@ index 9781c2d5..990404a0 100644
    return status.percentageKnown || status.millivoltsKnown || status.externalPowerKnown;
  }
  
-@@ -1077,6 +1090,26 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
+@@ -1077,6 +1083,55 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
      4200,  // 100%
  };
  
 +#if FREEINK_DEVICE_PAPERDIY
-+// PaperDIY's LGS4056H charger terminates around 4.10 V. The generic 4.20 V
-+// curve therefore reports 90% on a full pack and never reaches 100%. Keep the
-+// same lower notches and move only the top anchor to the observed full-cell
-+// voltage; a 4.10 V pack is full, not 90%.
-+constexpr uint16_t PAPERDIY_LIION_NOTCH_MV[11] = {
++// The cell shipped with the kit: the original PaperDIY curve, with the same
++// lower notches and a 4.10 V resting-full top anchor.
++constexpr uint16_t PAPERDIY_KIT_NOTCH_MV[11] = {
 +    3450,  //   0%
 +    3680,  //  10%
 +    3740,  //  20%
@@ -169,18 +513,49 @@ index 9781c2d5..990404a0 100644
 +    4060,  //  90%
 +    4100,  // 100%
 +};
++
++// The 1500 mAh 604050 extended cell: measured over 45.4 h and 5448 page turns
++// (30 s/page, no Wi-Fi). The cell rests at ~4.09-4.10 V after a full charge;
++// 4.17 V is only the charger's CV, so the top anchor is the resting full
++// voltage. This table follows elapsed runtime under that reading load, not
++// resting OCV: a very different page rate or cell needs its own calibration.
++constexpr uint16_t PAPERDIY_EXTENDED_NOTCH_MV[11] = {
++    3431,  //   0%
++    3516,  //  10%
++    3603,  //  20%
++    3680,  //  30%
++    3778,  //  40%
++    3846,  //  50%
++    3894,  //  60%
++    3980,  //  70%
++    4022,  //  80%
++    4064,  //  90%
++    4100,  // 100%
++};
++
++namespace {
++std::atomic<const uint16_t*> paperDiyNotches{PAPERDIY_KIT_NOTCH_MV};
++}
++
++void BatteryMonitor::setPaperDiyBatteryProfile(const PaperDiyBatteryProfile profile) {
++  paperDiyNotches.store(
++      profile == PaperDiyBatteryProfile::Extended ? PAPERDIY_EXTENDED_NOTCH_MV : PAPERDIY_KIT_NOTCH_MV,
++      std::memory_order_relaxed);
++}
++#else
++void BatteryMonitor::setPaperDiyBatteryProfile(const PaperDiyBatteryProfile profile) { (void)profile; }
 +#endif
 +
  // A notch change has to clear the boundary by this much before it is accepted.
  // The 20-40% band is only 50 mV wide, so without a deadband a few millivolts of
  // sampler noise would swap the icon back and forth between page turns. Kept
-@@ -1084,14 +1117,18 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
+@@ -1084,14 +1139,18 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
  constexpr uint16_t NOTCH_HYSTERESIS_MV = 8;
  
  uint16_t BatteryMonitor::percentageFromMillivolts(uint16_t millivolts) {
 +  const uint16_t* notches = LIION_NOTCH_MV;
 +#if FREEINK_DEVICE_PAPERDIY
-+  if (BoardConfig::isPaperDiy()) notches = PAPERDIY_LIION_NOTCH_MV;
++  if (BoardConfig::isPaperDiy()) notches = paperDiyNotches.load(std::memory_order_relaxed);
 +#endif
    // A failed read reports 0 mV, which lands on 0% here. That is deliberate: the
    // cubic this table replaced evaluated to +7501 at 0 V and clamped to a
@@ -197,7 +572,7 @@ index 9781c2d5..990404a0 100644
    }
    return 0;
 diff --git a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
-index 05de51c0..ee9ef075 100644
+index 800b2485..4aaad92c 100644
 --- a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
 +++ b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
 @@ -18,6 +18,7 @@
@@ -248,16 +623,17 @@ index 05de51c0..ee9ef075 100644
  #define FREEINK_DRIVER_LGFX_EPD 1
  #else
  #define FREEINK_DRIVER_LGFX_EPD 0
-@@ -404,7 +408,7 @@
+@@ -406,7 +410,8 @@
  // (The prebuilt Arduino-ESP32 libs disable BSS-in-PSRAM, so this is a runtime
  // heap allocation, not EXT_RAM_BSS_ATTR.)
  #ifndef FREEINK_FB_PSRAM
--#define FREEINK_FB_PSRAM (FREEINK_DEVICE_M5PAPER || FREEINK_DEVICE_PAPERMONO)
-+#define FREEINK_FB_PSRAM (FREEINK_DEVICE_M5PAPER || FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY)
- #endif
- 
- // SD transport. Silkscreen (4-bit) and X4 Pro (1-bit) are wired for SDMMC; SdFat
-@@ -470,6 +474,7 @@ enum class Board : uint8_t {
+-#if defined(BOARD_HAS_PSRAM) || FREEINK_DEVICE_M5PAPER || FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PICCO
++#if defined(BOARD_HAS_PSRAM) || FREEINK_DEVICE_M5PAPER || FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PICCO || \
++    FREEINK_DEVICE_PAPERDIY
+ #define FREEINK_FB_PSRAM 1
+ #else
+ #define FREEINK_FB_PSRAM 0
+@@ -476,6 +481,7 @@ enum class Board : uint8_t {
    Sticky,
    PaperMono,
    M5PaperS3,  // ESP32-S3 sibling of M5Paper v1.1: same ED047TC1 glass, no IT8951 — raw parallel via LovyanGFX
@@ -265,7 +641,7 @@ index 05de51c0..ee9ef075 100644
    EegoA4,     // EEGO Reader A4: ESP32-S3, UC8279C 768x552 SPI panel, GSLX680 touch, PCF8563 RTC
    OnePage,    // OnePage: ESP32-C61, SSD1677 800x480 SPI panel, 4-key ADC ladder + 3 side keys
    WsEpaper397,  // Waveshare ESP32-S3-ePaper-3.97: SSD1677 800x480, 3 keys + BOOT, AXP2101 PMIC
-@@ -558,6 +563,10 @@ struct SdPins {
+@@ -564,6 +570,10 @@ struct SdPins {
    // attempt, as the X4 Pro's stock mountSD does. false just holds it on — for
    // boards whose enable also feeds other already-running peripherals (Picco).
    bool powerCycleOnMount = true;
@@ -276,7 +652,7 @@ index 05de51c0..ee9ef075 100644
  };
  
  // 4-bit SDMMC/SDIO wiring (e.g. Silkscreen). SdFat can't drive SDIO, so a board with
-@@ -1551,6 +1560,61 @@ constexpr BoardProfile M5PAPER_S3 = {
+@@ -1557,6 +1567,61 @@ constexpr BoardProfile M5PAPER_S3 = {
      0,      // wifiMaxTxPower: radio default
      false};  // usbDetectActiveHigh: GPIO5 is driven LOW while a cable is attached
  
@@ -338,7 +714,7 @@ index 05de51c0..ee9ef075 100644
  // --- EEGO Reader A4 — ESP32-S3 N16R8, UC8279C (768x552) + GSLX680 touch -------
  // CrossPoint fork device; pins/resolution/calibration from stock-firmware RE,
  // none hardware-confirmed. See docs/eego-a4-support.md.
-@@ -2134,7 +2198,7 @@ constexpr uint32_t cmax(uint32_t a, uint32_t b) { return a > b ? a : b; }
+@@ -2140,7 +2205,7 @@ constexpr uint32_t cmax(uint32_t a, uint32_t b) { return a > b ? a : b; }
  constexpr uint32_t panelBytes(const BoardProfile& p) {
    return static_cast<uint32_t>(p.displayWidth / 8) * p.displayHeight;
  }
@@ -347,7 +723,7 @@ index 05de51c0..ee9ef075 100644
      cmax(cmax(FREEINK_DEVICE_X4 ? panelBytes(XTEINK_X4) : 0u, FREEINK_DEVICE_X3 ? panelBytes(XTEINK_X3) : 0u),
           cmax(FREEINK_DEVICE_M5 ? panelBytes(M5STACK_PAPER_COLOR) : 0u,
                FREEINK_DEVICE_MURPHY ? panelBytes(MURPHY_M3) : 0u)),
-@@ -2152,6 +2216,8 @@ constexpr uint32_t MAX_FRAMEBUFFER_BYTES = cmax(
+@@ -2158,6 +2223,8 @@ constexpr uint32_t MAX_FRAMEBUFFER_BYTES = cmax(
                          cmax(FREEINK_DEVICE_WS397 ? panelBytes(WS_EPAPER_397) : 0u,
                               cmax(FREEINK_DEVICE_METALIO_EINK4 ? panelBytes(METALIO_EINK4) : 0u,
                                    FREEINK_DEVICE_PICCO ? panelBytes(PICCO) : 0u)))))));
@@ -356,7 +732,7 @@ index 05de51c0..ee9ef075 100644
  
  // Compile-time default device — the profile ACTIVE starts as. With a single
  // device in the build this is the only device; with several same-MCU devices it
-@@ -2182,6 +2248,8 @@ constexpr BoardProfile DEFAULT_DEVICE = LILYGO_T5S3;
+@@ -2188,6 +2255,8 @@ constexpr BoardProfile DEFAULT_DEVICE = LILYGO_T5S3;
  constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_V11;
  #elif FREEINK_DEVICE_PAPERS3
  constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_S3;
@@ -365,7 +741,7 @@ index 05de51c0..ee9ef075 100644
  #elif FREEINK_DEVICE_STICKY
  constexpr BoardProfile DEFAULT_DEVICE = STICKY;
  #elif FREEINK_DEVICE_X4PRO
-@@ -2330,6 +2398,11 @@ inline bool selectDevice(Board which) {
+@@ -2336,6 +2405,11 @@ inline bool selectDevice(Board which) {
        ACTIVE = M5PAPER_S3;
        break;
  #endif
@@ -377,7 +753,7 @@ index 05de51c0..ee9ef075 100644
  #if FREEINK_DEVICE_EEGO_A4
      case Board::EegoA4:
        ACTIVE = EEGO_A4;
-@@ -2372,6 +2445,7 @@ inline bool isSilkscreen() { return ACTIVE.board == Board::Silkscreen; }
+@@ -2378,6 +2452,7 @@ inline bool isSilkscreen() { return ACTIVE.board == Board::Silkscreen; }
  [[deprecated("renamed to isSilkscreen()")]] inline bool isDeLink() { return isSilkscreen(); }
  inline bool isM5PaperV11() { return ACTIVE.board == Board::M5PaperV11; }
  inline bool isM5PaperS3() { return ACTIVE.board == Board::M5PaperS3; }
@@ -723,7 +1099,7 @@ index 00000000..de106962
 +
 +}  // namespace freeink
 diff --git a/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp b/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
-index 7d1424ac..e3a63941 100644
+index cff5222b..f7eced83 100644
 --- a/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
 +++ b/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
 @@ -1,5 +1,9 @@

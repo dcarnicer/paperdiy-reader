@@ -4,7 +4,7 @@
 
 ## Cambios respecto a CrossPoint 2.0
 
-Commit base: `fa17b9ca794c798d925734af9cce2bc3bff644ec` (develop, 2.0.0,
+Commit base: `36b9430efd75e498c516196bf37af1b764a9fde7` (develop, 2.0.0,
 2026-11-12). `main` es el espejo de upstream; `paperdiy` es el fork. El SDK
 `freeink-sdk` está vendorizado para que el build sea autocontenido. El port se
 mantiene en `patches/sdk.patch` + `patches/firmware.patch`.
@@ -412,8 +412,8 @@ El soporte se puede proponer a CrossPoint:
 3. El perfil PaperDIY es pequeño y encaja con la arquitectura existente; es un
    buen candidato a PR.
 
-El port está separado en `patches/sdk.patch` (base SDK `6a208c0c`) y
-`patches/firmware.patch` (base CrossPoint `fa17b9ca`). La generación y el
+El port está separado en `patches/sdk.patch` (base SDK `a8acebf`) y
+`patches/firmware.patch` (base CrossPoint `36b9430e`). La generación y el
 proceso de sync están en
 [`10-fork-maintenance.md`](10-fork-maintenance.md).
 

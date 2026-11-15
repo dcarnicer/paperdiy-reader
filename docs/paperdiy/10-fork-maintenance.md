@@ -3,8 +3,8 @@
 Este repo es un fork downstream de CrossPoint. La regla es simple: **el motor
 se sigue de upstream; el hardware y la UX PaperDIY viven en nuestro fork**.
 
-Última sincronización: CrossPoint `622e5de9` / FreeInk SDK `6a208c0c`
-(13/11/2026).
+Última sincronización: CrossPoint `36b9430e` / FreeInk SDK `a8acebf`
+(15/11/2026).
 
 ## Ramas y remotos
 
@@ -167,31 +167,31 @@ git add freeink-sdk && git commit -m "chore: vendor pristine SDK for patch basel
 
 | Patch | Base | Contenido |
 |---|---|---|
-| `patches/sdk.patch` | FreeInk SDK `6a208c0c` | perfil, BoardPaperDiy, PM1, InputManager, PowerManager, driver LGFX |
-| `patches/firmware.patch` | CrossPoint `622e5de9` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main |
+| `patches/sdk.patch` | FreeInk SDK `a8acebf` | perfil, BoardPaperDiy, PM1, InputManager, PowerManager, driver LGFX, batería |
+| `patches/firmware.patch` | CrossPoint `36b9430e` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main, batería |
 | `patches/paperdiy-support.patch` | ambos | concatenación de los dos anteriores |
 
 Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
 
-## Pendientes de la sync `622e5de9` (13/11/2026)
+## Release `2.0.0-6` (15/11/2026)
 
-Estado: sync mergeada en local (`paperdiy`), sin release todavía porque el
-lector está ocupado con el test de batería y no se puede probar en hardware.
+Estado: release preparada sobre CrossPoint `36b9430e` / FreeInk SDK `a8acebf`.
 
-- CrossPoint `622e5de9` trae `fix: group controls settings in web UI` y
-  `fix: scrolling in optionPopup`; el commit de CI (`libpcre3`) no aplica a
-  nuestros workflows.
-- El pin de FreeInk SDK no cambia (`6a208c0c`). No adelantar `main` (`c342aa5`).
+- Upstream: mejoras de refresco EPD para todos los paneles, optimizaciones TTF,
+  profundidad de bits XTC, chevron de página anterior y los fixes de la sync
+  anterior (Controles agrupados en la web y scroll de `OptionPopup`).
+- Port: reaplicado sobre el SDK nuevo. Conflictos resueltos en la política
+  PSRAM de `BoardConfig.h` y en las ventanas de refresco de `GfxRenderer.h`.
+- Batería: log de descarga, `CMD:BATLOG`, modo de page-turning de test, curva
+  medida de la 604050 (45,4 h / 5.448 páginas) y perfil kit/extendida. Todo
+  forma parte de `paperdiy` en esta release.
 - `patches/sdk.patch`, `patches/firmware.patch` y
   `patches/paperdiy-support.patch` regenerados y verificados con
-  `git apply --check` contra `622e5de9` / `6a208c0c`.
-- El log de batería y la curva de 4,17 V viven en la rama local
-  `feat/battery-log`, no en `paperdiy`. La curva es específica de la celda de
-  1500 mAh y no debe publicarse como valor por defecto sin un perfil de celda.
-- Pendiente: smoke de hardware del merge y decidir la release `2.0.0-6` cuando
-  el lector esté libre. No se ha creado tag ni publicado nada.
-- Smoke histórico pendiente: ghosting/autonomía, sleep/wake, BLE real, Calibre
-  completo y OTA completa.
+  `git apply --check` contra `36b9430e` / `a8acebf`.
+- Pendiente antes de publicar: smoke de hardware de la release (refresco y
+  ghosting del panel, botones, sleep/wake, perfil de batería). No se ha creado
+  tag ni publicado nada todavía.
+- Smoke histórico pendiente: BLE real, Calibre completo y OTA completa.
 
 ## OTA
 
