@@ -252,13 +252,20 @@ Medición en hardware con la celda original y USB conectado:
 VBAT=4110 mV  VIN=5082 mV  PWR_SRC=5  CHG_STAT=alto  PWR_CFG=0x03
 ```
 
-La 604050 de 1500 mAh, **en carga**, llega a ~4,17 V, pero **en reposo** se
-queda en ~4,09–4,10 V. La curva de descarga usa la tensión de reposo:
-**4,10 V = 100 %**. Se recalibró con una descarga real de **45,4 h y 5.448
-páginas** (30 s/página, sin WiFi), que también bajó los anclajes inferiores
-(0 % ≈ 3,43 V, 10 % ≈ 3,52 V, 50 % ≈ 3,85 V) para no mostrar 0 % durante horas.
-Es una curva dependiente del patrón de lectura: si cambia mucho el ritmo o la
-celda, hay que recalibrarla o volver a la curva genérica.
+Como el PaperDIY es DIY, la celda puede no ser la del kit. En **Ajustes >
+General > Perfil de batería** se elige:
+
+- **Kit original (140 mAh)**: curva original, por defecto.
+- **Extendida (1500 mAh)**: curva medida con la 604050.
+
+El perfil solo cambia la curva de porcentaje; **no cambia la carga**. La curva
+extendida se midió con una descarga real de **45,4 h y 5.448 páginas**
+(30 s/página, sin WiFi). La celda, en carga, llega a ~4,17 V, pero **en reposo**
+se queda en ~4,09–4,10 V; por eso el ancla superior es **4,10 V = 100 %**. La
+curva también bajó los anclajes inferiores (0 % ≈ 3,43 V, 10 % ≈ 3,52 V,
+50 % ≈ 3,85 V) para no mostrar 0 % durante horas. Es dependiente del patrón de
+lectura: si cambia mucho el ritmo o la celda, recalibrar o volver a la curva
+genérica.
 
 También se integran del ecosistema M5Stack:
 

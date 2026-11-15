@@ -146,8 +146,11 @@ opening the menu; it is a UX trade-off still to be decided.
   happens if USB keeps the board alive.
 - If you will not use the device for a long time, power it off with a double
   click.
-- The battery is 140 mAh: battery life depends on sleeping. Reading with Wi-Fi
-  on drains it much faster.
+- The kit battery is 140 mAh: battery life depends on sleeping. Reading with
+  Wi-Fi on drains it much faster.
+- If you install a larger cell, choose **Settings > General > Battery profile >
+  Extended (1500 mAh)**. The profile only changes the percentage curve; charging
+  is unchanged.
 
 ## SD: recommended layout
 

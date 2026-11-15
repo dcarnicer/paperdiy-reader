@@ -1,5 +1,7 @@
 #include "SettingsList.h"
 
+#include <HalPowerManager.h>
+
 #include <array>
 #include <utility>
 
@@ -199,6 +201,19 @@ void forEachBaseSetting(SettingVisitor visit, void* context) {
            .withWebHidden());
 
   // --- System ---
+  // PaperDIY DIY builds can carry the kit's 140 mAh cell or a larger cell.
+  // The profile only changes the discharge curve, never the charger.
+  if (BoardConfig::isPaperDiy()) {
+    SettingInfo batteryProfile = SettingInfo::Enum(StrId::STR_BATTERY_PROFILE, &CrossPointSettings::batteryProfile,
+                                                   {StrId::STR_BATTERY_KIT, StrId::STR_BATTERY_EXTENDED},
+                                                   "batteryProfile", StrId::STR_CAT_SYSTEM);
+    batteryProfile.valueSetter = [](uint8_t value) {
+      SETTINGS.batteryProfile =
+          value < CrossPointSettings::BATTERY_PROFILE_COUNT ? value : CrossPointSettings::BATTERY_KIT;
+      powerManager.setPaperDiyBatteryProfile(SETTINGS.batteryProfile == CrossPointSettings::BATTERY_EXTENDED);
+    };
+    emit(batteryProfile);
+  }
   emit(SettingInfo::Value(
       StrId::STR_TIME_TO_SLEEP, &CrossPointSettings::sleepTimeoutMinutes,
       {CrossPointSettings::MIN_SLEEP_TIMEOUT_MINUTES, CrossPointSettings::MAX_SLEEP_TIMEOUT_MINUTES, 1},

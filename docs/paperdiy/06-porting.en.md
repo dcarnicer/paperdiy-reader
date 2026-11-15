@@ -250,13 +250,19 @@ Hardware measurement with the original cell and USB connected:
 VBAT=4110 mV  VIN=5082 mV  PWR_SRC=5  CHG_STAT=high  PWR_CFG=0x03
 ```
 
-The 1500 mAh 604050 reaches ~4.17 V **while charging**, but it rests at
-~4.09-4.10 V. The discharge curve uses the resting voltage: **4.10 V = 100%**.
-It was recalibrated with a real **45.4 h / 5448-page** discharge (30 s/page, no
-WiFi), which also lowered the bottom anchors (0% ≈ 3.43 V, 10% ≈ 3.52 V,
-50% ≈ 3.85 V) so the device no longer shows 0% for hours. This curve depends
-on the reading pattern: a very different page rate or cell needs its own
-calibration or the generic curve.
+Because the PaperDIY is DIY, the installed cell may not be the kit cell. Under
+**Settings > General > Battery profile** you can choose:
+
+- **Original kit (140 mAh)**: the original curve, the default.
+- **Extended (1500 mAh)**: the measured 604050 curve.
+
+The profile only changes the percentage mapping; it **does not change
+charging**. The extended curve was measured with a real **45.4 h / 5448-page**
+discharge (30 s/page, no WiFi). The cell reaches ~4.17 V while charging but
+rests at ~4.09-4.10 V, so the top anchor is **4.10 V = 100%**. The curve also
+lowered the bottom anchors (0% ≈ 3.43 V, 10% ≈ 3.52 V, 50% ≈ 3.85 V) so the
+device no longer shows 0% for hours. It depends on the reading pattern: a very
+different page rate or cell needs its own calibration or the generic curve.
 
 M5Stack ecosystem pieces are also integrated:
 

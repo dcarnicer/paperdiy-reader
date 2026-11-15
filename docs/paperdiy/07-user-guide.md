@@ -146,8 +146,11 @@ antes de abrir el menú; es un compromiso de UX pendiente de decidir.
   solo power enciende. El fallback **deep sleep** con wake A/B solo ocurre si
   el USB mantiene la placa viva.
 - Si vas a estar mucho tiempo sin usar el equipo, apágalo con doble clic.
-- La batería es de 140 mAh: la autonomía depende de dormir. Si lees con Wi-Fi
-  encendida, baja mucho.
+- La batería del kit es de 140 mAh: la autonomía depende de dormir. Si lees con
+  Wi-Fi encendida, baja mucho.
+- Si instalas una celda mayor, elige **Ajustes > General > Perfil de batería >
+  Extendida (1500 mAh)**. El perfil solo cambia la curva del porcentaje; la
+  carga es la misma.
 
 ## SD: organización recomendada
 

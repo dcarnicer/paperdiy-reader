@@ -15,6 +15,7 @@
 #endif
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <cstring>
 
@@ -1083,13 +1084,28 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
 };
 
 #if FREEINK_DEVICE_PAPERDIY
-// PaperDIY 1500 mAh 604050 discharge curve, measured over 45.4 h and 5448
-// page turns (30 s/page, no Wi-Fi). The cell rests at ~4.09-4.10 V after a
-// full charge; 4.17 V is only the charger's CV, so the top anchor is the
-// resting full voltage. This table follows elapsed runtime under that reading
-// load, not resting OCV: a very different page rate or cell needs its own
-// calibration.
-constexpr uint16_t PAPERDIY_LIION_NOTCH_MV[11] = {
+// The cell shipped with the kit: the original PaperDIY curve, with the same
+// lower notches and a 4.10 V resting-full top anchor.
+constexpr uint16_t PAPERDIY_KIT_NOTCH_MV[11] = {
+    3450,  //   0%
+    3680,  //  10%
+    3740,  //  20%
+    3770,  //  30%
+    3790,  //  40%
+    3820,  //  50%
+    3870,  //  60%
+    3920,  //  70%
+    3980,  //  80%
+    4060,  //  90%
+    4100,  // 100%
+};
+
+// The 1500 mAh 604050 extended cell: measured over 45.4 h and 5448 page turns
+// (30 s/page, no Wi-Fi). The cell rests at ~4.09-4.10 V after a full charge;
+// 4.17 V is only the charger's CV, so the top anchor is the resting full
+// voltage. This table follows elapsed runtime under that reading load, not
+// resting OCV: a very different page rate or cell needs its own calibration.
+constexpr uint16_t PAPERDIY_EXTENDED_NOTCH_MV[11] = {
     3431,  //   0%
     3516,  //  10%
     3603,  //  20%
@@ -1102,6 +1118,18 @@ constexpr uint16_t PAPERDIY_LIION_NOTCH_MV[11] = {
     4064,  //  90%
     4100,  // 100%
 };
+
+namespace {
+std::atomic<const uint16_t*> paperDiyNotches{PAPERDIY_KIT_NOTCH_MV};
+}
+
+void BatteryMonitor::setPaperDiyBatteryProfile(const PaperDiyBatteryProfile profile) {
+  paperDiyNotches.store(
+      profile == PaperDiyBatteryProfile::Extended ? PAPERDIY_EXTENDED_NOTCH_MV : PAPERDIY_KIT_NOTCH_MV,
+      std::memory_order_relaxed);
+}
+#else
+void BatteryMonitor::setPaperDiyBatteryProfile(const PaperDiyBatteryProfile profile) { (void)profile; }
 #endif
 
 // A notch change has to clear the boundary by this much before it is accepted.
@@ -1113,7 +1141,7 @@ constexpr uint16_t NOTCH_HYSTERESIS_MV = 8;
 uint16_t BatteryMonitor::percentageFromMillivolts(uint16_t millivolts) {
   const uint16_t* notches = LIION_NOTCH_MV;
 #if FREEINK_DEVICE_PAPERDIY
-  if (BoardConfig::isPaperDiy()) notches = PAPERDIY_LIION_NOTCH_MV;
+  if (BoardConfig::isPaperDiy()) notches = paperDiyNotches.load(std::memory_order_relaxed);
 #endif
   // A failed read reports 0 mV, which lands on 0% here. That is deliberate: the
   // cubic this table replaced evaluated to +7501 at 0 V and clamped to a

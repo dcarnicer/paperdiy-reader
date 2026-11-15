@@ -688,6 +688,7 @@ void setup() {
     SETTINGS.readerMenuStyle = CrossPointSettings::READER_MENU_TOOLBAR;
   }
   SETTINGS.loadFromFile();
+  powerManager.setPaperDiyBatteryProfile(SETTINGS.batteryProfile == CrossPointSettings::BATTERY_EXTENDED);
   // Push the saved timezone's POSIX rule into the clock (migrating the legacy
   // UTC-offset setting on first boot after the update).
   timezones::applyToClock();

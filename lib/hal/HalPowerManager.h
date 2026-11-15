@@ -63,6 +63,10 @@ class HalPowerManager {
   // with the percentage path because both touch the same I2C/ADC backend.
   BatteryMonitor::Status getBatteryStatus() const;
 
+  // PaperDIY only: select the original-kit or extended-cell discharge curve.
+  // The profile changes the percentage mapping; it does not change charging.
+  void setPaperDiyBatteryProfile(bool extended) const;
+
   // RAII helper class to manage power saving locks
   // Usage: create an instance of Lock in a scope to disable power saving, for example when running a task that needs
   // full performance. When the Lock instance is destroyed (goes out of scope), power saving will be re-enabled.

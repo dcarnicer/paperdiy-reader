@@ -260,6 +260,15 @@ BatteryMonitor::Status HalPowerManager::getBatteryStatus() const {
   return batteryMonitor().readStatus();
 }
 
+void HalPowerManager::setPaperDiyBatteryProfile(const bool extended) const {
+#if FREEINK_DEVICE_PAPERDIY
+  BatteryMonitor::setPaperDiyBatteryProfile(extended ? BatteryMonitor::PaperDiyBatteryProfile::Extended
+                                                     : BatteryMonitor::PaperDiyBatteryProfile::Kit);
+#else
+  (void)extended;
+#endif
+}
+
 uint16_t HalPowerManager::getBatteryPercentage() const {
   const BatteryReadLock lock(batteryMutex);
   if (BoardConfig::ACTIVE.batteryGauge.gaugeAddr != 0) {
