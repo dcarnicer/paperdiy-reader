@@ -334,7 +334,7 @@ index 3f817092..96f25c46 100644
    // power button (Xteink-style button-energized rail with reliable USB
    // detection). When false, cold boots always proceed to a normal boot.
 diff --git a/lib/hal/HalPowerManager.cpp b/lib/hal/HalPowerManager.cpp
-index 2889e769..c0fbe71a 100644
+index 2889e769..3115ac05 100644
 --- a/lib/hal/HalPowerManager.cpp
 +++ b/lib/hal/HalPowerManager.cpp
 @@ -3,6 +3,7 @@
@@ -461,7 +461,7 @@ index 2889e769..c0fbe71a 100644
  
    if (wakeOnHeldButton) {
      freeink::PowerManager::armPowerButtonWakeup();
-@@ -200,8 +273,111 @@ bool HalPowerManager::holdWhileUsbPowered(HalGPIO& gpio, void (*onStatus)(bool c
+@@ -200,8 +273,115 @@ bool HalPowerManager::holdWhileUsbPowered(HalGPIO& gpio, void (*onStatus)(bool c
  }
  #endif
  
@@ -475,6 +475,7 @@ index 2889e769..c0fbe71a 100644
 +#if FREEINK_DEVICE_PAPERDIY
 +  if (!BoardConfig::isPaperDiy()) return;
 +
++  _batteryPresentationFixed = false;
 +  const unsigned long now = millis();
 +  const bool externalKnown = status.externalPowerKnown;
 +  const bool external = externalKnown && status.externalPower;
@@ -492,12 +493,14 @@ index 2889e769..c0fbe71a 100644
 +      _hasLastDischargePercent = true;
 +      status.percentage = 100;
 +      status.percentageKnown = true;
++      _batteryPresentationFixed = true;
 +    } else if (_hasLastDischargePercent) {
 +      // The charger raises the terminal voltage above the cell's OCV, so a
 +      // voltage curve would reach 100% early. Keep the last discharge estimate
 +      // until the charger reports completion.
 +      status.percentage = _lastDischargePercent;
 +      status.percentageKnown = true;
++      _batteryPresentationFixed = true;
 +    }
 +    return;
 +  }
@@ -517,6 +520,7 @@ index 2889e769..c0fbe71a 100644
 +      if (_hasLastDischargePercent) {
 +        status.percentage = _lastDischargePercent;
 +        status.percentageKnown = true;
++        _batteryPresentationFixed = true;
 +      }
 +      return;
 +    }
@@ -574,7 +578,7 @@ index 2889e769..c0fbe71a 100644
    if (BoardConfig::ACTIVE.batteryGauge.gaugeAddr != 0) {
      const unsigned long now = millis();
      if (_batteryLastPollMs != 0 && (now - _batteryLastPollMs) < BATTERY_POLL_MS) {
-@@ -210,7 +386,7 @@ uint16_t HalPowerManager::getBatteryPercentage() const {
+@@ -210,7 +390,7 @@ uint16_t HalPowerManager::getBatteryPercentage() const {
  
      _batteryLastPollMs = now;
      uint16_t percent = 0;
@@ -583,12 +587,16 @@ index 2889e769..c0fbe71a 100644
        return _batteryCachedPercent;
      }
      _batteryCachedPercent = percent;
-@@ -218,10 +394,12 @@ uint16_t HalPowerManager::getBatteryPercentage() const {
+@@ -218,10 +398,16 @@ uint16_t HalPowerManager::getBatteryPercentage() const {
    }
  
    // smooth the battery %.
 +  const BatteryMonitor::Status status = readBatteryStatusLocked();
 +  const uint16_t sample = status.percentageKnown ? status.percentage : 0;
++  if (_batteryPresentationFixed) {
++    _batteryCachedPercent = sample * 10;
++    return sample;
++  }
    if (_batteryCachedPercent == 0) {
 -    _batteryCachedPercent = 10 * battery.readPercentage();
 +    _batteryCachedPercent = 10 * sample;
@@ -599,10 +607,10 @@ index 2889e769..c0fbe71a 100644
    return _batteryCachedPercent / 10;
  }
 diff --git a/lib/hal/HalPowerManager.h b/lib/hal/HalPowerManager.h
-index 0ddf380c..2314b75a 100644
+index 0ddf380c..bf878434 100644
 --- a/lib/hal/HalPowerManager.h
 +++ b/lib/hal/HalPowerManager.h
-@@ -19,6 +19,24 @@ class HalPowerManager {
+@@ -19,6 +19,25 @@ class HalPowerManager {
  
    mutable int _batteryCachedPercent = 0;         // Last read battery percentage (0-100)
    mutable unsigned long _batteryLastPollMs = 0;  // Timestamp of last battery read in milliseconds
@@ -615,6 +623,7 @@ index 0ddf380c..2314b75a 100644
 +  mutable unsigned long _batterySettleStartMs = 0;
 +  mutable bool _lastExternalPowerKnown = false;
 +  mutable bool _lastExternalPower = false;
++  mutable bool _batteryPresentationFixed = false;
 +#if defined(PAPERDIY_SERIAL_TEST)
 +  mutable bool _forceNotFullForTest = false;
 +#endif
@@ -627,7 +636,7 @@ index 0ddf380c..2314b75a 100644
  
    enum LockMode { None, NormalSpeed };
    LockMode currentLockMode = None;
-@@ -56,6 +74,25 @@ class HalPowerManager {
+@@ -56,6 +75,25 @@ class HalPowerManager {
    // Get battery percentage (range 0-100)
    uint16_t getBatteryPercentage() const;
  
@@ -693,7 +702,7 @@ index bee6736b..692a5584 100644
    // the bus pads (no-op on SPI boards). Call only after all file users have
    // stopped; open HalFiles become invalid. A deep-sleep wake resets the MCU and
 diff --git a/platformio.ini b/platformio.ini
-index f0068f87..8a89c64b 100644
+index f0068f87..ba9d4149 100644
 --- a/platformio.ini
 +++ b/platformio.ini
 @@ -4,7 +4,7 @@ build_cache_dir = .cache
@@ -701,7 +710,7 @@ index f0068f87..8a89c64b 100644
  
  [crosspoint]
 -version = 2.0.0
-+version = 2.0.0-6
++version = 2.0.0-7
  
  [base]
  platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip
