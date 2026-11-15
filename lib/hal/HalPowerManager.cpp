@@ -283,6 +283,7 @@ void HalPowerManager::applyPaperDiyBatteryPresentation(BatteryMonitor::Status& s
 #if FREEINK_DEVICE_PAPERDIY
   if (!BoardConfig::isPaperDiy()) return;
 
+  _batteryPresentationFixed = false;
   const unsigned long now = millis();
   const bool externalKnown = status.externalPowerKnown;
   const bool external = externalKnown && status.externalPower;
@@ -300,12 +301,14 @@ void HalPowerManager::applyPaperDiyBatteryPresentation(BatteryMonitor::Status& s
       _hasLastDischargePercent = true;
       status.percentage = 100;
       status.percentageKnown = true;
+      _batteryPresentationFixed = true;
     } else if (_hasLastDischargePercent) {
       // The charger raises the terminal voltage above the cell's OCV, so a
       // voltage curve would reach 100% early. Keep the last discharge estimate
       // until the charger reports completion.
       status.percentage = _lastDischargePercent;
       status.percentageKnown = true;
+      _batteryPresentationFixed = true;
     }
     return;
   }
@@ -325,6 +328,7 @@ void HalPowerManager::applyPaperDiyBatteryPresentation(BatteryMonitor::Status& s
       if (_hasLastDischargePercent) {
         status.percentage = _lastDischargePercent;
         status.percentageKnown = true;
+        _batteryPresentationFixed = true;
       }
       return;
     }
@@ -396,6 +400,10 @@ uint16_t HalPowerManager::getBatteryPercentage() const {
   // smooth the battery %.
   const BatteryMonitor::Status status = readBatteryStatusLocked();
   const uint16_t sample = status.percentageKnown ? status.percentage : 0;
+  if (_batteryPresentationFixed) {
+    _batteryCachedPercent = sample * 10;
+    return sample;
+  }
   if (_batteryCachedPercent == 0) {
     _batteryCachedPercent = 10 * sample;
   } else {

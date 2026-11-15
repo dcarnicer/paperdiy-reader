@@ -28,6 +28,7 @@ class HalPowerManager {
   mutable unsigned long _batterySettleStartMs = 0;
   mutable bool _lastExternalPowerKnown = false;
   mutable bool _lastExternalPower = false;
+  mutable bool _batteryPresentationFixed = false;
 #if defined(PAPERDIY_SERIAL_TEST)
   mutable bool _forceNotFullForTest = false;
 #endif

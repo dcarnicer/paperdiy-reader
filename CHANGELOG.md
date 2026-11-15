@@ -13,7 +13,7 @@ Corrección de la presentación de batería en PaperDIY. Mantiene CrossPoint
 - El último porcentaje de descarga se guarda en NVS, así que sobrevive al
   apagado y a un arranque mientras carga.
 - Hook `BATHOLD` solo en `paperdiy-test` para verificar el camino de retención.
-- Build `paperdiy`: `firmware.bin` 5.438.651 B, 83,0 % de flash y 33,9 % de
+- Build `paperdiy`: `firmware.bin` 5.438.679 B, 83,0 % de flash y 33,9 % de
   RAM. `paperdiy-test` compila. Tests de batería 5/5.
 
 ## 2.0.0-6 — 2026-11-15
