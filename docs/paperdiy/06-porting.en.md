@@ -250,12 +250,13 @@ Hardware measurement with the original cell and USB connected:
 VBAT=4110 mV  VIN=5082 mV  PWR_SRC=5  CHG_STAT=high  PWR_CFG=0x03
 ```
 
-The original 140 mAh cell terminated at ~4.10 V; the 1500 mAh 604050
-replacement reaches ~4.17 V. `BatteryMonitor`'s generic curve assumed 4.20 V
-and showed 90% in both cases. `PAPERDIY_LIION_NOTCH_MV` keeps the same lower
-segment and uses **4.17 V = 100%** for the current cell. If the cell is changed
-to one that charges to another voltage, the upper anchor must be recalibrated
-or the generic curve restored.
+The 1500 mAh 604050 reaches ~4.17 V **while charging**, but it rests at
+~4.09-4.10 V. The discharge curve uses the resting voltage: **4.10 V = 100%**.
+It was recalibrated with a real **45.4 h / 5448-page** discharge (30 s/page, no
+WiFi), which also lowered the bottom anchors (0% ≈ 3.43 V, 10% ≈ 3.52 V,
+50% ≈ 3.85 V) so the device no longer shows 0% for hours. This curve depends
+on the reading pattern: a very different page rate or cell needs its own
+calibration or the generic curve.
 
 M5Stack ecosystem pieces are also integrated:
 

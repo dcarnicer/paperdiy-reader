@@ -346,20 +346,6 @@ def main() -> int:
     else:
         print("full cycle: not found (need a trusted-time run from >=95% to <=5%)")
 
-    if args.capacity and pairs:
-        estimates = []
-        for left, right, dt in pairs:
-            if left.pct is None or right.pct is None or left.pct <= right.pct:
-                continue
-            hours = dt / 3600.0
-            if hours <= 0:
-                continue
-            used_mah = args.capacity * (left.pct - right.pct) / 100.0
-            estimates.append(used_mah / hours)
-        if estimates:
-            print(f"segment estimate: median {statistics.median(estimates):.1f} mA "
-                  f"(range {min(estimates):.1f} .. {max(estimates):.1f}, n={len(estimates)})")
-
     if args.curve:
         curve = suggest_curve(samples)
         if curve is None:

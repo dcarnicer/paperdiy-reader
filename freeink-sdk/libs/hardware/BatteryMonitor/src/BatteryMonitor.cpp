@@ -1083,22 +1083,24 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
 };
 
 #if FREEINK_DEVICE_PAPERDIY
-// PaperDIY's LGS4056H has a 4.2 V target. The original 140 mAh cell terminated
-// at ~4.10 V, while the 1500 mAh 604050 replacement reaches ~4.17 V; the top
-// anchor is the measured full voltage of the installed cell. Keep the lower
-// notches and recalibrate this anchor if a replacement charges differently.
+// PaperDIY 1500 mAh 604050 discharge curve, measured over 45.4 h and 5448
+// page turns (30 s/page, no Wi-Fi). The cell rests at ~4.09-4.10 V after a
+// full charge; 4.17 V is only the charger's CV, so the top anchor is the
+// resting full voltage. This table follows elapsed runtime under that reading
+// load, not resting OCV: a very different page rate or cell needs its own
+// calibration.
 constexpr uint16_t PAPERDIY_LIION_NOTCH_MV[11] = {
-    3450,  //   0%
-    3680,  //  10%
-    3740,  //  20%
-    3770,  //  30%
-    3790,  //  40%
-    3820,  //  50%
-    3870,  //  60%
-    3920,  //  70%
-    3980,  //  80%
-    4060,  //  90%
-    4170,  // 100%
+    3431,  //   0%
+    3516,  //  10%
+    3603,  //  20%
+    3680,  //  30%
+    3778,  //  40%
+    3846,  //  50%
+    3894,  //  60%
+    3980,  //  70%
+    4022,  //  80%
+    4064,  //  90%
+    4100,  // 100%
 };
 #endif
 
