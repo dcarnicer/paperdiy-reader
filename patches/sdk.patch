@@ -356,7 +356,7 @@ index af1d9a8d..956887cb 100644
 +  int8_t _chargeStatusPin;
  };
 diff --git a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
-index 9781c2d5..ccaf2469 100644
+index 9781c2d5..68b83e33 100644
 --- a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
 +++ b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
 @@ -15,6 +15,7 @@
@@ -467,7 +467,7 @@ index 9781c2d5..ccaf2469 100644
  
  bool BatteryMonitor::isCharging() const {
  #if FREEINK_BATTERY_I2C_GAUGE
-@@ -1047,9 +1040,22 @@ bool BatteryMonitor::readM5Pm1Status(Status& status) const {
+@@ -1047,9 +1040,26 @@ bool BatteryMonitor::readM5Pm1Status(Status& status) const {
      status.externalPower = (sources & (M5PM1_PWR_SRC_5VIN | M5PM1_PWR_SRC_5VINOUT)) != 0;
    }
  
@@ -482,6 +482,10 @@ index 9781c2d5..ccaf2469 100644
 +    if (freeink::m5pm1::readReg(freeink::m5pm1::REG_GPIO_IN, &gpio)) {
 +      status.chargingKnown = true;
 +      status.charging = (gpio & freeink::m5pm1::GPIO3) == 0;
++      // With USB present and CHG_STAT high the LGS4056H has terminated (or is
++      // idle); there is no separate full flag on this board.
++      status.chargeCompleteKnown = status.externalPowerKnown;
++      status.chargeComplete = status.externalPower && !status.charging;
 +    }
 +  }
 +#endif
@@ -493,7 +497,7 @@ index 9781c2d5..ccaf2469 100644
    return status.percentageKnown || status.millivoltsKnown || status.externalPowerKnown;
  }
  
-@@ -1077,6 +1083,55 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
+@@ -1077,6 +1087,55 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
      4200,  // 100%
  };
  
@@ -549,7 +553,7 @@ index 9781c2d5..ccaf2469 100644
  // A notch change has to clear the boundary by this much before it is accepted.
  // The 20-40% band is only 50 mV wide, so without a deadband a few millivolts of
  // sampler noise would swap the icon back and forth between page turns. Kept
-@@ -1084,14 +1139,18 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
+@@ -1084,14 +1143,18 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
  constexpr uint16_t NOTCH_HYSTERESIS_MV = 8;
  
  uint16_t BatteryMonitor::percentageFromMillivolts(uint16_t millivolts) {

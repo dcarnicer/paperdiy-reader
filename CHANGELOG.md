@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.0-7 — 2026-11-15
+
+Corrección de la presentación de batería en PaperDIY. Mantiene CrossPoint
+`36b9430e` y FreeInk SDK `a8acebf`.
+
+- El PM1 no tiene coulomb counter y la tensión de carga no sirve para estimar
+  el estado de carga. Mientras hay USB, el porcentaje se congela en el último
+  valor de descarga; al completar la carga muestra 100 %.
+- Tras desenchufar, se mantiene el último valor durante ~2 min para que la
+  celda se relaje, y después vuelve a la curva de descarga.
+- El último porcentaje de descarga se guarda en NVS, así que sobrevive al
+  apagado y a un arranque mientras carga.
+- Hook `BATHOLD` solo en `paperdiy-test` para verificar el camino de retención.
+- Build `paperdiy`: `firmware.bin` 5.438.651 B, 83,0 % de flash y 33,9 % de
+  RAM. `paperdiy-test` compila. Tests de batería 5/5.
+
 ## 2.0.0-6 — 2026-11-15
 
 Revisión sobre CrossPoint `2.0.0` (`36b9430e`) y FreeInk SDK `a8acebf`.

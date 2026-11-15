@@ -257,7 +257,12 @@ Because the PaperDIY is DIY, the installed cell may not be the kit cell. Under
 - **Extended (1500 mAh)**: the measured 604050 curve.
 
 The profile only changes the percentage mapping; it **does not change
-charging**. The extended curve was measured with a real **45.4 h / 5448-page**
+charging**. While the device is plugged in, the percentage is frozen at the last
+discharge estimate (charging voltage is not a reliable SoC measurement); it
+shows 100% when charging completes, and after unplugging it waits about two
+minutes for the cell to relax before returning to the discharge curve. The last
+value is persisted in NVS across power-off. The extended curve was measured with
+a real **45.4 h / 5448-page**
 discharge (30 s/page, no WiFi). The cell reaches ~4.17 V while charging but
 rests at ~4.09-4.10 V, so the top anchor is **4.10 V = 100%**. The curve also
 lowered the bottom anchors (0% ≈ 3.43 V, 10% ≈ 3.52 V, 50% ≈ 3.85 V) so the

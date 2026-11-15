@@ -151,6 +151,10 @@ antes de abrir el menú; es un compromiso de UX pendiente de decidir.
 - Si instalas una celda mayor, elige **Ajustes > General > Perfil de batería >
   Extendida (1500 mAh)**. El perfil solo cambia la curva del porcentaje; la
   carga es la misma.
+- Mientras está enchufado, el porcentaje se congela en el último valor de
+  descarga; al completar la carga muestra 100 % y, al desenchufar, tarda unos
+  2 min en recalcular. El PM1 no tiene coulomb counter, así que la tensión de
+  carga no sirve para estimar el estado real.
 
 ## SD: organización recomendada
 

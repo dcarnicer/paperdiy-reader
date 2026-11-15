@@ -356,7 +356,7 @@ index af1d9a8d..956887cb 100644
 +  int8_t _chargeStatusPin;
  };
 diff --git a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
-index 9781c2d5..ccaf2469 100644
+index 9781c2d5..68b83e33 100644
 --- a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
 +++ b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
 @@ -15,6 +15,7 @@
@@ -467,7 +467,7 @@ index 9781c2d5..ccaf2469 100644
  
  bool BatteryMonitor::isCharging() const {
  #if FREEINK_BATTERY_I2C_GAUGE
-@@ -1047,9 +1040,22 @@ bool BatteryMonitor::readM5Pm1Status(Status& status) const {
+@@ -1047,9 +1040,26 @@ bool BatteryMonitor::readM5Pm1Status(Status& status) const {
      status.externalPower = (sources & (M5PM1_PWR_SRC_5VIN | M5PM1_PWR_SRC_5VINOUT)) != 0;
    }
  
@@ -482,6 +482,10 @@ index 9781c2d5..ccaf2469 100644
 +    if (freeink::m5pm1::readReg(freeink::m5pm1::REG_GPIO_IN, &gpio)) {
 +      status.chargingKnown = true;
 +      status.charging = (gpio & freeink::m5pm1::GPIO3) == 0;
++      // With USB present and CHG_STAT high the LGS4056H has terminated (or is
++      // idle); there is no separate full flag on this board.
++      status.chargeCompleteKnown = status.externalPowerKnown;
++      status.chargeComplete = status.externalPower && !status.charging;
 +    }
 +  }
 +#endif
@@ -493,7 +497,7 @@ index 9781c2d5..ccaf2469 100644
    return status.percentageKnown || status.millivoltsKnown || status.externalPowerKnown;
  }
  
-@@ -1077,6 +1083,55 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
+@@ -1077,6 +1087,55 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
      4200,  // 100%
  };
  
@@ -549,7 +553,7 @@ index 9781c2d5..ccaf2469 100644
  // A notch change has to clear the boundary by this much before it is accepted.
  // The 20-40% band is only 50 mV wide, so without a deadband a few millivolts of
  // sampler noise would swap the icon back and forth between page turns. Kept
-@@ -1084,14 +1139,18 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
+@@ -1084,14 +1143,18 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
  constexpr uint16_t NOTCH_HYSTERESIS_MV = 8;
  
  uint16_t BatteryMonitor::percentageFromMillivolts(uint16_t millivolts) {
@@ -1692,10 +1696,18 @@ index 3f817092..96f25c46 100644
    // power button (Xteink-style button-energized rail with reliable USB
    // detection). When false, cold boots always proceed to a normal boot.
 diff --git a/lib/hal/HalPowerManager.cpp b/lib/hal/HalPowerManager.cpp
-index 2889e769..35d478f7 100644
+index 2889e769..c0fbe71a 100644
 --- a/lib/hal/HalPowerManager.cpp
 +++ b/lib/hal/HalPowerManager.cpp
-@@ -19,9 +19,12 @@
+@@ -3,6 +3,7 @@
+ #include <BoardConfig.h>
+ #include <Logging.h>
+ #include <PowerManager.h>
++#include <Preferences.h>
+ #include <WiFi.h>
+ #include <esp_sleep.h>
+ #include <soc/soc_caps.h>
+@@ -19,9 +20,12 @@
  #include <driver/gpio.h>
  #endif
  
@@ -1709,11 +1721,15 @@ index 2889e769..35d478f7 100644
  
  HalPowerManager powerManager;  // Singleton instance
  
-@@ -30,6 +33,30 @@ HalPowerManager powerManager;  // Singleton instance
+@@ -30,6 +34,34 @@ HalPowerManager powerManager;  // Singleton instance
  // X4 Pro display chip select.
  static constexpr gpio_num_t XTEINK_C3_GPIO13 = GPIO_NUM_13;
  
 +namespace {
++constexpr unsigned long PAPERDIY_SETTLE_MS = 2 * 60 * 1000;
++constexpr const char* BATTERY_PREFS_NAMESPACE = "cpbat";
++constexpr const char* BATTERY_PREFS_KEY = "lastpct";
++
 +BatteryMonitor& batteryMonitor() {
 +  static BatteryMonitor battery;
 +  return battery;
@@ -1740,7 +1756,7 @@ index 2889e769..35d478f7 100644
  void HalPowerManager::begin() {
    if (BoardConfig::ACTIVE.batteryAdc >= 0) {
      pinMode(BoardConfig::ACTIVE.batteryAdc, INPUT);
-@@ -37,9 +64,27 @@ void HalPowerManager::begin() {
+@@ -37,9 +69,40 @@ void HalPowerManager::begin() {
    // Board charger setup (Picco SGM41562: stock charge voltage and limits); a
    // no-op on boards without a configurable charger.
    if (BatteryMonitor::configureCharger()) LOG_INF("PWR", "Charger configured");
@@ -1765,10 +1781,23 @@ index 2889e769..35d478f7 100644
    assert(modeMutex != nullptr);
 +  batteryMutex = xSemaphoreCreateMutex();
 +  assert(batteryMutex != nullptr);
++#if FREEINK_DEVICE_PAPERDIY
++  if (BoardConfig::isPaperDiy()) {
++    Preferences prefs;
++    if (prefs.begin(BATTERY_PREFS_NAMESPACE, /*readOnly=*/true)) {
++      const uint8_t value = prefs.getUChar(BATTERY_PREFS_KEY, 0xFF);
++      prefs.end();
++      if (value <= 100) {
++        _lastDischargePercent = value;
++        _hasLastDischargePercent = true;
++      }
++    }
++  }
++#endif
  }
  
  void HalPowerManager::setPowerSaving(bool enabled) {
-@@ -140,7 +185,7 @@ void HalPowerManager::startDeepSleep(HalGPIO& gpio, const bool wakeOnHeldButton)
+@@ -140,7 +203,7 @@ void HalPowerManager::startDeepSleep(HalGPIO& gpio, const bool wakeOnHeldButton)
    // guarantees that ordering).
    freeink::PowerManager::powerDownRailsForSleep();
  
@@ -1777,7 +1806,7 @@ index 2889e769..35d478f7 100644
    // Its power button is behind the M5PM1 PMIC rather than an ESP GPIO, so
    // normal GPIO deep sleep would have no wake source. Ask the PMIC to shut the
    // device down; a button click then restarts it through a cold boot.
-@@ -153,6 +198,16 @@ void HalPowerManager::startDeepSleep(HalGPIO& gpio, const bool wakeOnHeldButton)
+@@ -153,6 +216,16 @@ void HalPowerManager::startDeepSleep(HalGPIO& gpio, const bool wakeOnHeldButton)
    // power instead; the button cold-boots it. Returns only on USB power.
    freeink::metalio::powerOff();
  #endif
@@ -1794,13 +1823,80 @@ index 2889e769..35d478f7 100644
  
    if (wakeOnHeldButton) {
      freeink::PowerManager::armPowerButtonWakeup();
-@@ -200,8 +255,22 @@ bool HalPowerManager::holdWhileUsbPowered(HalGPIO& gpio, void (*onStatus)(bool c
+@@ -200,8 +273,111 @@ bool HalPowerManager::holdWhileUsbPowered(HalGPIO& gpio, void (*onStatus)(bool c
  }
  #endif
  
++BatteryMonitor::Status HalPowerManager::readBatteryStatusLocked() const {
++  BatteryMonitor::Status status = batteryMonitor().readStatus();
++  applyPaperDiyBatteryPresentation(status);
++  return status;
++}
++
++void HalPowerManager::applyPaperDiyBatteryPresentation(BatteryMonitor::Status& status) const {
++#if FREEINK_DEVICE_PAPERDIY
++  if (!BoardConfig::isPaperDiy()) return;
++
++  const unsigned long now = millis();
++  const bool externalKnown = status.externalPowerKnown;
++  const bool external = externalKnown && status.externalPower;
++  bool full = status.chargeCompleteKnown && status.chargeComplete;
++#if defined(PAPERDIY_SERIAL_TEST)
++  if (_forceNotFullForTest) full = false;
++#endif
++
++  if (externalKnown && external) {
++    _lastExternalPowerKnown = true;
++    _lastExternalPower = true;
++    _batterySettling = false;
++    if (full) {
++      _lastDischargePercent = 100;
++      _hasLastDischargePercent = true;
++      status.percentage = 100;
++      status.percentageKnown = true;
++    } else if (_hasLastDischargePercent) {
++      // The charger raises the terminal voltage above the cell's OCV, so a
++      // voltage curve would reach 100% early. Keep the last discharge estimate
++      // until the charger reports completion.
++      status.percentage = _lastDischargePercent;
++      status.percentageKnown = true;
++    }
++    return;
++  }
++
++  if (!externalKnown) return;
++
++  // On battery. After unplugging, the cell relaxes from the charger voltage to
++  // its OCV; hold the last estimate for a settling window before trusting the
++  // discharge curve again.
++  if (_lastExternalPowerKnown && _lastExternalPower) {
++    _lastExternalPower = false;
++    _batterySettling = true;
++    _batterySettleStartMs = now;
++  }
++  if (_batterySettling) {
++    if (now - _batterySettleStartMs < PAPERDIY_SETTLE_MS) {
++      if (_hasLastDischargePercent) {
++        status.percentage = _lastDischargePercent;
++        status.percentageKnown = true;
++      }
++      return;
++    }
++    _batterySettling = false;
++  }
++
++  if (status.percentageKnown) {
++    _lastDischargePercent = status.percentage;
++    _hasLastDischargePercent = true;
++  }
++#else
++  (void)status;
++#endif
++}
++
 +BatteryMonitor::Status HalPowerManager::getBatteryStatus() const {
 +  const BatteryReadLock lock(batteryMutex);
-+  return batteryMonitor().readStatus();
++  return readBatteryStatusLocked();
 +}
 +
 +void HalPowerManager::setPaperDiyBatteryProfile(const bool extended) const {
@@ -1812,13 +1908,35 @@ index 2889e769..35d478f7 100644
 +#endif
 +}
 +
++void HalPowerManager::persistBatteryEstimate() const {
++#if FREEINK_DEVICE_PAPERDIY
++  const BatteryReadLock lock(batteryMutex);
++  if (!BoardConfig::isPaperDiy() || !_hasLastDischargePercent) return;
++  Preferences prefs;
++  if (!prefs.begin(BATTERY_PREFS_NAMESPACE, /*readOnly=*/false)) return;
++  prefs.putUChar(BATTERY_PREFS_KEY, static_cast<uint8_t>(_lastDischargePercent));
++  prefs.end();
++#endif
++}
++
++#if defined(PAPERDIY_SERIAL_TEST)
++void HalPowerManager::setBatteryHoldForTest(const int percent, const bool forceNotFull) const {
++  const BatteryReadLock lock(batteryMutex);
++  if (percent >= 0 && percent <= 100) {
++    _lastDischargePercent = static_cast<uint16_t>(percent);
++    _hasLastDischargePercent = true;
++  }
++  _forceNotFullForTest = forceNotFull;
++}
++#endif
++
  uint16_t HalPowerManager::getBatteryPercentage() const {
 -  static const BatteryMonitor battery;
 +  const BatteryReadLock lock(batteryMutex);
    if (BoardConfig::ACTIVE.batteryGauge.gaugeAddr != 0) {
      const unsigned long now = millis();
      if (_batteryLastPollMs != 0 && (now - _batteryLastPollMs) < BATTERY_POLL_MS) {
-@@ -210,7 +279,7 @@ uint16_t HalPowerManager::getBatteryPercentage() const {
+@@ -210,7 +386,7 @@ uint16_t HalPowerManager::getBatteryPercentage() const {
  
      _batteryLastPollMs = now;
      uint16_t percent = 0;
@@ -1827,11 +1945,12 @@ index 2889e769..35d478f7 100644
        return _batteryCachedPercent;
      }
      _batteryCachedPercent = percent;
-@@ -218,10 +287,11 @@ uint16_t HalPowerManager::getBatteryPercentage() const {
+@@ -218,10 +394,12 @@ uint16_t HalPowerManager::getBatteryPercentage() const {
    }
  
    // smooth the battery %.
-+  const uint16_t sample = batteryMonitor().readPercentage();
++  const BatteryMonitor::Status status = readBatteryStatusLocked();
++  const uint16_t sample = status.percentageKnown ? status.percentage : 0;
    if (_batteryCachedPercent == 0) {
 -    _batteryCachedPercent = 10 * battery.readPercentage();
 +    _batteryCachedPercent = 10 * sample;
@@ -1842,20 +1961,35 @@ index 2889e769..35d478f7 100644
    return _batteryCachedPercent / 10;
  }
 diff --git a/lib/hal/HalPowerManager.h b/lib/hal/HalPowerManager.h
-index 0ddf380c..28887b03 100644
+index 0ddf380c..2314b75a 100644
 --- a/lib/hal/HalPowerManager.h
 +++ b/lib/hal/HalPowerManager.h
-@@ -19,6 +19,9 @@ class HalPowerManager {
+@@ -19,6 +19,24 @@ class HalPowerManager {
  
    mutable int _batteryCachedPercent = 0;         // Last read battery percentage (0-100)
    mutable unsigned long _batteryLastPollMs = 0;  // Timestamp of last battery read in milliseconds
++  // PaperDIY has no coulomb counter, so charging voltage cannot estimate SoC.
++  // Hold the last discharge estimate while external power is present and wait
++  // for the cell to relax after unplugging.
++  mutable uint16_t _lastDischargePercent = 0;
++  mutable bool _hasLastDischargePercent = false;
++  mutable bool _batterySettling = false;
++  mutable unsigned long _batterySettleStartMs = 0;
++  mutable bool _lastExternalPowerKnown = false;
++  mutable bool _lastExternalPower = false;
++#if defined(PAPERDIY_SERIAL_TEST)
++  mutable bool _forceNotFullForTest = false;
++#endif
 +  // Serializes battery reads: the render task paints the status bar while the
 +  // main loop samples the same PM1/ADC for the battery log.
 +  mutable SemaphoreHandle_t batteryMutex = nullptr;
++
++  BatteryMonitor::Status readBatteryStatusLocked() const;
++  void applyPaperDiyBatteryPresentation(BatteryMonitor::Status& status) const;
  
    enum LockMode { None, NormalSpeed };
    LockMode currentLockMode = None;
-@@ -56,6 +59,14 @@ class HalPowerManager {
+@@ -56,6 +74,25 @@ class HalPowerManager {
    // Get battery percentage (range 0-100)
    uint16_t getBatteryPercentage() const;
  
@@ -1866,6 +2000,17 @@ index 0ddf380c..28887b03 100644
 +  // PaperDIY only: select the original-kit or extended-cell discharge curve.
 +  // The profile changes the percentage mapping; it does not change charging.
 +  void setPaperDiyBatteryProfile(bool extended) const;
++
++  // Persist the last discharge estimate for the next boot. PaperDIY powers off
++  // on sleep and may boot while charging, where voltage cannot estimate SoC.
++  void persistBatteryEstimate() const;
++
++#if defined(PAPERDIY_SERIAL_TEST)
++  // Test-only: inject a discharge estimate and optionally make the filter
++  // ignore the charger's full signal, so the hold path can be exercised on a
++  // full battery. pass -1 to clear the override.
++  void setBatteryHoldForTest(int percent, bool forceNotFull) const;
++#endif
 +
    // RAII helper class to manage power saving locks
    // Usage: create an instance of Lock in a scope to disable power saving, for example when running a task that needs
@@ -1910,7 +2055,7 @@ index bee6736b..692a5584 100644
    // the bus pads (no-op on SPI boards). Call only after all file users have
    // stopped; open HalFiles become invalid. A deep-sleep wake resets the MCU and
 diff --git a/platformio.ini b/platformio.ini
-index f0068f87..74ce4542 100644
+index f0068f87..8a89c64b 100644
 --- a/platformio.ini
 +++ b/platformio.ini
 @@ -4,7 +4,7 @@ build_cache_dir = .cache
@@ -1918,7 +2063,7 @@ index f0068f87..74ce4542 100644
  
  [crosspoint]
 -version = 2.0.0
-+version = 2.0.0-5
++version = 2.0.0-6
  
  [base]
  platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip
@@ -2791,7 +2936,7 @@ index 3a39cc25..12ae475f 100644
    // strings only need to outlive the fui::header() call that consumes them.
    static char percentText[8];
 diff --git a/src/main.cpp b/src/main.cpp
-index 50355c8f..b93b3930 100644
+index 50355c8f..cde4258e 100644
 --- a/src/main.cpp
 +++ b/src/main.cpp
 @@ -45,7 +45,9 @@
@@ -2831,15 +2976,16 @@ index 50355c8f..b93b3930 100644
  
  // A wake hold must never become an in-app power-button action.  Boot may continue
  // while the button is held; swallow the one release that ends that wake gesture.
-@@ -459,6 +479,7 @@ void enterDeepSleep(bool fromTimeout = false) {
+@@ -459,6 +479,8 @@ void enterDeepSleep(bool fromTimeout = false) {
    // Sleep may end in a power-off (battery death, latch); persist the clock
    // floor now so a later cold boot resumes from it.
    trustedtime::note();
 +  batteryLog.logSleep(APP_STATE.lastSleepFromReader, WiFi.getMode() != WIFI_MODE_NULL);
++  powerManager.persistBatteryEstimate();
  
    // Stop Bluetooth before plugin delivery can start WiFi; a timeout defers delivery.
    deepSleepInProgress = true;
-@@ -608,8 +629,11 @@ void setup() {
+@@ -608,8 +630,11 @@ void setup() {
    const auto recoveryButton = (BoardConfig::isX4Pro() || BoardConfig::isX4Classic()) ? MappedInputManager::Button::Down
                                                                                       : MappedInputManager::Button::Up;
    // The Picco has no second app slot to flash into (partitions_picco.csv).
@@ -2852,7 +2998,7 @@ index 50355c8f..b93b3930 100644
  
    halTiltSensor.begin();
    halClock.begin();
-@@ -619,12 +643,42 @@ void setup() {
+@@ -619,12 +644,42 @@ void setup() {
  #else
    LOG_INF("MAIN", "Device: %s", BoardConfig::ACTIVE.name);
  #endif
@@ -2897,7 +3043,7 @@ index 50355c8f..b93b3930 100644
      activityManager.goToFullScreenMessage("SD card error", EpdFontFamily::BOLD);
      return;
    }
-@@ -648,6 +702,7 @@ void setup() {
+@@ -648,6 +703,7 @@ void setup() {
      SETTINGS.readerMenuStyle = CrossPointSettings::READER_MENU_TOOLBAR;
    }
    SETTINGS.loadFromFile();
@@ -2905,7 +3051,7 @@ index 50355c8f..b93b3930 100644
    // Push the saved timezone's POSIX rule into the clock (migrating the legacy
    // UTC-offset setting on first boot after the update).
    timezones::applyToClock();
-@@ -675,6 +730,7 @@ void setup() {
+@@ -675,6 +731,7 @@ void setup() {
    // Restore the monotonic clock floor before anything reads time() (event
    // timestamps, loan-expiry checks).
    trustedtime::init();
@@ -2913,7 +3059,7 @@ index 50355c8f..b93b3930 100644
    bleturner::begin(pageturner::host, SETTINGS.ble);
  
    // Brightness and warmth are always restored. A normal wake starts with the
-@@ -704,8 +760,8 @@ void setup() {
+@@ -704,8 +761,8 @@ void setup() {
      case HalGPIO::WakeupReason::AfterUSBPower:
        // Most devices return to sleep after a USB-powered cold boot.
        LOG_DBG("MAIN", "Wakeup reason: After USB Power");
@@ -2924,7 +3070,7 @@ index 50355c8f..b93b3930 100644
        // X4 Pro must stay awake so USB Serial/JTAG remains available after leaving
        // USB Drive and reconnecting the cable. Paper Mono has no armable GPIO wake
        // (its button is behind the PMIC). Metalio also needs native USB available
-@@ -832,6 +888,7 @@ void setup() {
+@@ -832,6 +889,7 @@ void setup() {
    }
  
    allowSleepAt = millis() + 2000;
@@ -2932,7 +3078,7 @@ index 50355c8f..b93b3930 100644
  }
  
  void loop() {
-@@ -876,6 +933,7 @@ void loop() {
+@@ -876,6 +934,7 @@ void loop() {
  
    // After the exclusive-storage return: it saves settings to the SD card.
    handleSlideSwitch();
@@ -2940,7 +3086,7 @@ index 50355c8f..b93b3930 100644
    halTiltSensor.update(SETTINGS.tiltPageTurn, SETTINGS.orientation, activityManager.isReaderActivity());
  
    // Under the render lock, so a step never overlaps the themes' gauge reads.
-@@ -913,18 +971,87 @@ void loop() {
+@@ -913,18 +972,101 @@ void loop() {
          uint8_t* buf = display.getFrameBuffer();
          logSerial.write(buf, bufferSize);
          logSerial.printf("SCREENSHOT_END\n");
@@ -2991,6 +3137,20 @@ index 50355c8f..b93b3930 100644
 +          activityManager.goToReader(path.c_str());
 +          logSerial.printf("OPEN:OK\n");
 +        }
++      } else if (cmd.startsWith("BATHOLD")) {
++        const int separator = cmd.indexOf(':');
++        if (separator < 0) {
++          powerManager.setBatteryHoldForTest(-1, false);
++          logSerial.printf("BATHOLD:CLEARED\n");
++        } else {
++          const int percent = cmd.substring(separator + 1).toInt();
++          if (percent >= 0 && percent <= 100) {
++            powerManager.setBatteryHoldForTest(percent, true);
++            logSerial.printf("BATHOLD:%d\n", percent);
++          } else {
++            logSerial.printf("BATHOLD:BAD\n");
++          }
++        }
 +      } else if (cmd.startsWith("DRAIN")) {
 +        if (cmd == "DRAIN:STOP") {
 +          drainTest::enabled = false;
@@ -3030,7 +3190,7 @@ index 50355c8f..b93b3930 100644
      powerManager.setPowerSaving(false);  // Restore normal CPU frequency on user activity
    }
  
-@@ -970,7 +1097,15 @@ void loop() {
+@@ -970,7 +1112,15 @@ void loop() {
    const bool x4ProDoubleClickEnabled = BoardConfig::isX4Pro() && SETTINGS.doublePwrBtn != CrossPointSettings::IGNORE;
  
    const unsigned long sleepTimeoutMs = SETTINGS.getSleepTimeoutMs();
@@ -3047,7 +3207,7 @@ index 50355c8f..b93b3930 100644
      LOG_DBG("SLP", "Auto-sleep triggered after %lu ms of inactivity", sleepTimeoutMs);
      enterDeepSleep(true);
      // This should never be hit as `enterDeepSleep` calls esp_deep_sleep_start
-@@ -1002,10 +1137,10 @@ void loop() {
+@@ -1002,10 +1152,10 @@ void loop() {
      return;
    }
  
@@ -3062,7 +3222,7 @@ index 50355c8f..b93b3930 100644
    if ((SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP ||
         SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::IGNORE) &&
        millis() >= allowSleepAt && mappedInputManager.wasReleased(MappedInputManager::Button::Power)) {
-@@ -1028,20 +1163,67 @@ void loop() {
+@@ -1028,20 +1178,67 @@ void loop() {
      }
    }
  

@@ -151,6 +151,10 @@ opening the menu; it is a UX trade-off still to be decided.
 - If you install a larger cell, choose **Settings > General > Battery profile >
   Extended (1500 mAh)**. The profile only changes the percentage curve; charging
   is unchanged.
+- While plugged in, the percentage is frozen at the last discharge estimate;
+  it shows 100% when charging completes and takes about two minutes to
+  recalculate after unplugging. The PM1 has no coulomb counter, so the charging
+  voltage cannot estimate the real state of charge.
 
 ## SD: recommended layout
 

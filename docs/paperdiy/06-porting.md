@@ -258,8 +258,13 @@ General > Perfil de batería** se elige:
 - **Kit original (140 mAh)**: curva original, por defecto.
 - **Extendida (1500 mAh)**: curva medida con la 604050.
 
-El perfil solo cambia la curva de porcentaje; **no cambia la carga**. La curva
-extendida se midió con una descarga real de **45,4 h y 5.448 páginas**
+El perfil solo cambia la curva de porcentaje; **no cambia la carga**. Mientras
+el equipo está enchufado, el porcentaje se congela en el último valor de
+descarga (la tensión de carga no es una medida fiable de SoC); al completar la
+carga muestra 100 %, y tras desenchufar espera unos 2 min a que la celda se
+relaje antes de volver a la curva de descarga. El último valor se guarda en NVS
+para sobrevivir al apagado. La curva extendida se midió con una descarga real de
+**45,4 h y 5.448 páginas**
 (30 s/página, sin WiFi). La celda, en carga, llega a ~4,17 V, pero **en reposo**
 se queda en ~4,09–4,10 V; por eso el ancla superior es **4,10 V = 100 %**. La
 curva también bajó los anclajes inferiores (0 % ≈ 3,43 V, 10 % ≈ 3,52 V,
