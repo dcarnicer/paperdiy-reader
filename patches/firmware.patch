@@ -1,8 +1,8 @@
 diff --git a/lib/GfxRenderer/GfxRenderer.cpp b/lib/GfxRenderer/GfxRenderer.cpp
-index c50eba5f..abfcb38d 100644
+index ea16890c..860b515f 100644
 --- a/lib/GfxRenderer/GfxRenderer.cpp
 +++ b/lib/GfxRenderer/GfxRenderer.cpp
-@@ -1776,6 +1776,22 @@ void GfxRenderer::displayBuffer(HalDisplay::RefreshMode refreshMode) const {
+@@ -1783,6 +1783,22 @@ void GfxRenderer::displayBuffer(HalDisplay::RefreshMode refreshMode) const {
    display.displayBuffer(refreshMode, fadingFix);
  }
  
@@ -56,7 +56,7 @@ index 1c119e37..f5bcc4a2 100644
  STR_LONG_PRESS_BEHAVIOR_OFF: "Desactivat"
  STR_LONG_PRESS_BEHAVIOR_SKIP: "Saltar capítols"
 diff --git a/lib/I18n/translations/english.yaml b/lib/I18n/translations/english.yaml
-index 97948163..05036124 100644
+index 0d873353..4dd3ca90 100644
 --- a/lib/I18n/translations/english.yaml
 +++ b/lib/I18n/translations/english.yaml
 @@ -180,6 +180,14 @@ STR_MOVE_FINISHED_TO_READ: "Move Finished Books to Read Folder"
@@ -74,7 +74,7 @@ index 97948163..05036124 100644
  STR_LANGUAGE: "Language"
  STR_KEYBOARD_LAYOUTS: "Keyboard Layouts"
  STR_ABOUT: "About"
-@@ -601,7 +609,7 @@ STR_FIRMWARE_FILE_OPEN_FAILED: "Cannot open file"
+@@ -602,7 +610,7 @@ STR_FIRMWARE_FILE_OPEN_FAILED: "Cannot open file"
  STR_FIRMWARE_WRITE_FAILED: "Firmware write failed"
  STR_FIRMWARE_UPDATE_DO_NOT_POWER_OFF: "Do not power off!"
  STR_RECOVERY_MODE: "Recovery Mode"
@@ -83,7 +83,7 @@ index 97948163..05036124 100644
  
  STR_HOME_SHORTCUT: "Home"
  STR_HOME_BUTTON: "Home Button Gestures"
-@@ -676,3 +684,6 @@ STR_TAPS_AND_GESTURES: "Taps and gestures"
+@@ -677,3 +685,6 @@ STR_TAPS_AND_GESTURES: "Taps and gestures"
  STR_PAGE_TURN_LONG_PRESS: "Page turn long press"
  
  STR_POWER_DOUBLE_CLICK: "Double click"
@@ -127,7 +127,7 @@ index 0fcc22e0..a174ceef 100644
  STR_LONG_PRESS_BEHAVIOR_OFF: "Dezactivat"
  STR_LONG_PRESS_BEHAVIOR_SKIP: "Sărire capitol"
 diff --git a/lib/I18n/translations/spanish.yaml b/lib/I18n/translations/spanish.yaml
-index 6d2c28f4..2e8d982c 100644
+index 6d2c28f4..212e2895 100644
 --- a/lib/I18n/translations/spanish.yaml
 +++ b/lib/I18n/translations/spanish.yaml
 @@ -121,6 +121,7 @@ STR_HAPTIC_MEDIUM: "Media"
@@ -146,7 +146,7 @@ index 6d2c28f4..2e8d982c 100644
  STR_LIBRARY: "Biblioteca"
  STR_LIBRARY_EMPTY: "No se encontraron libros en la tarjeta SD"
  STR_LIBRARY_NO_RESULTS: "No hay libros que coincidan con la búsqueda"
-@@ -173,6 +175,14 @@ STR_MOVE_FINISHED_TO_READ: "Mover libros terminados a la carpeta Read"
+@@ -173,9 +175,18 @@ STR_MOVE_FINISHED_TO_READ: "Mover libros terminados a la carpeta Read"
  STR_REFRESH_FREQ: "Frecuencia de refresco"
  STR_KOREADER_SYNC: "CrossPoint Sync"
  STR_CHECK_UPDATES: "Verificar actualizaciones"
@@ -161,7 +161,11 @@ index 6d2c28f4..2e8d982c 100644
  STR_LANGUAGE: "Idioma"
  STR_KEYBOARD_LAYOUTS: "Distribuciones de teclado"
  STR_CLEAR_READING_CACHE: "Borrar caché de lectura"
-@@ -246,6 +256,7 @@ STR_INVERTED_TAP: "Toque invertido"
++STR_DISPLAY_REFRESH: "Refresco de pantalla"
+ STR_USERNAME: "Usuario"
+ STR_PASSWORD: "Contraseña"
+ STR_SYNC_SERVER_URL: "URL del servidor de sinc."
+@@ -246,6 +257,7 @@ STR_INVERTED_TAP: "Toque invertido"
  STR_KOSYNC: "CrossPoint Sync"
  STR_BOOKMARK_OPTION: "Marcador"
  STR_DICTIONARY: "Diccionario"
@@ -169,7 +173,7 @@ index 6d2c28f4..2e8d982c 100644
  STR_READER_MENU: "Menú de lectura"
  STR_DISABLED: "Desactivado"
  STR_NOTO_SANS: "Noto Sans"
-@@ -413,6 +424,7 @@ STR_COVER_TRANSPARENT: "Portada + transparente"
+@@ -413,6 +425,7 @@ STR_COVER_TRANSPARENT: "Portada + transparente"
  STR_MENU_RECENT_BOOKS: "Libros recientes"
  STR_REMOVE_FROM_RECENTS: "Quitar de recientes"
  STR_CALIBRE_DESC: "Transferir contenido a este dispositivo"
@@ -177,7 +181,7 @@ index 6d2c28f4..2e8d982c 100644
  STR_FORGET_AND_REMOVE: "¿Desea olvidar la red y la contraseña guardada?"
  STR_FORGET_BUTTON: "Olvidar"
  STR_CALIBRE_STARTING: "Iniciando Calibre..."
-@@ -545,7 +557,7 @@ STR_FIRMWARE_FILE_OPEN_FAILED: "No se puede abrir el archivo"
+@@ -545,7 +558,7 @@ STR_FIRMWARE_FILE_OPEN_FAILED: "No se puede abrir el archivo"
  STR_FIRMWARE_WRITE_FAILED: "Falló la escritura del firmware"
  STR_FIRMWARE_UPDATE_DO_NOT_POWER_OFF: "¡No apague el dispositivo!"
  STR_RECOVERY_MODE: "Modo de recuperación"
@@ -186,7 +190,7 @@ index 6d2c28f4..2e8d982c 100644
  STR_ADD_HIDDEN_NETWORK: "Añadir red oculta..."
  STR_ENTER_WIFI_SSID: "Introduce el nombre de la red (SSID)"
  STR_DBL_CLICK_PWR_LIGHT: "Doble pulsación de encendido: luz"
-@@ -660,3 +672,12 @@ STR_KOREADER_CUSTOM_HEADER_1_NAME: "Nombre de la cabecera personalizada 1 de KOR
+@@ -660,3 +673,12 @@ STR_KOREADER_CUSTOM_HEADER_1_NAME: "Nombre de la cabecera personalizada 1 de KOR
  STR_KOREADER_CUSTOM_HEADER_1_VALUE: "Valor de la cabecera personalizada 1 de KOReader"
  STR_KOREADER_CUSTOM_HEADER_2_NAME: "Nombre de la cabecera personalizada 2 de KOReader"
  STR_KOREADER_CUSTOM_HEADER_2_VALUE: "Valor de la cabecera personalizada 2 de KOReader"
@@ -320,10 +324,10 @@ index 25de3d9f..faaac6d0 100644
  
  HalGPIO::WakeupReason HalGPIO::getWakeupReason() const {
 diff --git a/lib/hal/HalGPIO.h b/lib/hal/HalGPIO.h
-index 3f817092..96f25c46 100644
+index 22932658..64bb2dd7 100644
 --- a/lib/hal/HalGPIO.h
 +++ b/lib/hal/HalGPIO.h
-@@ -129,6 +129,9 @@ class HalGPIO {
+@@ -136,6 +136,9 @@ class HalGPIO {
    // Check if USB is connected
    bool isUsbConnected() const;
  
@@ -779,10 +783,22 @@ index f0068f87..ba9d4149 100644
  ; UC8279C SPI panel, GSLX680 touch, PCF8563 RTC, dedicated HSPI MicroSD (SPI,
  ; not SDMMC). 16MB DIO flash + 8MB OPI PSRAM. One binary serves the frontlit
 diff --git a/src/CrossPointSettings.cpp b/src/CrossPointSettings.cpp
-index 760f377f..68a55d8f 100644
+index 760f377f..212bcb07 100644
 --- a/src/CrossPointSettings.cpp
 +++ b/src/CrossPointSettings.cpp
-@@ -121,6 +121,12 @@ void CrossPointSettings::toJson(JsonDocument& doc) const {
+@@ -110,6 +110,11 @@ void CrossPointSettings::toJson(JsonDocument& doc) const {
+   doc["longPressMenuFunction"] = longPressMenuFunction;
+   doc["shortPwrBtn"] = shortPwrBtn;
+   doc["doublePwrBtn"] = doublePwrBtn;
++  // Battery profile — uses a dynamic setter in SettingsList so the new curve is
++  // applied immediately; the generic persistence loop skips dynamic entries.
++  if (BoardConfig::isPaperDiy()) {
++    doc["batteryProfile"] = batteryProfile;
++  }
+ 
+   // Language -- managed by LanguageSelectActivity, not in SettingsList.
+   // Stored as ISO code string ("EN", "DE", ...) for stability across enum reorders.
+@@ -121,6 +126,12 @@ void CrossPointSettings::toJson(JsonDocument& doc) const {
      doc["keyboardLayouts"] = keyboardLayouts;
    }
  
@@ -795,7 +811,20 @@ index 760f377f..68a55d8f 100644
    bleturner::writeJson(ble, doc);
  }
  
-@@ -308,6 +314,22 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
+@@ -270,6 +281,12 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
+   doublePwrBtn =
+       clamp(doc["doublePwrBtn"] | (uint8_t)((doc["doubleClickPwrLight"] | (uint8_t)1) ? PWR_FRONTLIGHT : IGNORE),
+             (uint8_t)SHORT_PWRBTN_COUNT, (uint8_t)PWR_FRONTLIGHT);
++  // Battery profile — a dynamic SettingsList entry, so load and clamp it here.
++  // Older or corrupt values fall back to the kit cell.
++  if (BoardConfig::isPaperDiy()) {
++    batteryProfile =
++        clamp(doc["batteryProfile"] | (uint8_t)BATTERY_KIT, (uint8_t)BATTERY_PROFILE_COUNT, (uint8_t)BATTERY_KIT);
++  }
+   if (BoardConfig::hasHomeKey() && doc["homeButtonLongPressAction"].isNull() &&
+       !doc["longPressMenuFunction"].isNull()) {
+     static constexpr HomeButtonAction LEGACY[] = {HomeButtonAction::Sync,       HomeButtonAction::Ignore,
+@@ -308,6 +325,22 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
      keyboardLayouts = doc["keyboardLayouts"].as<uint16_t>();
    }
  
@@ -819,10 +848,10 @@ index 760f377f..68a55d8f 100644
      needsResave = true;
    }
 diff --git a/src/CrossPointSettings.h b/src/CrossPointSettings.h
-index ce1b035d..02c4ea57 100644
+index 68bd51ee..be4af5a6 100644
 --- a/src/CrossPointSettings.h
 +++ b/src/CrossPointSettings.h
-@@ -195,6 +195,9 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
+@@ -196,6 +196,9 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
    // Hide battery percentage
    enum HIDE_BATTERY_PERCENTAGE { HIDE_NEVER = 0, HIDE_READER = 1, HIDE_ALWAYS = 2, HIDE_BATTERY_PERCENTAGE_COUNT };
  
@@ -832,7 +861,7 @@ index ce1b035d..02c4ea57 100644
    // Page turn button long press behavior
    enum LONG_PRESS_BUTTON_BEHAVIOR {
      OFF = 0,
-@@ -329,8 +332,15 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
+@@ -330,8 +333,15 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
    uint8_t paragraphAlignment = JUSTIFIED;
    // Auto-sleep timeout setting (default 10 minutes). Legacy sleepTimeout enum values are migration-only.
    uint8_t sleepTimeoutMinutes = 10;
@@ -849,7 +878,7 @@ index ce1b035d..02c4ea57 100644
    uint8_t hyphenationEnabled = 0;
  
    // Reader screen margin settings
-@@ -348,6 +358,9 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
+@@ -349,6 +359,9 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
    uint8_t opdsFilenameFormat = 0;
    // Hide battery percentage
    uint8_t hideBatteryPercentage = HIDE_NEVER;
@@ -860,7 +889,7 @@ index ce1b035d..02c4ea57 100644
    uint8_t longPressButtonBehavior = OFF;
    // Long-press Confirm function in EPUB reader (cycles through LONG_PRESS_MENU_FUNCTION values).
 diff --git a/src/SettingsList.cpp b/src/SettingsList.cpp
-index 7ed937c7..559fcffb 100644
+index 7ed937c7..be39be0b 100644
 --- a/src/SettingsList.cpp
 +++ b/src/SettingsList.cpp
 @@ -1,5 +1,7 @@
@@ -871,22 +900,28 @@ index 7ed937c7..559fcffb 100644
  #include <array>
  #include <utility>
  
-@@ -203,6 +205,19 @@ void forEachBaseSetting(SettingVisitor visit, void* context) {
+@@ -203,6 +205,25 @@ void forEachBaseSetting(SettingVisitor visit, void* context) {
             .withWebHidden());
  
    // --- System ---
 +  // PaperDIY DIY builds can carry the kit's 140 mAh cell or a larger cell.
 +  // The profile only changes the discharge curve, never the charger.
 +  if (BoardConfig::isPaperDiy()) {
-+    SettingInfo batteryProfile = SettingInfo::Enum(StrId::STR_BATTERY_PROFILE, &CrossPointSettings::batteryProfile,
-+                                                   {StrId::STR_BATTERY_KIT, StrId::STR_BATTERY_EXTENDED},
-+                                                   "batteryProfile", StrId::STR_CAT_SYSTEM);
-+    batteryProfile.valueSetter = [](uint8_t value) {
-+      SETTINGS.batteryProfile =
-+          value < CrossPointSettings::BATTERY_PROFILE_COUNT ? value : CrossPointSettings::BATTERY_KIT;
-+      powerManager.setPaperDiyBatteryProfile(SETTINGS.batteryProfile == CrossPointSettings::BATTERY_EXTENDED);
-+    };
-+    emit(batteryProfile);
++    // Dynamic so every consumer goes through the setter, which applies the new
++    // curve to the power manager immediately. A plain Enum writes valuePtr
++    // directly and the change would only take effect after a reboot.
++    emit(SettingInfo::DynamicEnum(
++        StrId::STR_BATTERY_PROFILE, {StrId::STR_BATTERY_KIT, StrId::STR_BATTERY_EXTENDED},
++        []() -> uint8_t {
++          return SETTINGS.batteryProfile < CrossPointSettings::BATTERY_PROFILE_COUNT ? SETTINGS.batteryProfile
++                                                                                     : CrossPointSettings::BATTERY_KIT;
++        },
++        [](uint8_t value) {
++          SETTINGS.batteryProfile =
++              value < CrossPointSettings::BATTERY_PROFILE_COUNT ? value : CrossPointSettings::BATTERY_KIT;
++          powerManager.setPaperDiyBatteryProfile(SETTINGS.batteryProfile == CrossPointSettings::BATTERY_EXTENDED);
++        },
++        "batteryProfile", StrId::STR_CAT_SYSTEM));
 +  }
    emit(SettingInfo::Value(
        StrId::STR_TIME_TO_SLEEP, &CrossPointSettings::sleepTimeoutMinutes,
@@ -920,10 +955,10 @@ index 2f8e3705..b3293acb 100644
    static void screenTrampoline(UiScreen& screen, void* user);
    static void rowActionTrampoline(const freeink::ui::ActionEvent& event, void* user);
 diff --git a/src/activities/home/FileBrowserActivity.cpp b/src/activities/home/FileBrowserActivity.cpp
-index c5f96cbd..bc8290bd 100644
+index 77d1e584..17ac23da 100644
 --- a/src/activities/home/FileBrowserActivity.cpp
 +++ b/src/activities/home/FileBrowserActivity.cpp
-@@ -592,7 +592,7 @@ bool FileBrowserActivity::handleButtons() {
+@@ -594,7 +594,7 @@ bool FileBrowserActivity::handleButtons() {
  }
  
  void FileBrowserActivity::render(RenderLock&& lock) {
@@ -933,7 +968,7 @@ index c5f96cbd..bc8290bd 100644
  }
  
 diff --git a/src/activities/library/LibraryListActivity.cpp b/src/activities/library/LibraryListActivity.cpp
-index c5c0535f..8e71089f 100644
+index 27a83392..73fe2754 100644
 --- a/src/activities/library/LibraryListActivity.cpp
 +++ b/src/activities/library/LibraryListActivity.cpp
 @@ -1065,7 +1065,7 @@ void LibraryListActivity::drawHoldHelp() const {
@@ -1412,7 +1447,7 @@ index c3159303..8169e335 100644
          state = State::PICKING;
          launchPicker();
 diff --git a/src/activities/settings/SettingsActivity.cpp b/src/activities/settings/SettingsActivity.cpp
-index 05248eb2..e5049afc 100644
+index f7af9f74..2632adcb 100644
 --- a/src/activities/settings/SettingsActivity.cpp
 +++ b/src/activities/settings/SettingsActivity.cpp
 @@ -24,6 +24,7 @@
@@ -1435,9 +1470,9 @@ index 05248eb2..e5049afc 100644
  #include "fontIds.h"
 +#include "platform/LauncherEnv.h"
  #include "util/PluginEvents.h"
+ #include "util/TaskWatchdog.h"
  
- namespace fui = freeink::ui;
-@@ -106,7 +109,7 @@ bool belongsToControlsGroup(const SettingInfo& setting, ControlsGroup group) {
+@@ -107,7 +110,7 @@ bool belongsToControlsGroup(const SettingInfo& setting, ControlsGroup group) {
  }
  
  // Device-only action rows added per section, beyond the shared list.
@@ -1446,7 +1481,7 @@ index 05248eb2..e5049afc 100644
  }  // namespace
  
  void SettingsActivity::rebuildSettings() {
-@@ -199,12 +202,19 @@ void SettingsActivity::rebuildSettings() {
+@@ -200,13 +203,20 @@ void SettingsActivity::rebuildSettings() {
    // OTA fetches this board's own release asset (see OtaUpdater); boards whose
    // asset isn't published yet just report no update available. The Picco's
    // stock layout has one app slot (partitions_picco.csv), so it cannot update
@@ -1461,6 +1496,7 @@ index 05248eb2..e5049afc 100644
 +      addAction(SettingsSection::General, StrId::STR_SD_FIRMWARE_UPDATE, SettingAction::SdFirmwareUpdate);
 +    }
    }
+   addAction(SettingsSection::General, StrId::STR_DISPLAY_REFRESH, SettingAction::DisplayRefresh);
    addAction(SettingsSection::General, StrId::STR_ABOUT, SettingAction::About);
 +  if (underLauncher) {
 +    addAction(SettingsSection::General, StrId::STR_EXIT_TO_LAUNCHER, SettingAction::ExitToLauncher);
@@ -1468,7 +1504,7 @@ index 05248eb2..e5049afc 100644
    rebuildRowItems();
  }
  
-@@ -452,6 +462,22 @@ void SettingsActivity::toggleSelectedSetting() {
+@@ -471,6 +481,22 @@ void SettingsActivity::toggleSelectedSetting() {
        case SettingAction::SdFirmwareUpdate:
          startActivityForResult(std::make_unique<SdFirmwareUpdateActivity>(renderer, mappedInput), resultHandler);
          break;
@@ -1491,7 +1527,7 @@ index 05248eb2..e5049afc 100644
        case SettingAction::DownloadFonts:
          startActivityForResult(std::make_unique<FontDownloadActivity>(renderer, mappedInput),
                                 [this](const ActivityResult&) {
-@@ -649,6 +675,6 @@ void SettingsActivity::drawFooter() {
+@@ -668,6 +694,6 @@ void SettingsActivity::drawFooter() {
  }
  
  void SettingsActivity::render(RenderLock&& lock) {
@@ -1500,11 +1536,11 @@ index 05248eb2..e5049afc 100644
    UiListActivity::render(std::move(lock));
  }
 diff --git a/src/activities/settings/SettingsActivity.h b/src/activities/settings/SettingsActivity.h
-index fdec5b46..152faee7 100644
+index 2a93bc86..fc57edb5 100644
 --- a/src/activities/settings/SettingsActivity.h
 +++ b/src/activities/settings/SettingsActivity.h
-@@ -25,6 +25,7 @@ enum class SettingAction {
-   ClearCache,
+@@ -26,6 +26,7 @@ enum class SettingAction {
+   DisplayRefresh,
    CheckForUpdates,
    SdFirmwareUpdate,
 +  ExitToLauncher,
@@ -1561,7 +1597,7 @@ index ce66bf4b..703b0393 100644
    mutable std::atomic<bool> uiReady{false};
  };
 diff --git a/src/components/themes/BaseTheme.cpp b/src/components/themes/BaseTheme.cpp
-index 3a39cc25..12ae475f 100644
+index 19f90280..1a5f2604 100644
 --- a/src/components/themes/BaseTheme.cpp
 +++ b/src/components/themes/BaseTheme.cpp
 @@ -83,7 +83,7 @@ void BaseTheme::drawBatteryLightningBolt(const GfxRenderer& renderer, int boltX,
@@ -1583,7 +1619,7 @@ index 3a39cc25..12ae475f 100644
    // strings only need to outlive the fui::header() call that consumes them.
    static char percentText[8];
 diff --git a/src/main.cpp b/src/main.cpp
-index 50355c8f..cde4258e 100644
+index 31eb8216..95e35875 100644
 --- a/src/main.cpp
 +++ b/src/main.cpp
 @@ -45,7 +45,9 @@
@@ -1621,9 +1657,9 @@ index 50355c8f..cde4258e 100644
 +}  // namespace drainTest
 +#endif
  
- // A wake hold must never become an in-app power-button action.  Boot may continue
- // while the button is held; swallow the one release that ends that wake gesture.
-@@ -459,6 +479,8 @@ void enterDeepSleep(bool fromTimeout = false) {
+ // Fonts
+ EpdFont notosans14RegularFont(&notosans_14_regular);
+@@ -457,6 +477,8 @@ void enterDeepSleep(bool fromTimeout = false) {
    // Sleep may end in a power-off (battery death, latch); persist the clock
    // floor now so a later cold boot resumes from it.
    trustedtime::note();
@@ -1632,7 +1668,7 @@ index 50355c8f..cde4258e 100644
  
    // Stop Bluetooth before plugin delivery can start WiFi; a timeout defers delivery.
    deepSleepInProgress = true;
-@@ -608,8 +630,11 @@ void setup() {
+@@ -607,8 +629,11 @@ void setup() {
    const auto recoveryButton = (BoardConfig::isX4Pro() || BoardConfig::isX4Classic()) ? MappedInputManager::Button::Down
                                                                                       : MappedInputManager::Button::Up;
    // The Picco has no second app slot to flash into (partitions_picco.csv).
@@ -1645,7 +1681,7 @@ index 50355c8f..cde4258e 100644
  
    halTiltSensor.begin();
    halClock.begin();
-@@ -619,12 +644,42 @@ void setup() {
+@@ -618,12 +643,42 @@ void setup() {
  #else
    LOG_INF("MAIN", "Device: %s", BoardConfig::ACTIVE.name);
  #endif
@@ -1690,7 +1726,7 @@ index 50355c8f..cde4258e 100644
      activityManager.goToFullScreenMessage("SD card error", EpdFontFamily::BOLD);
      return;
    }
-@@ -648,6 +703,7 @@ void setup() {
+@@ -647,6 +702,7 @@ void setup() {
      SETTINGS.readerMenuStyle = CrossPointSettings::READER_MENU_TOOLBAR;
    }
    SETTINGS.loadFromFile();
@@ -1698,15 +1734,15 @@ index 50355c8f..cde4258e 100644
    // Push the saved timezone's POSIX rule into the clock (migrating the legacy
    // UTC-offset setting on first boot after the update).
    timezones::applyToClock();
-@@ -675,6 +731,7 @@ void setup() {
+@@ -674,6 +730,7 @@ void setup() {
    // Restore the monotonic clock floor before anything reads time() (event
    // timestamps, loan-expiry checks).
    trustedtime::init();
 +  batteryLog.begin();
    bleturner::begin(pageturner::host, SETTINGS.ble);
  
-   // Brightness and warmth are always restored. A normal wake starts with the
-@@ -704,8 +761,8 @@ void setup() {
+   switch (wakeupReason) {
+@@ -691,8 +748,8 @@ void setup() {
      case HalGPIO::WakeupReason::AfterUSBPower:
        // Most devices return to sleep after a USB-powered cold boot.
        LOG_DBG("MAIN", "Wakeup reason: After USB Power");
@@ -1717,15 +1753,24 @@ index 50355c8f..cde4258e 100644
        // X4 Pro must stay awake so USB Serial/JTAG remains available after leaving
        // USB Drive and reconnecting the cable. Paper Mono has no armable GPIO wake
        // (its button is behind the PMIC). Metalio also needs native USB available
-@@ -832,6 +889,7 @@ void setup() {
+@@ -830,8 +887,15 @@ void setup() {
+     gpio.update();
    }
  
-   allowSleepAt = millis() + 2000;
+-  mappedInputManager.beginPowerInput(!isSilentReboot || suppressRestartPower, mappedInputManager.isPowerHeld());
++  // PMIC-only power buttons report the wake click as a one-tick event that can
++  // arrive after setup. Suppress that first release so the wake click cannot
++  // become an in-app page turn, refresh, or shutdown.
++  const bool pmicPowerWake = wakeupReason == HalGPIO::WakeupReason::PowerButton &&
++                             (BoardConfig::isPaperDiy() || BoardConfig::isPaperMono());
++  mappedInputManager.beginPowerInput(!isSilentReboot || suppressRestartPower || pmicPowerWake,
++                                     mappedInputManager.isPowerHeld() || pmicPowerWake);
+   allowSleepAt = millis() + (isSilentReboot ? 0 : 2000);
 +  lastActivityTime = millis();
  }
  
  void loop() {
-@@ -876,6 +934,7 @@ void loop() {
+@@ -876,6 +940,7 @@ void loop() {
  
    // After the exclusive-storage return: it saves settings to the SD card.
    handleSlideSwitch();
@@ -1733,7 +1778,7 @@ index 50355c8f..cde4258e 100644
    halTiltSensor.update(SETTINGS.tiltPageTurn, SETTINGS.orientation, activityManager.isReaderActivity());
  
    // Under the render lock, so a step never overlaps the themes' gauge reads.
-@@ -913,18 +972,101 @@ void loop() {
+@@ -913,18 +978,101 @@ void loop() {
          uint8_t* buf = display.getFrameBuffer();
          logSerial.write(buf, bufferSize);
          logSerial.printf("SCREENSHOT_END\n");
@@ -1837,7 +1882,7 @@ index 50355c8f..cde4258e 100644
      powerManager.setPowerSaving(false);  // Restore normal CPU frequency on user activity
    }
  
-@@ -970,7 +1112,15 @@ void loop() {
+@@ -967,7 +1115,15 @@ void loop() {
    const bool x4ProDoubleClickEnabled = BoardConfig::isX4Pro() && SETTINGS.doublePwrBtn != CrossPointSettings::IGNORE;
  
    const unsigned long sleepTimeoutMs = SETTINGS.getSleepTimeoutMs();
@@ -1854,9 +1899,9 @@ index 50355c8f..cde4258e 100644
      LOG_DBG("SLP", "Auto-sleep triggered after %lu ms of inactivity", sleepTimeoutMs);
      enterDeepSleep(true);
      // This should never be hit as `enterDeepSleep` calls esp_deep_sleep_start
-@@ -1002,10 +1152,10 @@ void loop() {
-     return;
-   }
+@@ -995,10 +1151,10 @@ void loop() {
+   // A completed long hold stays consumed even when sleep is temporarily blocked.
+   if (mappedInputManager.wasPowerReleaseConsumed()) return;
  
 -#if FREEINK_DEVICE_PAPERMONO
 -  // Paper Mono reports the PMIC power button as a one-tick click, so the held
@@ -1868,8 +1913,8 @@ index 50355c8f..cde4258e 100644
 +  // normal power-button meaning and shut down; explicit alternate bindings win.
    if ((SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP ||
         SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::IGNORE) &&
-       millis() >= allowSleepAt && mappedInputManager.wasReleased(MappedInputManager::Button::Power)) {
-@@ -1028,20 +1178,67 @@ void loop() {
+       millis() >= allowSleepAt && mappedInputManager.wasPowerSingleClick()) {
+@@ -1021,20 +1177,67 @@ void loop() {
      }
    }
  

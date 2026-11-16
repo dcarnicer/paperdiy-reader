@@ -3,8 +3,8 @@
 Este repo es un fork downstream de CrossPoint. La regla es simple: **el motor
 se sigue de upstream; el hardware y la UX PaperDIY viven en nuestro fork**.
 
-Última sincronización: CrossPoint `36b9430e` / FreeInk SDK `a8acebf`
-(15/11/2026).
+Última sincronización: CrossPoint `490813ff` / FreeInk SDK `3f3e4c1`
+(16/11/2026).
 
 ## Ramas y remotos
 
@@ -169,8 +169,8 @@ git add freeink-sdk && git commit -m "chore: vendor pristine SDK for patch basel
 
 | Patch | Base | Contenido |
 |---|---|---|
-| `patches/sdk.patch` | FreeInk SDK `a8acebf` | perfil, BoardPaperDiy, PM1, InputManager, PowerManager, driver LGFX, batería |
-| `patches/firmware.patch` | CrossPoint `36b9430e` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main, batería |
+| `patches/sdk.patch` | FreeInk SDK `3f3e4c1` | perfil, BoardPaperDiy, PM1, InputManager, PowerManager, driver LGFX, batería |
+| `patches/firmware.patch` | CrossPoint `490813ff` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main, batería |
 | `patches/paperdiy-support.patch` | ambos | concatenación de los dos anteriores |
 
 Orden de aplicación: `sdk.patch` y luego `firmware.patch`.

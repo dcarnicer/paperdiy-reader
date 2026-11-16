@@ -1,3 +1,23 @@
+diff --git a/freeink-sdk/docs/testing.md b/freeink-sdk/docs/testing.md
+index 1fd3c2f8..35fa3cfe 100644
+--- a/freeink-sdk/docs/testing.md
++++ b/freeink-sdk/docs/testing.md
+@@ -35,12 +35,14 @@ sh libs/book/ContentProtection/test/host/run.sh
+ sh libs/hardware/InputManager/test/host/run.sh
+ sh libs/hardware/InputManager/test/host/run_metalio.sh
+ sh libs/hardware/InputManager/test/host/run_papermono.sh
++sh libs/hardware/InputManager/test/host/run_paperdiy.sh
+ sh libs/hardware/HapticManager/test/host/run.sh
+ ```
+ 
+ The Paper Mono input suite disables touch and models PMIC click reports. It checks
+ that delayed polling does not lengthen clicks and that two-button Power chords
+-retain their hold duration, including clicks that overlap a chord.
++retain their hold duration, including clicks that overlap a chord. The PaperDIY
++suite applies the same checks to the M5PM1 click path.
+ 
+ The book suite also needs `zip`. It uses `sips` or ImageMagick's `convert` for
+ JPEG fixtures and optionally Pillow for progressive JPEG fixtures; the related
 diff --git a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp
 index 0e2cc958..298756a6 100644
 --- a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp
@@ -576,7 +596,7 @@ index 9781c2d5..68b83e33 100644
    }
    return 0;
 diff --git a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
-index 800b2485..4aaad92c 100644
+index e1a78b5f..bcd36d97 100644
 --- a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
 +++ b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
 @@ -18,6 +18,7 @@
@@ -718,7 +738,7 @@ index 800b2485..4aaad92c 100644
  // --- EEGO Reader A4 — ESP32-S3 N16R8, UC8279C (768x552) + GSLX680 touch -------
  // CrossPoint fork device; pins/resolution/calibration from stock-firmware RE,
  // none hardware-confirmed. See docs/eego-a4-support.md.
-@@ -2140,7 +2205,7 @@ constexpr uint32_t cmax(uint32_t a, uint32_t b) { return a > b ? a : b; }
+@@ -2141,7 +2206,7 @@ constexpr uint32_t cmax(uint32_t a, uint32_t b) { return a > b ? a : b; }
  constexpr uint32_t panelBytes(const BoardProfile& p) {
    return static_cast<uint32_t>(p.displayWidth / 8) * p.displayHeight;
  }
@@ -727,7 +747,7 @@ index 800b2485..4aaad92c 100644
      cmax(cmax(FREEINK_DEVICE_X4 ? panelBytes(XTEINK_X4) : 0u, FREEINK_DEVICE_X3 ? panelBytes(XTEINK_X3) : 0u),
           cmax(FREEINK_DEVICE_M5 ? panelBytes(M5STACK_PAPER_COLOR) : 0u,
                FREEINK_DEVICE_MURPHY ? panelBytes(MURPHY_M3) : 0u)),
-@@ -2158,6 +2223,8 @@ constexpr uint32_t MAX_FRAMEBUFFER_BYTES = cmax(
+@@ -2159,6 +2224,8 @@ constexpr uint32_t MAX_FRAMEBUFFER_BYTES = cmax(
                          cmax(FREEINK_DEVICE_WS397 ? panelBytes(WS_EPAPER_397) : 0u,
                               cmax(FREEINK_DEVICE_METALIO_EINK4 ? panelBytes(METALIO_EINK4) : 0u,
                                    FREEINK_DEVICE_PICCO ? panelBytes(PICCO) : 0u)))))));
@@ -736,7 +756,7 @@ index 800b2485..4aaad92c 100644
  
  // Compile-time default device — the profile ACTIVE starts as. With a single
  // device in the build this is the only device; with several same-MCU devices it
-@@ -2188,6 +2255,8 @@ constexpr BoardProfile DEFAULT_DEVICE = LILYGO_T5S3;
+@@ -2189,6 +2256,8 @@ constexpr BoardProfile DEFAULT_DEVICE = LILYGO_T5S3;
  constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_V11;
  #elif FREEINK_DEVICE_PAPERS3
  constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_S3;
@@ -745,7 +765,7 @@ index 800b2485..4aaad92c 100644
  #elif FREEINK_DEVICE_STICKY
  constexpr BoardProfile DEFAULT_DEVICE = STICKY;
  #elif FREEINK_DEVICE_X4PRO
-@@ -2336,6 +2405,11 @@ inline bool selectDevice(Board which) {
+@@ -2337,6 +2406,11 @@ inline bool selectDevice(Board which) {
        ACTIVE = M5PAPER_S3;
        break;
  #endif
@@ -757,7 +777,7 @@ index 800b2485..4aaad92c 100644
  #if FREEINK_DEVICE_EEGO_A4
      case Board::EegoA4:
        ACTIVE = EEGO_A4;
-@@ -2378,6 +2452,7 @@ inline bool isSilkscreen() { return ACTIVE.board == Board::Silkscreen; }
+@@ -2379,6 +2453,7 @@ inline bool isSilkscreen() { return ACTIVE.board == Board::Silkscreen; }
  [[deprecated("renamed to isSilkscreen()")]] inline bool isDeLink() { return isSilkscreen(); }
  inline bool isM5PaperV11() { return ACTIVE.board == Board::M5PaperV11; }
  inline bool isM5PaperS3() { return ACTIVE.board == Board::M5PaperS3; }
@@ -1102,8 +1122,21 @@ index 00000000..de106962
 +}
 +
 +}  // namespace freeink
+diff --git a/freeink-sdk/libs/hardware/InputManager/include/InputManager.h b/freeink-sdk/libs/hardware/InputManager/include/InputManager.h
+index 167249f9..616d3172 100644
+--- a/freeink-sdk/libs/hardware/InputManager/include/InputManager.h
++++ b/freeink-sdk/libs/hardware/InputManager/include/InputManager.h
+@@ -466,7 +466,7 @@ class InputManager {
+   uint8_t twoButtonPhysicalState;
+   unsigned long twoButtonPressStart;
+   bool twoButtonLongPressActive;
+-#if FREEINK_DEVICE_PAPERMONO
++#if FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY
+   bool powerButtonClick = false;  // Retained through release; polling latency is not click duration.
+ #endif
+ 
 diff --git a/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp b/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
-index cff5222b..f7eced83 100644
+index 179efa85..a1cb0945 100644
 --- a/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
 +++ b/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
 @@ -1,5 +1,9 @@
@@ -1126,18 +1159,209 @@ index cff5222b..f7eced83 100644
  #if FREEINK_DEVICE_METALIO_EINK4
    if (BoardConfig::isMetalioEInk4()) freeink::metalio::ensureBooted(METALIO_BOOT_WAIT_MS);
  #endif
-@@ -574,6 +581,11 @@ void InputManager::updateDigitalTwoButton(const unsigned long currentTime) {
+@@ -564,16 +571,29 @@ void InputManager::updateDigitalTwoButton(const unsigned long currentTime) {
+   const uint8_t physical = static_cast<uint8_t>((up ? 1u : 0u) | (down ? 2u : 0u));
+   uint8_t auxiliaryState = serviceTouch();
+   if (s_buttonHook) auxiliaryState |= s_buttonHook();
++#if FREEINK_DEVICE_PAPERMONO || (FREEINK_DEVICE_PAPERDIY && PAPERDIY_PM1_APP_POWER_BUTTON)
++  bool pmicClicked = false;
++#endif
+ #if FREEINK_DEVICE_PAPERMONO
+   // The power button reaches only the PM1 PMIC; clicks surface here as a
+   // one-tick BTN_POWER pulse in the STATE, so applyStateChange() emits the
+   // press this update and the release on the next. Never write the event
+   // masks directly — applyStateChange() assigns them from the state diff,
+   // clobbering direct writes the same tick.
+-  const bool pmicClicked = freeink::papermono::pollPowerButtonClicked(currentTime);
++  pmicClicked = freeink::papermono::pollPowerButtonClicked(currentTime);
+   if (pmicClicked) {
      auxiliaryState |= static_cast<uint8_t>(1u << BTN_POWER);
    }
- #endif
++#endif
 +#if FREEINK_DEVICE_PAPERDIY && PAPERDIY_PM1_APP_POWER_BUTTON
 +  if (BoardPaperDiy::pollPowerButtonClicked(currentTime)) {
 +    auxiliaryState |= static_cast<uint8_t>(1u << BTN_POWER);
++    pmicClicked = true;
 +  }
 +#endif
++#if FREEINK_DEVICE_PAPERMONO || (FREEINK_DEVICE_PAPERDIY && PAPERDIY_PM1_APP_POWER_BUTTON)
++  // Retain the click through its release: the next poll gap is loop latency,
++  // not a physical hold. A real two-button chord clears it below.
+   if ((auxiliaryState & (1u << BTN_POWER)) && !isPressed(BTN_POWER)) powerButtonClick = pmicClicked;
+ #endif
  
-   if (physical != twoButtonPhysicalState) {
-     const uint8_t releasedPhysical = twoButtonPhysicalState;
+@@ -610,7 +630,7 @@ void InputManager::updateDigitalTwoButton(const unsigned long currentTime) {
+   applyStateChange(nextState, currentTime);
+   if (physical == 3 && twoButtonLongPressActive) {
+     powerButtonPressStart = twoButtonPressStart;
+-#if FREEINK_DEVICE_PAPERMONO
++#if FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY
+     // A chord can take over a PMIC pulse without a new logical press edge.
+     powerButtonClick = false;
+ #endif
+@@ -701,7 +721,7 @@ unsigned long InputManager::getHeldTime() const {
+ }
+ 
+ unsigned long InputManager::getPowerButtonHeldTime() const {
+-#if FREEINK_DEVICE_PAPERMONO
++#if FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY
+   if (powerButtonClick) return 0;
+ #endif
+   if (isPressed(BTN_POWER)) {
+diff --git a/freeink-sdk/libs/hardware/InputManager/test/host/paperdiy_stubs/BoardPaperDiy.h b/freeink-sdk/libs/hardware/InputManager/test/host/paperdiy_stubs/BoardPaperDiy.h
+new file mode 100644
+index 00000000..07d58a39
+--- /dev/null
++++ b/freeink-sdk/libs/hardware/InputManager/test/host/paperdiy_stubs/BoardPaperDiy.h
+@@ -0,0 +1,19 @@
++#pragma once
++
++#ifndef PAPERDIY_PM1_APP_POWER_BUTTON
++#define PAPERDIY_PM1_APP_POWER_BUTTON 1
++#endif
++
++namespace BoardPaperDiy {
++
++inline bool powerButtonClicked = false;
++
++inline bool ensureBooted() { return true; }
++
++inline bool pollPowerButtonClicked(unsigned long) {
++  const bool clicked = powerButtonClicked;
++  powerButtonClicked = false;
++  return clicked;
++}
++
++}  // namespace BoardPaperDiy
+diff --git a/freeink-sdk/libs/hardware/InputManager/test/host/run_paperdiy.sh b/freeink-sdk/libs/hardware/InputManager/test/host/run_paperdiy.sh
+new file mode 100755
+index 00000000..3cafa345
+--- /dev/null
++++ b/freeink-sdk/libs/hardware/InputManager/test/host/run_paperdiy.sh
+@@ -0,0 +1,10 @@
++#!/bin/sh
++set -eu
++cd "$(dirname "$0")"
++BUILD_DIR=$(mktemp -d "${TMPDIR:-/tmp}/freeink-paperdiy-input.XXXXXX")
++trap 'rm -rf "$BUILD_DIR"' EXIT
++c++ -std=c++17 -Wall -Wextra -Wno-unused-parameter \
++  -DFREEINK_DEVICE_PAPERDIY=1 -DFREEINK_CAP_TOUCH=0 -DARDUINO_USB_CDC_ON_BOOT=1 \
++  -Ipaperdiy_stubs -Imetalio_stubs -I../../include -I../../../BoardConfig/include \
++  test_paperdiy.cpp ../../src/InputManager.cpp -o "$BUILD_DIR/test_paperdiy"
++"$BUILD_DIR/test_paperdiy"
+diff --git a/freeink-sdk/libs/hardware/InputManager/test/host/test_paperdiy.cpp b/freeink-sdk/libs/hardware/InputManager/test/host/test_paperdiy.cpp
+new file mode 100644
+index 00000000..382e98fd
+--- /dev/null
++++ b/freeink-sdk/libs/hardware/InputManager/test/host/test_paperdiy.cpp
+@@ -0,0 +1,107 @@
++#include <BoardPaperDiy.h>
++#include <InputManager.h>
++
++#include <cassert>
++#include <cstdio>
++
++namespace {
++
++void tick(InputManager& input, unsigned long now, unsigned sides, bool click = false) {
++  fakeNow = now;
++  gpioLevels[BoardConfig::ACTIVE.input.up] = sides & 1 ? LOW : HIGH;
++  gpioLevels[BoardConfig::ACTIVE.input.down] = sides & 2 ? LOW : HIGH;
++  BoardPaperDiy::powerButtonClicked = click;
++  input.update();
++}
++
++}  // namespace
++
++int main() {
++  // A PMIC pulse is a click, not a hold, even if the next poll is late.
++  for (unsigned sides : {0u, 1u, 2u, 3u}) {
++    InputManager input;
++    tick(input, 1000, sides);
++    tick(input, 1100, sides, true);
++    assert(input.wasPressed(InputManager::BTN_POWER));
++    assert(input.isPressed(InputManager::BTN_POWER));
++    assert(input.getPowerButtonHeldTime() == 0);
++    fakeNow = 1600;
++    assert(input.getPowerButtonHeldTime() == 0);
++    tick(input, 1600, sides);
++    assert(input.wasReleased(InputManager::BTN_POWER));
++    assert(!input.isPressed(InputManager::BTN_POWER));
++    assert(input.getPowerButtonHeldTime() == 0);
++    tick(input, 1601, sides);
++    assert(!input.wasReleased(InputManager::BTN_POWER));
++    assert(input.getPowerButtonHeldTime() == 0);
++  }
++
++  // A click during a side-button hold keeps the side action and stays a click.
++  for (unsigned sides : {1u, 2u}) {
++    InputManager input;
++    tick(input, 2000, sides);
++    tick(input, 2100, sides, true);
++    assert(input.wasPressed(InputManager::BTN_POWER));
++    assert(input.getPowerButtonHeldTime() == 0);
++    const auto sideAction = sides == 1 ? InputManager::BTN_BACK : InputManager::BTN_CONFIRM;
++    tick(input, 2700, sides);
++    assert(input.wasReleased(InputManager::BTN_POWER));
++    assert(input.getPowerButtonHeldTime() == 0);
++    assert(input.isPressed(sideAction));
++  }
++
++  // A PMIC click during an active chord does not duplicate Power or reset the
++  // chord's hold duration.
++  InputManager input;
++  tick(input, 3000, 3);
++  tick(input, 3650, 3);
++  assert(input.wasPressed(InputManager::BTN_POWER));
++  assert(input.isPressed(InputManager::BTN_POWER));
++  assert(input.getPowerButtonHeldTime() == 650);
++  tick(input, 3800, 3, true);
++  assert(!input.wasPressed(InputManager::BTN_POWER));
++  assert(input.getPowerButtonHeldTime() == 800);
++  tick(input, 4000, 0);
++  assert(input.wasReleased(InputManager::BTN_POWER));
++  assert(input.getPowerButtonHeldTime() == 1000);
++
++  // A click before the chord matures must not create a second Power press.
++  {
++    InputManager early;
++    tick(early, 6000, 3);
++    tick(early, 6100, 3, true);
++    assert(early.wasPressed(InputManager::BTN_POWER));
++    assert(early.getPowerButtonHeldTime() == 0);
++    tick(early, 6650, 3);
++    assert(!early.wasPressed(InputManager::BTN_POWER));
++    assert(early.isPressed(InputManager::BTN_POWER));
++    assert(early.getPowerButtonHeldTime() == 650);
++    tick(early, 7000, 0);
++    assert(early.wasReleased(InputManager::BTN_POWER));
++    assert(early.getPowerButtonHeldTime() == 1000);
++  }
++
++  // A click on the physical transition into the chord keeps the chord's hold.
++  {
++    InputManager transition;
++    tick(transition, 8000, 3, true);
++    assert(transition.wasPressed(InputManager::BTN_POWER));
++    assert(transition.getPowerButtonHeldTime() == 0);
++    tick(transition, 8650, 3);
++    assert(!transition.wasPressed(InputManager::BTN_POWER));
++    assert(transition.getPowerButtonHeldTime() == 650);
++    tick(transition, 9000, 0);
++    assert(transition.wasReleased(InputManager::BTN_POWER));
++    assert(transition.getPowerButtonHeldTime() == 1000);
++  }
++
++  // A fresh click after the chord must not inherit the chord's hold time.
++  tick(input, 4100, 0, true);
++  assert(input.wasPressed(InputManager::BTN_POWER));
++  assert(input.getPowerButtonHeldTime() == 0);
++  tick(input, 5000, 0);
++  assert(input.wasReleased(InputManager::BTN_POWER));
++  assert(input.getPowerButtonHeldTime() == 0);
++
++  std::puts("PaperDIY PMIC click duration and two-button Power chords passed");
++}
 diff --git a/freeink-sdk/libs/hardware/PowerManager/src/PowerManager.cpp b/freeink-sdk/libs/hardware/PowerManager/src/PowerManager.cpp
 index 890a1650..d53fa219 100644
 --- a/freeink-sdk/libs/hardware/PowerManager/src/PowerManager.cpp
@@ -1200,10 +1424,10 @@ index 890a1650..d53fa219 100644
    if (BoardConfig::isMetalioEInk4()) {
      metalio::setAmplifier(false);
 diff --git a/freeink-sdk/libs/hardware/SDCardManager/include/SDCardManager.h b/freeink-sdk/libs/hardware/SDCardManager/include/SDCardManager.h
-index 7dd1d82c..7cf2a46a 100644
+index 2b8635a9..8d2f15d1 100644
 --- a/freeink-sdk/libs/hardware/SDCardManager/include/SDCardManager.h
 +++ b/freeink-sdk/libs/hardware/SDCardManager/include/SDCardManager.h
-@@ -32,6 +32,14 @@ class SDCardManager {
+@@ -33,6 +33,14 @@ class SDCardManager {
    SDCardManager();
    bool begin();
    bool ready() const;
@@ -1219,10 +1443,10 @@ index 7dd1d82c..7cf2a46a 100644
    uint64_t sdTotalBytes() const;
    // Returns used space in bytes, cached with a 20-second TTL (freeClusterCount
 diff --git a/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp b/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp
-index 35e7cadf..931f7b41 100644
+index 8821d8ad..ea4be16d 100644
 --- a/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp
 +++ b/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp
-@@ -22,6 +22,13 @@ SDCardManager::SDCardManager() {}
+@@ -23,6 +23,13 @@ SDCardManager::SDCardManager() {}
  
  bool SDCardManager::begin() {
    if (initialized) return true;
@@ -1236,7 +1460,7 @@ index 35e7cadf..931f7b41 100644
  #if FREEINK_DEVICE_METALIO_EINK4
    if (BoardConfig::isMetalioEInk4() && !freeink::metalio::ensureBooted()) return false;
  #endif
-@@ -122,6 +129,13 @@ void SDCardManager::shutdown() {
+@@ -126,6 +133,13 @@ bool SDCardManager::shutdown() {
  SDCardManager::SDCardManager() : sd() {}
  
  bool SDCardManager::begin() {
@@ -1250,9 +1474,9 @@ index 35e7cadf..931f7b41 100644
    // Profiles whose SD CS is not yet known leave it unassigned so the card stays
    // dormant — bail out before any pin is touched, or SdFat drives "pin 255" and
    // floods the log. (Native-SDMMC boards like the X4 Pro take the #if branch above.)
-@@ -286,6 +300,36 @@ bool SDCardManager::ready() const {
-   return initialized;
- }
+@@ -306,6 +320,36 @@ bool SDCardManager::syncFilesystem() {
+ 
+ bool SDCardManager::ready() const { return initialized; }
  
 +bool SDCardManager::isCardPresent() const {
 +  const int8_t pin = BoardConfig::ACTIVE.sd.detect;
@@ -1306,10 +1530,10 @@ index 0d421f71..606a138d 100644
  class Print {
   public:
 diff --git a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/BoardConfig.h b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/BoardConfig.h
-index 7b414b0d..d6b8c43b 100644
+index af35a31b..a83bb0d7 100644
 --- a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/BoardConfig.h
 +++ b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/BoardConfig.h
-@@ -15,6 +15,7 @@ struct Profile {
+@@ -23,6 +23,7 @@ struct Profile {
      int cs = 1, sclk = 2, mosi = 3, miso = 4, powerEnable = -1;
      bool separateSpi = false, powerActiveHigh = true;
      uint32_t spiHz = 0;
@@ -1318,19 +1542,19 @@ index 7b414b0d..d6b8c43b 100644
    struct {
      int cs = -1, sclk = -1, mosi = -1;
 diff --git a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/SdFat.h b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/SdFat.h
-index 0f9e8804..ff1c3b76 100644
+index 10468759..8e50534a 100644
 --- a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/SdFat.h
 +++ b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/SdFat.h
-@@ -77,6 +77,7 @@ class FsVolume {
- class SdFat : public FsVolume {
+@@ -106,6 +106,7 @@ class SdFat : public FsVolume {
   public:
+   FsBlockDeviceInterface* card() { return &card_; }
    bool begin(uint8_t, uint32_t) { return true; }
 +  void end() {}
    int sdErrorCode() const { return 0; }
    int sdErrorData() const { return 0; }
- };
+ 
 diff --git a/freeink-sdk/libs/hardware/SDCardManager/test/host/test_stream.cpp b/freeink-sdk/libs/hardware/SDCardManager/test/host/test_stream.cpp
-index a67a9168..399cdb47 100644
+index 5a471143..746084fe 100644
 --- a/freeink-sdk/libs/hardware/SDCardManager/test/host/test_stream.cpp
 +++ b/freeink-sdk/libs/hardware/SDCardManager/test/host/test_stream.cpp
 @@ -67,11 +67,26 @@ int main() {
