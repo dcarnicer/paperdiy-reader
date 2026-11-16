@@ -60,11 +60,30 @@ falla con un mensaje que pide flashear `paperdiy-test`.
 
 ## Resultado actual
 
-> **Pendiente:** la última ejecución completa registrada es la de abajo
-> (`2.0.0-4`, repetida sobre las fuentes de `2.0.0-5`). No hay un `make smoke`
-> completo de `2.0.0-6` ni `2.0.0-7`. Hay que ejecutarlo con `paperdiy-test` y
-> repetir la revisión diferida de ghosting y sleep/wake antes de la próxima
-> release.
+> **Estado:** smoke completo ejecutado el 16/11/2026 sobre el árbol del sync
+> `490813ff` (versión `2.0.0-7`): PASS, 25 pasos. Queda pendiente el salto
+> visual de la curva de batería (necesita <90 %) y la revisión de autonomía.
+
+`2026-11-16`, PaperDIY `2.0.0-7` + sync `490813ff` (`paperdiy-test`), run
+`20261116-194343`: **PASS, 25 pasos**. Tras restaurar y hacer un ciclo de power,
+el dispositivo volvió a Home en español con los recents originales y sin
+`SmokeTest`.
+
+Pruebas manuales del 16/11/2026 sobre el build de producción `2.0.0-7`
+(`firmware.bin` del árbol mergeado):
+
+- Wake-click tras A+B en batería: vuelve a la misma página, sin pasar página
+  ni abrir menús.
+- SD en caliente: en Home no aparece aviso (la UI sigue respondiendo); con un
+  libro abierto sale `Insert SD card` y no se cuelga; al reinsertar vuelve a
+  Home.
+- Perfil de batería: `Extendida` persiste tras apagar/encender; el cambio
+  desde la web se refleja en el lector sin reiniciar.
+- Click de power durante un refresco: no reproducible a mano por la duración
+  del refresco; la normalización del pulso PMIC está cubierta por
+  `freeink-sdk/libs/hardware/InputManager/test/host/test_paperdiy.cpp`.
+- Pendiente: salto visual de la curva al cambiar de perfil, que requiere
+  batería por debajo del ~90 %.
 
 `2026-11-12`, PaperDIY `2.0.0-4` (`paperdiy-test`), run `20261112-124506`:
 **PASS, 25 pasos**. Es una repetición sobre las mismas fuentes que la release

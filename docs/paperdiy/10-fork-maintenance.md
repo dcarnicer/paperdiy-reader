@@ -220,13 +220,12 @@ Estado: release `2.0.0-6` publicada (tag `v2.0.0-6`) sobre CrossPoint
   y sleep/wake.
 - Smoke histórico pendiente: BLE real, Calibre completo y OTA completa.
 
-> **Regresión pendiente antes de la próxima release.** La última ejecución
-> completa de `make smoke` es la de `2.0.0-4` (repetida sobre las fuentes de
-> `2.0.0-5`). No hay una ejecución completa registrada para `2.0.0-6` ni
-> `2.0.0-7`; en `2.0.0-6` solo se hizo un smoke básico. Antes de publicar la
-> siguiente versión hay que ejecutar `make smoke` con `paperdiy-test` y
-> completar la revisión diferida de ghosting y sleep/wake. Los resultados
-> históricos no se reescriben como si hubieran pasado.
+> **Regresión.** La última ejecución completa de `make smoke` es la del
+> 16/11/2026 sobre el árbol del sync `490813ff` (run `20261116-194343`, PASS 25
+> pasos). `2.0.0-6` no tiene una ejecución propia. Antes de publicar la próxima
+> versión hay que repetir el smoke y completar la revisión de ghosting,
+> autonomía y el salto visual de la curva de batería. Los resultados históricos
+> no se reescriben como si hubieran pasado.
 
 ## OTA
 

@@ -373,7 +373,7 @@ considerar el port "estable".
 | 4 | Refresco quality/text/fast/fastest | tiempos y calidad aceptables | `fast` 569–620 ms, `text` 1538–1542 ms; `quality` ≈1538 ms con mapeo temporal; `fastest` no se usa (06/11) |
 | 5 | A/B cortos | mover selección / página | OK (28/10) |
 | 6 | A/B largos | back / confirm | Back/confirm por inyección (05/11); falta hold físico |
-| 7 | A+B | evento power / dormir | Apaga vía PM1 con USB (05/11) |
+| 7 | A+B | evento power / dormir | A+B en batería apaga; power enciende (16/11) |
 | 8 | Batería | % y mV coherentes; carga detectada | OK (31/10) |
 | 9 | SD | monta, lista libros, caché | OK (04/11) |
 | 10 | EPUB grande | abre y pagina sin OOM | 7,3 MB OK (04/11) |
@@ -381,16 +381,18 @@ considerar el port "estable".
 | 12 | Diccionario | indexa y busca | N/T |
 | 13 | Wi-Fi | scan/join; web UI | OK (28/10) |
 | 14 | OPDS/Calibre | descarga un libro | OPDS Gutenberg y Calibre OK (04–05/11) |
-| 15 | Deep sleep | duerme y despierta con A/B | A+B con USB apagó vía PM1; A no despertó (05/11) |
+| 15 | Deep sleep | duerme y despierta con A/B | A+B en batería apaga; power enciende y conserva página (16/11) |
 | 16 | Consumo sleep | < 0,5 mA idealmente | Pendiente |
-| 17 | Wake | no hace page turn accidental | Power despierta y conserva página; auto-sleep 1 min con portada OK; A no despierta tras A+B (05/11) |
+| 17 | Wake | no hace page turn accidental | Power despierta y conserva página; wake-click sin acción repetida (16/11); auto-sleep 1 min con portada OK (05/11) |
 | 18 | OTA | actualiza sin brick | OK (04/11) |
 | 19 | Recuperación | download mode + factory bin | OK (04/11) |
 | 20 | Autonomía | horas de lectura reales | Pendiente |
-| 21 | Power PM1 corto | entrega `BTN_POWER` y duerme/apaga | OK (04/11) |
-| 22 | Shutdown en batería | el PM1 corta y un clic enciende | OK (04/11) |
+| 21 | Power PM1 corto | entrega `BTN_POWER` y duerme/apaga | OK (04/11); click durante refresco no reproducible a mano, cubierto por test host (16/11) |
+| 22 | Shutdown en batería | el PM1 corta y un clic enciende | OK (04/11); wake-click sin acción repetida (16/11) |
 | 23 | Fallback USB | con USB, deep sleep y wake A/B | No aplica: PM1 apagó con USB (05/11) |
 | 24 | OTA fork | no instala firmware oficial; URL propia si se publica | No instala firmware oficial (04/11) |
+| 25 | Perfil de batería | aplica en caliente y persiste | Persistencia y cambio web OK; salto visual pendiente <90 % (16/11) |
+| 26 | SD en caliente | quitar/reinsertar sin colgar | Home sin aviso; con libro abierto aviso y vuelta a Home (16/11) |
 
 ## Riesgos y mitigaciones
 
