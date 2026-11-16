@@ -110,6 +110,11 @@ void CrossPointSettings::toJson(JsonDocument& doc) const {
   doc["longPressMenuFunction"] = longPressMenuFunction;
   doc["shortPwrBtn"] = shortPwrBtn;
   doc["doublePwrBtn"] = doublePwrBtn;
+  // Battery profile — uses a dynamic setter in SettingsList so the new curve is
+  // applied immediately; the generic persistence loop skips dynamic entries.
+  if (BoardConfig::isPaperDiy()) {
+    doc["batteryProfile"] = batteryProfile;
+  }
 
   // Language -- managed by LanguageSelectActivity, not in SettingsList.
   // Stored as ISO code string ("EN", "DE", ...) for stability across enum reorders.
@@ -276,6 +281,12 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
   doublePwrBtn =
       clamp(doc["doublePwrBtn"] | (uint8_t)((doc["doubleClickPwrLight"] | (uint8_t)1) ? PWR_FRONTLIGHT : IGNORE),
             (uint8_t)SHORT_PWRBTN_COUNT, (uint8_t)PWR_FRONTLIGHT);
+  // Battery profile — a dynamic SettingsList entry, so load and clamp it here.
+  // Older or corrupt values fall back to the kit cell.
+  if (BoardConfig::isPaperDiy()) {
+    batteryProfile =
+        clamp(doc["batteryProfile"] | (uint8_t)BATTERY_KIT, (uint8_t)BATTERY_PROFILE_COUNT, (uint8_t)BATTERY_KIT);
+  }
   if (BoardConfig::hasHomeKey() && doc["homeButtonLongPressAction"].isNull() &&
       !doc["longPressMenuFunction"].isNull()) {
     static constexpr HomeButtonAction LEGACY[] = {HomeButtonAction::Sync,       HomeButtonAction::Ignore,
