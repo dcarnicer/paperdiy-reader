@@ -35,7 +35,8 @@ a diario.
 > con portada verificadas el 05/11/2026. Lectura larga: 250+ cambios de página
 > sin errores ni fugas el 06/11/2026. KOReader Sync validado contra un servidor
 > KOSync local el 06/11/2026. Pendiente: emparejar un mando BLE, consumo en
-> sleep/autonomía, batería 604050 y revisión visual física del ghosting. Ver
+> sleep, `make smoke` completo de `2.0.0-6`/`2.0.0-7` y revisión visual física
+> del ghosting. Ver
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md).
 >
 > **Fork downstream:** `main` es un espejo de `upstream/develop`; `paperdiy`
@@ -215,7 +216,7 @@ imagen que va a M5Burner; Launcher copia solo la app.
 > flashees `firmware.bin` en `0x10000` con Launcher instalado.
 
 El lector detecta Launcher y
-muestra `Ajustes > General > Salir a M5Launcher`; la actualización por SD se
+muestra `Ajustes > Sistema > Salir a M5Launcher`; la actualización por SD se
 oculta porque Launcher es quien gestiona las particiones OTA. Para que el
 lector despierte sin pasar por la pantalla de Launcher, configura en Launcher
 `CFG > GPIO on boot starts Launcher` = A: Launcher solo aparecerá al encender
@@ -264,14 +265,16 @@ disponibles en [English](docs/paperdiy/README.en.md),
 
 ## Limitaciones conocidas
 
-- Pendientes de medir: LUTs/ghosting tras muchas páginas, corriente de sueño
-  y autonomía.
+- Pendientes de medir: LUTs/ghosting tras muchas páginas y corriente de sueño.
+  La autonomía solo se midió con la 604050 extendida (45,4 h y 5.448 páginas
+  en una descarga real); la celda original de 140 mAh no se midió en esa
+  prueba. Ambas curvas siguen pendientes de validar en lectura normal.
 - Sin táctil, frontlight, RTC, IMU ni audio. La UI debe funcionar con 2 botones.
 - Batería de 140 mAh: al dormir, el firmware pide apagado al PM1. Si el PM1
   corta la alimentación (lo habitual, también con USB), solo el botón power
   vuelve a encender. Verificado el 05/11/2026: A+B con USB apagó vía PM1 y A
   no despertó. Si el USB mantiene la placa viva, el fallback es deep sleep
-  con wake A/B. La autonomía sigue pendiente de medir.
+  con wake A/B.
 - El botón físico de power lo gestiona el M5PM1; el firmware lo recibe como
   evento I²C, no como GPIO.
 - La OTA del env `paperdiy` consulta las releases de este repo

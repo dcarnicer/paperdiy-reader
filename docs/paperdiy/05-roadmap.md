@@ -33,7 +33,7 @@ Objetivo: demostrar que el port funciona en un PaperDIY real y recoger datos.
       back/confirm verificados; A+B con USB apaga vía PM1 (05/11). Falta
       validar la pulsación larga física sostenida.
 - [x] Batería: perfil seleccionable **kit original (140 mAh) / extendida
-      (1500 mAh)** en Ajustes > General, curva extendida medida (**4,10 V en
+      (1500 mAh)** en Ajustes > Sistema, curva extendida medida (**4,10 V en
       reposo = 100 %**), LVP a 3,4 V, `About` con VBAT/estado de carga y rayo
       según `CHG_STAT`. Autonomía medida: **45,4 h y 5.448 páginas** a 30 s por
       página. Pendiente validar ambas curvas en lectura normal.

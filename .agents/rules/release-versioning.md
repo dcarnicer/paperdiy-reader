@@ -41,7 +41,12 @@ accept long strings, and the M5Burner version must equal the release version.
     standalone in-app OTA. The reader builds this name from the tag through
     `CROSSPOINT_OTA_ASSET_FORMAT` in `platformio.ini`; keep both in sync.
 - The M5Burner upload is `crosspoint-paperdiy-latest.bin`, and its version
-  field is the tag without the `v`.
+  field is the tag without the `v`. The upload is manual and independent of
+  the GitHub release: a tag does not update the catalog. After publishing,
+  record the version in `m5burner/CHANGELOG.md` and keep
+  `m5burner/m5burner.json` at the latest release version (matching
+  `platformio.ini`). Do not record a version as published until the catalog
+  shows it.
 - The release workflow validates the tag and version with
   `scripts/check_release_version.py`. Do not bypass that check.
 - Release notes must warn that the reader does not install updates under

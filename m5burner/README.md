@@ -51,6 +51,9 @@ Use your own M5Stack account. There are two supported routes:
    repository to `firmware-repo.list`, and include `m5burner.json` plus the
    `firmware/` folder in this repository. M5Stack reviews the first submission.
 
+After publishing, update the status line at the top of `m5burner/CHANGELOG.md`.
+Do not mark a version as published until the M5Burner catalog shows it.
+
 For this package the expected device type is `M5Stack PaperDIY`. Confirm the
 exact string shown by the current M5Burner device list before publishing; if it
 differs, update `firmware_category.device` in `m5burner.json`.
@@ -69,7 +72,10 @@ differs, update `firmware_category.device` in `m5burner.json`.
 ## Notes
 
 - `m5burner.json` here is a template; the packaging script replaces
-  `version` and normalizes `repository`.
+  `version` and normalizes `repository`. Keep its `version` equal to the latest
+  release anyway: it is the reference stored in git and must not lag behind
+  `platformio.ini`. That value is what the next package will carry; it does not
+  mean the catalog has been updated.
 - M5Burner uses the same version as the GitHub release, without the `v`:
   `2.0.0-1`, `2.0.0-2`… (CrossPoint version + port revision, kept short
   because M5Burner limits the field; see

@@ -251,7 +251,7 @@ VBAT=4110 mV  VIN=5082 mV  PWR_SRC=5  CHG_STAT=high  PWR_CFG=0x03
 ```
 
 Because the PaperDIY is DIY, the installed cell may not be the kit cell. Under
-**Settings > General > Battery profile** you can choose:
+**Settings > System > Battery profile** you can choose:
 
 - **Original kit (140 mAh)**: the original curve, the default.
 - **Extended (1500 mAh)**: the measured 604050 curve.

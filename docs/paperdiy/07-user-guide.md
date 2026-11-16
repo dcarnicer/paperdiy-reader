@@ -148,7 +148,7 @@ antes de abrir el menú; es un compromiso de UX pendiente de decidir.
 - Si vas a estar mucho tiempo sin usar el equipo, apágalo con doble clic.
 - La batería del kit es de 140 mAh: la autonomía depende de dormir. Si lees con
   Wi-Fi encendida, baja mucho.
-- Si instalas una celda mayor, elige **Ajustes > General > Perfil de batería >
+- Si instalas una celda mayor, elige **Ajustes > Sistema > Perfil de batería >
   Extendida (1500 mAh)**. El perfil solo cambia la curva del porcentaje; la
   carga es la misma.
 - Mientras está enchufado, el porcentaje se congela en el último valor de

@@ -252,8 +252,8 @@ Medición en hardware con la celda original y USB conectado:
 VBAT=4110 mV  VIN=5082 mV  PWR_SRC=5  CHG_STAT=alto  PWR_CFG=0x03
 ```
 
-Como el PaperDIY es DIY, la celda puede no ser la del kit. En **Ajustes >
-General > Perfil de batería** se elige:
+Como el PaperDIY es DIY, la celda puede no ser la del kit. En
+**Ajustes > Sistema > Perfil de batería** se elige:
 
 - **Kit original (140 mAh)**: curva original, por defecto.
 - **Extendida (1500 mAh)**: curva medida con la 604050.

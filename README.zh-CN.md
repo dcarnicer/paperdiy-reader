@@ -30,7 +30,8 @@ OPDS/Calibre 以及日常使用所需一切功能的电子书阅读器。
 > 已于 2026-11-05 验证。自动休眠和封面休眠画面也于 2026-11-05 验证。
 > 长时间阅读：2026-11-06 完成 250+ 次翻页，无错误、无泄漏。KOReader Sync
 > 于 2026-11-06 通过本地 KOSync 服务器验证。待完成：配对 BLE 遥控器、
-> 休眠电流/续航、604050 电池，以及残影的实机目视检查。见
+> 休眠电流、`2.0.0-6`/`2.0.0-7` 的完整 `make smoke`，以及残影的实机目视
+> 检查。见
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md)。
 >
 > **下游分支：** `main` 镜像 `upstream/develop`；`paperdiy` 是我们的工作
@@ -224,12 +225,14 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 
 ## 已知限制
 
-- 仍待测量：LUT、多页后的残影、休眠电流和续航。
+- 仍待测量：LUT、多页后的残影和休眠电流。续航仅在扩展 604050（1500 mAh）
+  上实测（放电测试 45.4 小时 / 5,448 页）；原装 140 mAh 套件电池未参与该
+  测试，两条曲线仍待正常阅读验证。
 - 不支持触摸、前置灯、RTC、IMU 或音频。界面必须用两个按键操作。
 - 140 mAh 电池：休眠时固件会请求 PM1 关机。如果 PM1 切断电源（通常
   如此，USB 连接时也一样），只能用电源键重新开机。2026-11-05 验证：
   USB 连接时 A+B 通过 PM1 关机，A 无法唤醒。如果 USB 保持主板供电，
-  则回退到深度休眠并用 A/B 唤醒。续航仍待测量。
+  则回退到深度休眠并用 A/B 唤醒。
 - 物理电源键由 M5PM1 管理；固件通过 I²C 事件接收，而不是 GPIO。
 - `paperdiy` 环境的 OTA 检查本仓库的发布（`CROSSPOINT_OTA_RELEASES_URL`），
   并下载 `crosspoint-paperdiy-<version>-ota.bin`（`CROSSPOINT_OTA_ASSET_FORMAT`）；

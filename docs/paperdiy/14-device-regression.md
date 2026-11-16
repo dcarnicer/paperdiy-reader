@@ -60,6 +60,12 @@ falla con un mensaje que pide flashear `paperdiy-test`.
 
 ## Resultado actual
 
+> **Pendiente:** la última ejecución completa registrada es la de abajo
+> (`2.0.0-4`, repetida sobre las fuentes de `2.0.0-5`). No hay un `make smoke`
+> completo de `2.0.0-6` ni `2.0.0-7`. Hay que ejecutarlo con `paperdiy-test` y
+> repetir la revisión diferida de ghosting y sleep/wake antes de la próxima
+> release.
+
 `2026-11-12`, PaperDIY `2.0.0-4` (`paperdiy-test`), run `20261112-124506`:
 **PASS, 25 pasos**. Es una repetición sobre las mismas fuentes que la release
 `2.0.0-5`, que solo cambia la versión y el test de licencias. Tras restaurar y
