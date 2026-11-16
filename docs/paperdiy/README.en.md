@@ -31,5 +31,5 @@ buttons, SD, battery, Wi-Fi, EPUB reading, OPDS and Calibre wireless).
 Auto-sleep and the cover sleep screen were also validated. Long reading ran
 250+ page turns without errors or leaks (2026-11-06). KOReader Sync was
 validated against a local KOSync server (2026-11-06). Still pending: pairing a
-BLE remote, sleep current, a full `make smoke` on `2.0.0-6`/`2.0.0-7` and a
-physical visual review of ghosting. Start with `06-porting.md`.
+BLE remote, sleep current and a physical visual review of ghosting. Full
+`make smoke` passed on `2.0.0-8` (2026-11-16). Start with `06-porting.md`.

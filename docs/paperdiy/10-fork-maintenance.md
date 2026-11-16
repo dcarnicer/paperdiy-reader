@@ -184,6 +184,26 @@ en el parche, lo hincha y aumenta el riesgo de conflictos en el próximo
 `git apply --3way`. Mantén los cambios limitados a hunks funcionales y regenera
 el parche solo para esos hunks.
 
+## Release `2.0.0-8` (16/11/2026)
+
+Sincronización con CrossPoint `490813ff` / FreeInk SDK `3f3e4c1` y arreglos de
+validación del port. Mantiene CrossPoint `2.0.0`.
+
+- Upstream: desambiguación de gestos del botón power en reinicios suaves,
+  arreglos varios de lector, Home, WebDAV, descarga de fuentes y servidor web,
+  y stats de flash/RAM en CI.
+- Port: reaplicado sobre el SDK nuevo. Los pulsos del PM1 se normalizan como
+  clicks (duración 0) y el click que despierta no se reenvía a la app.
+- Perfil de batería: el cambio Kit/Extendida se aplica en caliente desde la UI
+  y la web, y persiste en `settings.json` con validación y fallback al kit.
+- Traducción española de `Display Refresh`.
+- Build `paperdiy`: `firmware.bin` 5.445.184 B, 83,0 % de flash y 33,9 % de
+  RAM. Tests: 18 Python, 933 host, PMIC PaperDIY y `make smoke` 25/25
+  (`20261116-194343`).
+- Hardware: wake-click tras A+B, SD en caliente, persistencia y cambio web del
+  perfil de batería validados. Pendiente el salto visual de la curva con
+  batería <90 % y la autonomía.
+
 ## Release `2.0.0-7` (15/11/2026)
 
 Corrección de la presentación de batería en carga sobre la `2.0.0-6`. Sin

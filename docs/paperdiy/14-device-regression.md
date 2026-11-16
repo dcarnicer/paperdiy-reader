@@ -61,16 +61,17 @@ falla con un mensaje que pide flashear `paperdiy-test`.
 ## Resultado actual
 
 > **Estado:** smoke completo ejecutado el 16/11/2026 sobre el árbol del sync
-> `490813ff` (versión `2.0.0-7`): PASS, 25 pasos. Queda pendiente el salto
-> visual de la curva de batería (necesita <90 %) y la revisión de autonomía.
+> `490813ff` (build previa a la release `2.0.0-8`, que solo cambia la cadena de
+> versión): PASS, 25 pasos. Queda pendiente el salto visual de la curva de
+> batería (necesita <90 %) y la revisión de autonomía.
 
-`2026-11-16`, PaperDIY `2.0.0-7` + sync `490813ff` (`paperdiy-test`), run
-`20261116-194343`: **PASS, 25 pasos**. Tras restaurar y hacer un ciclo de power,
-el dispositivo volvió a Home en español con los recents originales y sin
-`SmokeTest`.
+`2026-11-16`, PaperDIY `2.0.0-8` (árbol del sync `490813ff`; el smoke se
+ejecutó antes del bump de versión), run `20261116-194343`: **PASS, 25 pasos**.
+Tras restaurar y hacer un ciclo de power, el dispositivo volvió a Home en
+español con los recents originales y sin `SmokeTest`.
 
-Pruebas manuales del 16/11/2026 sobre el build de producción `2.0.0-7`
-(`firmware.bin` del árbol mergeado):
+Pruebas manuales del 16/11/2026 sobre el build de producción del árbol mergeado
+(release `2.0.0-8`):
 
 - Wake-click tras A+B en batería: vuelve a la misma página, sin pasar página
   ni abrir menús.

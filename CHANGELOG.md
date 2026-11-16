@@ -1,5 +1,28 @@
 # Changelog
 
+## 2.0.0-8 — 2026-11-16
+
+Sincronización con CrossPoint `490813ff` y FreeInk SDK `3f3e4c1`, más los
+arreglos de validación del port. Mantiene CrossPoint `2.0.0`.
+
+- CrossPoint `36b9430e` → `490813ff`: desambiguación de gestos del botón power
+  en reinicios suaves, arreglos varios de lector, Home, WebDAV, descarga de
+  fuentes y servidor web, y stats de flash/RAM en CI.
+- SDK `a8acebf` → `3f3e4c1`, con el port de PaperDIY reaplicado y el nuevo
+  `InputManager` de gestos. Los pulsos del PM1 se normalizan como clicks
+  (duración 0) y el click que despierta no se reenvía a la app.
+- Perfil de batería: el cambio Kit/Extendida se aplica en caliente desde la UI
+  y desde la web, sin reinicio. Se persiste en `settings.json` con validación
+  y fallback a `Kit original`.
+- Traducción española de `Display Refresh`.
+- Docs: pins de sync, estado de release/M5Burner, checklist de hardware y
+  resultados del smoke.
+- Build `paperdiy`: `firmware.bin` 5.445.184 B, 83,0 % de flash y 33,9 % de
+  RAM. Tests: 18 Python, 933 host, PMIC PaperDIY y `make smoke` 25/25.
+- Hardware: wake-click/A+B, SD en caliente, persistencia y cambio web del
+  perfil de batería validados. Pendiente el salto visual de la curva con
+  batería <90 % y la autonomía.
+
 ## 2.0.0-7 — 2026-11-15
 
 Corrección de la presentación de batería en PaperDIY. Mantiene CrossPoint

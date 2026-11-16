@@ -1,7 +1,7 @@
 # Changelog de M5Burner
 
 Última publicación registrada en este repositorio: **2.0.0-2** (tag
-`v2.0.0-2`, 2026-11-09). Las entradas **2.0.0-3** a **2.0.0-7** documentan sus
+`v2.0.0-2`, 2026-11-09). Las entradas **2.0.0-3** a **2.0.0-8** documentan sus
 cambios y el texto preparado para el diálogo Publish; no hay constancia en el
 repositorio de que se hayan subido a M5Burner y el estado del catálogo no está
 verificado.
@@ -10,7 +10,7 @@ de publicar.
 
 ## Short description for M5Burner (EN)
 
-CrossPoint for PaperDIY 2.0.0-7 — cumulative update from 2.0.0-2.
+CrossPoint for PaperDIY 2.0.0-8 — cumulative update from 2.0.0-2.
 
 - Controls reorganized into Power, Front, Side and Gestures submenus.
 - OPDS browser moved to File Transfer; servers live in Settings > Connectivity.
@@ -22,17 +22,36 @@ CrossPoint for PaperDIY 2.0.0-7 — cumulative update from 2.0.0-2.
 - Faster Home cover grid; TLS 2 KB records; updated FreeInk SDK for font
   downloads.
 - Battery: selectable kit/extended profile, discharge log, measured 1500 mAh
-  curve and percentage held while charging.
-- Synced with CrossPoint `36b9430e` / FreeInk SDK `a8acebf`: EPD refresh and
-  TTF improvements, XTC bit depth and previous-page chevron.
+  curve and percentage held while charging; profile changes now apply live
+  from the UI and web and persist across reboots.
+- Synced with CrossPoint `490813ff` / FreeInk SDK `3f3e4c1`: power-gesture
+  disambiguation, reader/Home/WebDAV/font-download fixes and EPD/TTF
+  improvements from the previous sync.
 - Spanish translations and user-guide updates.
 
 Known limitations: real BLE remote pairing, full Calibre transfer and full OTA
-install remain pending, as do sleep/wake, idle current and the visual ghosting
-review. The full `make smoke` and the deferred ghosting/sleep-wake review have
-not been run on `2.0.0-6` or `2.0.0-7`; run them before the next release.
+install remain pending, as do sleep/wake, idle current, autonomy and the visual
+ghosting review. The full `make smoke` passed on `2.0.0-8` (25 steps);
+`2.0.0-6` has no dedicated run. The visual battery-curve jump still needs a
+battery below ~90%.
 
 ## Full changelog (EN)
+
+### 2.0.0-8 — 2026-11-16
+
+Synced with CrossPoint `490813ff` and FreeInk SDK `3f3e4c1`.
+
+- Upstream: power-button gesture disambiguation across soft restarts, misc
+  reader/Home/WebDAV/font-download/web-server fixes, and CI flash/RAM stats.
+- PaperDIY port reapplied over the new SDK; the PM1 pulse is normalized as a
+  click (duration 0) and the wake click is not replayed to the app.
+- Battery profile changes apply live from the UI and web, without a reboot,
+  and persist in `settings.json` with validation and a kit fallback.
+- Spanish `Display Refresh` translation.
+- Build 5,445,184 B (83.0% flash, 33.9% RAM); 18 Python tests, 933 host tests,
+  PaperDIY PMIC test and 25-step hardware smoke passed.
+- Hardware: wake-click after A+B, SD hot-plug, profile persistence and the web
+  change validated. Pending: visual battery-curve jump below ~90% and autonomy.
 
 ### 2.0.0-7 — 2026-11-15
 
@@ -123,10 +142,28 @@ Synced with CrossPoint `8276d518` (3 commits) and FreeInk SDK `6a208c0c`.
   in a drain test (45.4 h / 5,448 pages), but both battery curves still need
   validation in normal reading. The original 140 mAh kit cell keeps its
   original curve.
-- Full `make smoke` is pending for `2.0.0-6`/`2.0.0-7`; the `2.0.0-6` hardware
-  smoke was basic.
+- Full `make smoke` passed on `2.0.0-8` (25 steps); `2.0.0-6` has no dedicated
+  run. The visual battery-curve jump still needs a battery below ~90%.
 
 ## Changelog completo (ES)
+
+### 2.0.0-8 — 2026-11-16
+
+Sincronización con CrossPoint `490813ff` y FreeInk SDK `3f3e4c1`.
+
+- Upstream: desambiguación de gestos del botón power en reinicios suaves,
+  arreglos varios de lector, Home, WebDAV, descarga de fuentes y servidor web,
+  y stats de flash/RAM en CI.
+- Port de PaperDIY reaplicado sobre el SDK nuevo; el pulso del PM1 se normaliza
+  como click (duración 0) y el click que despierta no se reenvía a la app.
+- El perfil de batería se aplica en caliente desde la UI y la web, sin
+  reinicio, y persiste en `settings.json` con validación y fallback al kit.
+- Traducción española de `Display Refresh`.
+- Build 5.445.184 B (83,0 % flash, 33,9 % RAM); 18 tests Python, 933 host, test
+  PMIC PaperDIY y smoke de hardware de 25 pasos.
+- Hardware: wake-click tras A+B, SD en caliente, persistencia del perfil y
+  cambio web validados. Pendiente: salto visual de la curva con batería <90 %
+  y autonomía.
 
 ### 2.0.0-7 — 2026-11-15
 
@@ -223,5 +260,6 @@ Sincronización con CrossPoint `8276d518` (3 commits) y FreeInk SDK `6a208c0c`.
   extendida se midió en una descarga real (45,4 h / 5.448 páginas), pero ambas
   curvas de batería siguen pendientes de validar en lectura normal. La celda
   original de 140 mAh conserva su curva original.
-- Falta el `make smoke` completo de `2.0.0-6`/`2.0.0-7`; el smoke de hardware
-  de `2.0.0-6` fue básico.
+- El `make smoke` completo pasó en `2.0.0-8` (25 pasos); `2.0.0-6` no tiene una
+  ejecución propia. El salto visual de la curva sigue pendiente con batería
+  por debajo del ~90 %.
