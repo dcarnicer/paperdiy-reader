@@ -20,9 +20,13 @@ The first `About` visit scans the SD FAT to show used/free space.
 ## Known limitations
 
 - BLE page-turner pairing is not validated with a real BLE remote yet.
-- Sleep current and real battery life are not measured.
-- The original 140 mAh cell gives short battery life; a 604050 cell is planned
-  but not validated in this build.
+- Sleep current is not measured. Battery life was measured only with the
+  extended 604050 cell (45.4 h / 5,448 pages in a drain test); the original
+  140 mAh kit cell was not measured in that test. Both curves still need
+  validation in normal reading.
+- The original 140 mAh cell gives short battery life. If you install a larger
+  cell, select **Extended (1500 mAh)** under **Settings > System > Battery
+  profile**; it changes only the percentage curve, not charging.
 - Ghosting after long reading is slight with the default 5-page refresh; the
   1-page setting is available but slower.
 - KOReader Sync was validated against a local KOSync server, not the public

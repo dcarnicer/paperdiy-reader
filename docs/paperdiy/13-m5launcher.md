@@ -53,7 +53,7 @@ M5Launcher, registra su configuración en el log de arranque
 (`M5Launcher detected: DDLB=… LauncherOnKey=… LauncherKeyLvl=…`) y adapta
 cuatro cosas:
 
-1. **Salir a M5Launcher.** Aparece en `Ajustes > General` y funciona en los
+1. **Salir a M5Launcher.** Aparece en `Ajustes > Sistema` y funciona en los
    tres modos:
    - **Con tecla configurada:** muestra "Mantén pulsado A para abrir
      M5Launcher". Al mantener A 0,3 s, el lector se reinicia con A todavía

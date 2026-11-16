@@ -34,8 +34,8 @@ usable every day.
 > Gutenberg) was validated on 2026-11-05. Auto-sleep and the cover sleep
 > screen were validated on 2026-11-05. Long reading: 250+ page turns without
 > errors or leaks on 2026-11-06. KOReader Sync was validated against a local
-> KOSync server on 2026-11-06. Pending: pairing a BLE remote, sleep
-> current/battery life, the 604050 battery and a physical visual review of
+> KOSync server on 2026-11-06. Pending: pairing a BLE remote, sleep current,
+> a full `make smoke` on `2.0.0-6`/`2.0.0-7` and a physical visual review of
 > ghosting. See
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md).
 >
@@ -211,7 +211,7 @@ published on M5Burner; Launcher copies only the app.
 > installs each version next to the previous one. Do not flash `firmware.bin`
 > at `0x10000` while Launcher is installed.
 
-The reader detects Launcher and exposes `Settings > General > Exit to M5Launcher`; the SD firmware
+The reader detects Launcher and exposes `Settings > System > Exit to M5Launcher`; the SD firmware
 update is hidden because Launcher owns the OTA partitions. To wake the reader
 without going through Launcher's screen, set Launcher's
 `CFG > GPIO on boot starts Launcher` to A: Launcher then only appears when A is
@@ -260,14 +260,16 @@ The detailed documentation is in Spanish. The
 
 ## Known limitations
 
-- Still to measure: LUTs/ghosting after many pages, sleep current and battery
-  life.
+- Still to measure: LUTs/ghosting after many pages and sleep current. Battery
+  life was measured only with the extended 604050 cell (45.4 h / 5,448 pages
+  in a drain test); the original 140 mAh kit cell was not measured in that
+  test. Both curves still need validation in normal reading.
 - No touch, frontlight, RTC, IMU or audio. The UI must work with 2 buttons.
 - 140 mAh battery: when sleeping, the firmware asks the PM1 to power off. If
   the PM1 cuts power (the usual case, including over USB), only the power
   button turns it back on. Verified on 2026-11-05: A+B over USB powered off
   via the PM1 and A did not wake it. If USB keeps the board alive, the
-  fallback is deep sleep with A/B wake. Battery life still needs measuring.
+  fallback is deep sleep with A/B wake.
 - The physical power button is managed by the M5PM1; the firmware receives it
   as an I²C event, not as a GPIO.
 - The `paperdiy` env's OTA checks this repo's releases

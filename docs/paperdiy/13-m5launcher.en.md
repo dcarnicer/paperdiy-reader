@@ -44,7 +44,7 @@ M5Launcher, logs its settings at boot
 (`M5Launcher detected: DDLB=… LauncherOnKey=… LauncherKeyLvl=…`) and adapts
 four things:
 
-1. **Exit to M5Launcher.** Appears under `Settings > General` and works in all
+1. **Exit to M5Launcher.** Appears under `Settings > System` and works in all
    three modes:
    - **Key configured:** shows "Hold A to open M5Launcher". Once A has been
      held for 0.3 s, the reader restarts with A still down; the bootloader sees

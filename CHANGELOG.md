@@ -33,7 +33,7 @@ Mantiene el esquema `<CrossPoint X.Y.Z>-<N>`.
 - Curva de la 604050 de 1500 mAh medida con una descarga real de **45,4 h y
   5.448 páginas** (30 s/página, sin WiFi). Ancla superior en **4,10 V en
   reposo** y anclajes inferiores ajustados para no mostrar 0 % durante horas.
-- Nuevo ajuste **Ajustes > General > Perfil de batería**: `Kit original
+- Nuevo ajuste **Ajustes > Sistema > Perfil de batería**: `Kit original
   (140 mAh)` por defecto o `Extendida (1500 mAh)`. Solo cambia la curva del
   porcentaje; la carga no cambia.
 - Lecturas de batería del PM1 serializadas en la HAL y `About` usando el mismo
@@ -243,7 +243,7 @@ en la prueba de hardware. El detalle está en las entradas siguientes.
   [bmorcelli/Launcher](https://github.com/bmorcelli/Launcher) por su partición
   `APP_TEST` y lee la configuración de arranque de Launcher (`DDLB`,
   `LauncherOnKey`, `LauncherKeyLvl`), que registra en el log de arranque.
-- Nuevo `Ajustes > General > Salir a M5Launcher`, visible siempre bajo
+- Nuevo `Ajustes > Sistema > Salir a M5Launcher`, visible siempre bajo
   Launcher y adaptado a su modo de arranque: con tecla configurada pide
   mantenerla y reinicia con ella pulsada (`LauncherExitActivity`); sin tecla
   usa un deep sleep de 1 ms o, si `DeepSleep starts Launcher` está desactivado,

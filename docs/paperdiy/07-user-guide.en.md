@@ -148,7 +148,7 @@ opening the menu; it is a UX trade-off still to be decided.
   click.
 - The kit battery is 140 mAh: battery life depends on sleeping. Reading with
   Wi-Fi on drains it much faster.
-- If you install a larger cell, choose **Settings > General > Battery profile >
+- If you install a larger cell, choose **Settings > System > Battery profile >
   Extended (1500 mAh)**. The profile only changes the percentage curve; charging
   is unchanged.
 - While plugged in, the percentage is frozen at the last discharge estimate;
