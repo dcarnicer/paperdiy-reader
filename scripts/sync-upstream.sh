@@ -78,7 +78,7 @@ rm -rf .github
 git checkout paperdiy -- README.md README.en.md README.ja.md README.zh-CN.md \
   CHANGELOG.md Makefile NOTICE LICENSE .gitignore .gitattributes hardware m5burner \
   .agents/rules/release-versioning.md lib/expat test/firmware_version \
-  test/test_release_license.py \
+  test/test_release_license.py test/test_battery_log.py \
   docs/paperdiy docs/README.md docs/upstream scripts patches .github
 python3 scripts/apply_downstream_overlay.py
 rm -f ROADMAP.md SCOPE.md GOVERNANCE.md AGENTS.md USER_GUIDE.md CLAUDE.md .gitmodules

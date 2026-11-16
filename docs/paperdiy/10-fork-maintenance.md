@@ -62,7 +62,8 @@ El script:
 4. Aplica `patches/sdk.patch` y `patches/firmware.patch` con `--3way`.
 5. Copia docs, Makefile, scripts, workflows y los ficheros con edición del fork
    (`.agents/rules/release-versioning.md`, `lib/expat`, `test/firmware_version`,
-   `.gitattributes`, `.gitignore`, `LICENSE`) desde `paperdiy`; añade las líneas
+   `test/test_release_license.py`, `test/test_battery_log.py`, `.gitattributes`,
+   `.gitignore`, `LICENSE`) desde `paperdiy`; añade las líneas
    downstream de `.agents/README.md` y los `CMakeLists` con
    `scripts/apply_downstream_overlay.py`.
 6. Deja el árbol listo e imprime el comando `make build`; la compilación es
@@ -107,6 +108,7 @@ git apply --3way patches/firmware.patch
 git checkout paperdiy -- README.md README.en.md README.ja.md README.zh-CN.md \
   CHANGELOG.md Makefile NOTICE LICENSE .gitignore .gitattributes hardware m5burner \
   .agents/rules/release-versioning.md lib/expat test/firmware_version \
+  test/test_release_license.py test/test_battery_log.py \
   docs/paperdiy docs/README.md docs/upstream scripts patches .github
 rm -f ROADMAP.md SCOPE.md GOVERNANCE.md AGENTS.md USER_GUIDE.md CLAUDE.md .gitmodules
 rm -rf .github && git checkout paperdiy -- .github

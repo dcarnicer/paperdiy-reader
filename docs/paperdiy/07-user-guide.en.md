@@ -176,7 +176,7 @@ look can take a few seconds because it walks the FAT.
 |---|---|
 | Blank screen | PM1 GPIO2/GPIO46? DCDC? Full flash? |
 | Inverted image | change `rotation` in `paperdiyLgfxConfig` (0 ↔ 2) |
-| Ghosting when turning pages | try `Refresh Frequency` at 5, then 1 in Settings > Display; the new fast LUT is under validation |
+| Ghosting when turning pages | try `Refresh Frequency` at 5, then 1 in Settings > Display; the new fast LUT is under validation. For an immediate full refresh: Settings > System > `Display Refresh` (Back stops it) |
 | SD does not mount | FAT32/exFAT, contact, try another card; if there is no card at boot, insert it and the device restarts |
 | Page does not turn | battery? A/B? is it in sleep mode? |
 | Does not wake | is the button OK? `ext1` GPIO3/4? |

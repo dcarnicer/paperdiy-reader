@@ -150,7 +150,7 @@
 |---|---|
 | 白屏 | PM1 GPIO2/GPIO46？DCDC？完整烧录？ |
 | 图像倒置 | 修改 `paperdiyLgfxConfig` 中的 `rotation`（0 ↔ 2） |
-| 翻页残影 | 在 设置 > 显示 中把 `Refresh Frequency` 试为 5，再试 1；新的快速 LUT 仍在验证中 |
+| 翻页残影 | 在 设置 > 显示 中把 `Refresh Frequency` 试为 5，再试 1；新的快速 LUT 仍在验证中。需要立即全屏刷新时：设置 > 系统 > `Display Refresh`（按返回停止） |
 | SD 无法挂载 | FAT32/exFAT、接触、换一张卡；启动时没有卡的话，插入后设备会重启 |
 | 无法翻页 | 电池？A/B？是否处于休眠？ |
 | 无法唤醒 | 按键是否正常？`ext1` GPIO3/4？ |
