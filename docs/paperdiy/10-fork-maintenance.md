@@ -203,7 +203,7 @@ CrossPoint `2.0.0`.
 - Traducciones ES/CA/VA para las cadenas nuevas de Recientes.
 - Build `paperdiy`: `firmware.bin` 5.446.272 B, 83,0 % de flash y 33,9 % de
   RAM. Tests: 935 host, `paperdiy-test` compila y `make smoke` 25/25
-  (`20261118-121539`).
+  (`20261118-132153`).
 - Hardware: smoke completo sobre `paperdiy-test`; pendientes ghosting,
   autonomía, sleep/wake, BLE real, Calibre completo y OTA completa.
 
@@ -264,7 +264,7 @@ Estado: release `2.0.0-6` publicada (tag `v2.0.0-6`) sobre CrossPoint
 - Smoke histórico pendiente: BLE real, Calibre completo y OTA completa.
 
 > **Regresión.** La última ejecución completa de `make smoke` es la del
-> 18/11/2026 sobre el árbol del sync `b6b7a6c1` (run `20261118-121539`, PASS 25
+> 18/11/2026 sobre el árbol del sync `b6b7a6c1` (run `20261118-132153`, PASS 25
 > pasos). `2.0.0-6` no tiene una ejecución propia. Queda pendiente completar la
 > revisión de ghosting, autonomía y el salto visual de la curva de batería. Los
 > resultados históricos no se reescriben como si hubieran pasado.

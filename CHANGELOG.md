@@ -21,7 +21,7 @@ CrossPoint `2.0.0`.
   recuperación CA/VA alineada con `-ota.bin`.
 - Build `paperdiy`: `firmware.bin` 5.446.272 B, 83,0 % de flash y 33,9 % de
   RAM. Tests: 935 host, `paperdiy-test` compila y `make smoke` 25/25
-  (`20261118-121539`).
+  (`20261118-132153`).
 - Hardware: smoke completo sobre `paperdiy-test`; pendientes ghosting,
   autonomía, sleep/wake, BLE real, Calibre completo y OTA completa.
 

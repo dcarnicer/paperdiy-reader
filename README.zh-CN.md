@@ -31,7 +31,7 @@ OPDS/Calibre 以及日常使用所需一切功能的电子书阅读器。
 > 长时间阅读：2026-11-06 完成 250+ 次翻页，无错误、无泄漏。KOReader Sync
 > 于 2026-11-06 通过本地 KOSync 服务器验证。待完成：配对 BLE 遥控器、
 > 休眠电流，以及残影的实机目视检查。`2.0.0-9` 的完整 `make smoke` 已通过
-> （2026-11-18，run `20261118-121539`）。见
+> （2026-11-18，run `20261118-132153`）。见
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md)。
 >
 > **下游分支：** `main` 镜像 `upstream/develop`；`paperdiy` 是我们的工作

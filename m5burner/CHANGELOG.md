@@ -39,7 +39,7 @@ CrossPoint for PaperDIY 2.0.0-9 — cumulative update from 2.0.0-2.
 Known limitations: real BLE remote pairing, full Calibre transfer and full OTA
 install remain pending, as do sleep/wake, idle current, autonomy and the visual
 ghosting review. The full `make smoke` passed on `2.0.0-9` (25 steps, run
-`20261118-121539`); `2.0.0-6` has no dedicated run. The visual battery-curve
+`20261118-132153`); `2.0.0-6` has no dedicated run. The visual battery-curve
 jump still needs a battery below ~90%.
 
 ## Full changelog (EN)
@@ -60,7 +60,7 @@ Synced with CrossPoint `b6b7a6c1` and FreeInk SDK `77ae8c75`.
 - Spanish/Catalan/Valencian translations for the new Recent strings; CA/VA
   recovery hint now names `-ota.bin`.
 - Build 5,446,272 B (83.0% flash, 33.9% RAM); 935 host tests, `paperdiy-test`
-  build and 25-step hardware smoke passed (`20261118-121539`).
+  build and 25-step hardware smoke passed (`20261118-132153`).
 
 ### 2.0.0-8 — 2026-11-16
 
@@ -168,7 +168,7 @@ Synced with CrossPoint `8276d518` (3 commits) and FreeInk SDK `6a208c0c`.
   validation in normal reading. The original 140 mAh kit cell keeps its
   original curve.
 - The latest full `make smoke` passed on `2.0.0-9` (25 steps, run
-  `20261118-121539`); `2.0.0-6` has no dedicated run. The visual battery-curve
+  `20261118-132153`); `2.0.0-6` has no dedicated run. The visual battery-curve
   jump still needs a battery below ~90%.
 
 ## Changelog completo (ES)
@@ -287,5 +287,5 @@ Sincronización con CrossPoint `8276d518` (3 commits) y FreeInk SDK `6a208c0c`.
   curvas de batería siguen pendientes de validar en lectura normal. La celda
   original de 140 mAh conserva su curva original.
 - La última ejecución completa de `make smoke` pasó en `2.0.0-9` (25 pasos,
-  run `20261118-121539`); `2.0.0-6` no tiene una ejecución propia. El salto
+  run `20261118-132153`); `2.0.0-6` no tiene una ejecución propia. El salto
   visual de la curva sigue pendiente con batería por debajo del ~90 %.
