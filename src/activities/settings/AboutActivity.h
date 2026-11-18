@@ -11,9 +11,9 @@ class AboutActivity final : public UiListActivity {
   explicit AboutActivity(GfxRenderer& renderer, MappedInputManager& mappedInput);
 
 #if FREEINK_DEVICE_EEGO_A4
-  static constexpr int ITEM_COUNT = 15;
+  static constexpr int ITEM_COUNT = 16;
 #else
-  static constexpr int ITEM_COUNT = 14;
+  static constexpr int ITEM_COUNT = 15;
 #endif
 
   void onEnter() override;

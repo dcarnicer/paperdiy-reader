@@ -30,6 +30,17 @@ def git(*args: str) -> str:
     ).strip()
 
 
+def recorded_sdk_revision() -> str:
+    """Read the SDK commit recorded in NOTICE for a vendored (non-submodule) tree."""
+    text = (PROJECT_DIR / "NOTICE").read_text(encoding="utf-8")
+    match = re.search(
+        r"FreeInk SDK.*?Commit:\s*([0-9a-f]{40})", text, re.DOTALL
+    )
+    if not match:
+        raise ValueError("NOTICE does not record the FreeInk SDK commit.")
+    return match.group(1)
+
+
 def section(title: str, body: str) -> str:
     return f"\n{'=' * 72}\n{title}\n{'=' * 72}\n\n{body.rstrip()}\n"
 
@@ -56,9 +67,14 @@ def source_reference(directory: Path) -> str:
 
 def build_license(environment: str, repository: str, packages_dir: Path) -> str:
     revision = git("rev-parse", "HEAD")
-    sdk_revision = git("rev-parse", "HEAD:freeink-sdk")
-    if git("-C", "freeink-sdk", "rev-parse", "HEAD") != sdk_revision:
-        raise ValueError("The SDK checkout differs from the recorded source revision.")
+    sdk_entry = git("cat-file", "-t", "HEAD:freeink-sdk")
+    if sdk_entry == "commit":
+        sdk_revision = git("rev-parse", "HEAD:freeink-sdk")
+        if git("-C", "freeink-sdk", "rev-parse", "HEAD") != sdk_revision:
+            raise ValueError("The SDK checkout differs from the recorded source revision.")
+    else:
+        # The PaperDIY fork vendors the SDK as normal files instead of a submodule.
+        sdk_revision = recorded_sdk_revision()
     source_url = f"https://github.com/{repository}"
     text = (
         "CrossPoint Reader firmware licenses\n\n"
