@@ -376,7 +376,7 @@ index af1d9a8d..956887cb 100644
 +  int8_t _chargeStatusPin;
  };
 diff --git a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
-index 9781c2d5..68b83e33 100644
+index 9781c2d5..9dfcfac0 100644
 --- a/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
 +++ b/freeink-sdk/libs/hardware/BatteryMonitor/src/BatteryMonitor.cpp
 @@ -15,6 +15,7 @@
@@ -487,7 +487,17 @@ index 9781c2d5..68b83e33 100644
  
  bool BatteryMonitor::isCharging() const {
  #if FREEINK_BATTERY_I2C_GAUGE
-@@ -1047,9 +1040,26 @@ bool BatteryMonitor::readM5Pm1Status(Status& status) const {
+@@ -1014,6 +1007,9 @@ bool BatteryMonitor::readM5Pm1Status(Status& status) const {
+   status.supported = true;
+   if (!hasM5Pm1Backend()) return false;
+ 
++  // Keep the rail burst, PWR_SRC and CHG_STAT in one PM1 transaction group so
++  // the button poll cannot interleave with a half-read status snapshot.
++  const freeink::I2cBusLock busLock;
+   freeink::m5pm1::beginBus();
+ 
+   // VREF/VBAT/VIN/5VOUT are four complete 16-bit little-endian millivolt
+@@ -1047,9 +1043,26 @@ bool BatteryMonitor::readM5Pm1Status(Status& status) const {
      status.externalPower = (sources & (M5PM1_PWR_SRC_5VIN | M5PM1_PWR_SRC_5VINOUT)) != 0;
    }
  
@@ -517,7 +527,7 @@ index 9781c2d5..68b83e33 100644
    return status.percentageKnown || status.millivoltsKnown || status.externalPowerKnown;
  }
  
-@@ -1077,6 +1087,55 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
+@@ -1077,6 +1090,55 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
      4200,  // 100%
  };
  
@@ -573,7 +583,7 @@ index 9781c2d5..68b83e33 100644
  // A notch change has to clear the boundary by this much before it is accepted.
  // The 20-40% band is only 50 mV wide, so without a deadband a few millivolts of
  // sampler noise would swap the icon back and forth between page turns. Kept
-@@ -1084,14 +1143,18 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
+@@ -1084,14 +1146,18 @@ constexpr uint16_t LIION_NOTCH_MV[11] = {
  constexpr uint16_t NOTCH_HYSTERESIS_MV = 8;
  
  uint16_t BatteryMonitor::percentageFromMillivolts(uint16_t millivolts) {
@@ -785,11 +795,49 @@ index e1a78b5f..bcd36d97 100644
  inline bool isSticky() { return ACTIVE.board == Board::Sticky; }
  inline bool isX4Pro() { return ACTIVE.board == Board::XteinkX4Pro; }
  inline bool isX4Classic() { return ACTIVE.board == Board::XteinkX4Classic; }
+diff --git a/freeink-sdk/libs/hardware/BoardConfig/include/I2cBusLock.h b/freeink-sdk/libs/hardware/BoardConfig/include/I2cBusLock.h
+index 005f7944..f278a03b 100644
+--- a/freeink-sdk/libs/hardware/BoardConfig/include/I2cBusLock.h
++++ b/freeink-sdk/libs/hardware/BoardConfig/include/I2cBusLock.h
+@@ -3,17 +3,19 @@
+ // the battery gauge here). Two transfers in flight at once fail with ESP_ERR_INVALID_STATE, so
+ // every helper holds this lock for one complete transfer. Recursive: helpers may nest.
+ //
+-// The Metalio enables it (see metalio::ensureBooted()), and EEGO A4 enables it before its
+-// touch controller boots in a background task; on every other board it does nothing until
+-// it has been tested there.
+-#if defined(ESP_PLATFORM) && (FREEINK_DEVICE_METALIO_EINK4 || FREEINK_DEVICE_EEGO_A4)
++// The Metalio enables it (see metalio::ensureBooted()), EEGO A4 enables it before its
++// touch controller boots in a background task, and PaperDIY enables it before the render
++// task shares the PM1 bus; on every other board it does nothing until it has been tested.
++#if defined(ESP_PLATFORM) && \
++    (FREEINK_DEVICE_METALIO_EINK4 || FREEINK_DEVICE_EEGO_A4 || FREEINK_DEVICE_PAPERDIY)
+ #include <freertos/FreeRTOS.h>
+ #include <freertos/semphr.h>
+ #endif
+ 
+ namespace freeink {
+ 
+-#if defined(ESP_PLATFORM) && (FREEINK_DEVICE_METALIO_EINK4 || FREEINK_DEVICE_EEGO_A4)
++#if defined(ESP_PLATFORM) && \
++    (FREEINK_DEVICE_METALIO_EINK4 || FREEINK_DEVICE_EEGO_A4 || FREEINK_DEVICE_PAPERDIY)
+ inline bool& i2cBusLockEnabled() {
+   static bool enabled = false;
+   return enabled;
 diff --git a/freeink-sdk/libs/hardware/BoardConfig/include/M5Pm1.h b/freeink-sdk/libs/hardware/BoardConfig/include/M5Pm1.h
-index 4c2ce964..7c044d92 100644
+index 4c2ce964..b1793765 100644
 --- a/freeink-sdk/libs/hardware/BoardConfig/include/M5Pm1.h
 +++ b/freeink-sdk/libs/hardware/BoardConfig/include/M5Pm1.h
-@@ -29,6 +29,8 @@ constexpr uint8_t ADDR = 0x6E;
+@@ -17,6 +17,8 @@
+ #include <Arduino.h>
+ #include <Wire.h>
+ 
++#include "I2cBusLock.h"
++
+ namespace freeink {
+ namespace m5pm1 {
+ 
+@@ -29,6 +31,8 @@ constexpr uint8_t ADDR = 0x6E;
  #ifndef FREEINK_M5PM1_SDA
  #if FREEINK_DEVICE_PAPERMONO
  #define FREEINK_M5PM1_SDA 47
@@ -798,7 +846,7 @@ index 4c2ce964..7c044d92 100644
  #else
  #define FREEINK_M5PM1_SDA 3
  #endif
-@@ -36,6 +38,8 @@ constexpr uint8_t ADDR = 0x6E;
+@@ -36,6 +40,8 @@ constexpr uint8_t ADDR = 0x6E;
  #ifndef FREEINK_M5PM1_SCL
  #if FREEINK_DEVICE_PAPERMONO
  #define FREEINK_M5PM1_SCL 48
@@ -807,7 +855,7 @@ index 4c2ce964..7c044d92 100644
  #else
  #define FREEINK_M5PM1_SCL 2
  #endif
-@@ -49,11 +53,13 @@ constexpr uint8_t REG_PWR_CFG = 0x06;   // [3]BOOST_EN [2]LDO_EN [1]DCDC_EN [0]C
+@@ -49,11 +55,13 @@ constexpr uint8_t REG_PWR_CFG = 0x06;   // [3]BOOST_EN [2]LDO_EN [1]DCDC_EN [0]C
                                          // auto-clears to 0 on reset/download/shutdown
  constexpr uint8_t REG_WAKE_SRC = 0x05;  // latched wake source; write 0 to clear
  constexpr uint8_t REG_HOLD_CFG = 0x07;
@@ -821,7 +869,7 @@ index 4c2ce964..7c044d92 100644
  constexpr uint8_t REG_GPIO_DRV = 0x13;   // 0 = push-pull
  constexpr uint8_t REG_GPIO_PULL0 = 0x14;
  constexpr uint8_t REG_GPIO_FUNC0 = 0x16;  // 0 = plain GPIO (vs alt function)
-@@ -83,8 +89,11 @@ constexpr uint8_t BTN_DOWNLOAD_LOCK = 1 << 7;
+@@ -83,25 +91,47 @@ constexpr uint8_t BTN_DOWNLOAD_LOCK = 1 << 7;
  constexpr uint8_t BTN_SINGLE_RESET_DISABLE = 1 << 0;
  constexpr uint8_t SYS_CMD_SHUTDOWN = 0xA1;
  
@@ -834,7 +882,89 @@ index 4c2ce964..7c044d92 100644
  constexpr uint8_t GPIO_WAKE_MASK = 0x1F;
  
  // Init the internal I2C bus and pin the PM1 to 100 kHz with idle-sleep disabled
-@@ -179,6 +188,14 @@ inline bool configureAppPowerButton(uint8_t* configuredValue = nullptr) {
+ // (SLP_TO=0) so it doesn't drop off the bus between transactions. Idempotent —
+ // safe to call from each module's begin().
+ inline void beginBus() {
++#if defined(FREEINK_DEVICE_PAPERDIY) && FREEINK_DEVICE_PAPERDIY
++  // The render task and the loop task share this bus. Configure the peripheral
++  // once; a per-read Wire.begin() used to reset it in the middle of the other
++  // task's register-pointer/read pair. Only mark it configured when the PM1
++  // acknowledged both writes, so a failed first bring-up retries.
++  const freeink::I2cBusLock busLock;
++  static bool initialized = false;
++  if (initialized) return;
++  bool configured = true;
++#endif
+   Wire.begin(SDA, SCL, I2C_HZ);
+   Wire.setTimeOut(4);
+   Wire.beginTransmission(ADDR);
+   Wire.write(REG_I2C_CFG);
+   Wire.write(0x00);
++#if defined(FREEINK_DEVICE_PAPERDIY) && FREEINK_DEVICE_PAPERDIY
++  configured = Wire.endTransmission() == 0;
++#else
+   Wire.endTransmission();
++#endif
+   delayMicroseconds(500);
+   Wire.beginTransmission(ADDR);
+   Wire.write(REG_WDT_CNT);
+   Wire.write(0x00);
++#if defined(FREEINK_DEVICE_PAPERDIY) && FREEINK_DEVICE_PAPERDIY
++  configured = (Wire.endTransmission() == 0) && configured;
++  initialized = configured;
++#else
+   Wire.endTransmission();
++#endif
+ }
+ 
+ // The PM1 is a PY32 MCU emulating an I2C slave in firmware, not a hardware
+@@ -112,6 +142,7 @@ inline void beginBus() {
+ constexpr uint32_t XFER_DELAY_US = 500;
+ 
+ inline bool writeReg(uint8_t reg, uint8_t value) {
++  const freeink::I2cBusLock busLock;
+   Wire.beginTransmission(ADDR);
+   Wire.write(reg);
+   Wire.write(value);
+@@ -121,6 +152,7 @@ inline bool writeReg(uint8_t reg, uint8_t value) {
+ }
+ 
+ inline bool writeBytes(uint8_t reg, const uint8_t* data, uint8_t len) {
++  const freeink::I2cBusLock busLock;
+   Wire.beginTransmission(ADDR);
+   Wire.write(reg);
+   for (uint8_t i = 0; i < len; ++i) Wire.write(data[i]);
+@@ -135,6 +167,7 @@ inline bool writeReg16(uint8_t reg, uint16_t value) {
+ }
+ 
+ inline bool readBytes(uint8_t reg, uint8_t* data, uint8_t len) {
++  const freeink::I2cBusLock busLock;
+   Wire.beginTransmission(ADDR);
+   Wire.write(reg);
+   if (Wire.endTransmission(false) != 0) return false;
+@@ -155,18 +188,21 @@ inline bool readReg16(uint8_t reg, uint16_t* value) {
+ }
+ 
+ inline bool updateReg(uint8_t reg, uint8_t clearMask, uint8_t setMask) {
++  const freeink::I2cBusLock busLock;
+   uint8_t value = 0;
+   if (!readReg(reg, &value)) return false;
+   return writeReg(reg, static_cast<uint8_t>((value & ~clearMask) | setMask));
+ }
+ 
+ inline bool updateRegChecked(uint8_t reg, uint8_t clearMask, uint8_t setMask) {
++  const freeink::I2cBusLock busLock;
+   if (!updateReg(reg, clearMask, setMask)) return false;
+   uint8_t value = 0;
+   return readReg(reg, &value) && (value & (clearMask | setMask)) == setMask;
+ }
+ 
+ inline bool configureAppPowerButton(uint8_t* configuredValue = nullptr) {
++  const freeink::I2cBusLock busLock;
+   uint8_t value = 0;
+   if (!readReg(REG_BTN_CFG_1, &value)) return false;
+   // Keep the timing fields intact. Only take over the single-click reset and
+@@ -179,6 +215,14 @@ inline bool configureAppPowerButton(uint8_t* configuredValue = nullptr) {
    return (verify & (BTN_SINGLE_RESET_DISABLE | BTN_DOWNLOAD_LOCK)) == BTN_SINGLE_RESET_DISABLE;
  }
  
@@ -849,6 +979,22 @@ index 4c2ce964..7c044d92 100644
  inline bool readButtonStatus(uint8_t* value) { return readReg(REG_BTN_STATUS, value); }
  
  inline bool readWakeSource(uint8_t* value) { return readReg(REG_WAKE_SRC, value); }
+@@ -186,6 +230,7 @@ inline bool readWakeSource(uint8_t* value) { return readReg(REG_WAKE_SRC, value)
+ inline bool clearWakeSource() { return writeReg(REG_WAKE_SRC, 0x00); }
+ 
+ inline bool requestShutdown(bool (*shouldAbort)(void*) = nullptr, void* context = nullptr) {
++  const freeink::I2cBusLock busLock;
+   // The PMIC library's reference implementation waits before issuing a system
+   // command so any preceding rail writes have reached the PY32 firmware.
+   delay(120);
+@@ -213,6 +258,7 @@ inline bool requestShutdown(bool (*shouldAbort)(void*) = nullptr, void* context
+ // seen at boot) even while the ESP sleeps. The display is the first PM1 caller,
+ // so doing both here kills the green LED before LedManager has even run.
+ inline void applyBootPowerPolicy() {
++  const freeink::I2cBusLock busLock;
+   updateReg(REG_PWR_CFG, LDO_EN, CHG_EN | DCDC_EN | BOOST_EN);
+   writeReg(REG_NEO_CFG, 0x00);
+ }
 diff --git a/freeink-sdk/libs/hardware/BoardPaperDiy/include/BoardPaperDiy.h b/freeink-sdk/libs/hardware/BoardPaperDiy/include/BoardPaperDiy.h
 new file mode 100644
 index 00000000..6d6c8609
@@ -954,10 +1100,10 @@ index 00000000..864dabc7
 +}
 diff --git a/freeink-sdk/libs/hardware/BoardPaperDiy/src/BoardPaperDiy.cpp b/freeink-sdk/libs/hardware/BoardPaperDiy/src/BoardPaperDiy.cpp
 new file mode 100644
-index 00000000..7134b038
+index 00000000..1ee3a1d5
 --- /dev/null
 +++ b/freeink-sdk/libs/hardware/BoardPaperDiy/src/BoardPaperDiy.cpp
-@@ -0,0 +1,84 @@
+@@ -0,0 +1,88 @@
 +#include <BoardPaperDiy.h>
 +#include <M5Pm1.h>
 +
@@ -1006,6 +1152,10 @@ index 00000000..7134b038
 +namespace BoardPaperDiy {
 +
 +bool ensureBooted() {
++  // The render task also reads the PM1 (battery/charging); enable the shared
++  // bus lock before the first multi-register sequence.
++  freeink::enableI2cBusLock();
++  const freeink::I2cBusLock busLock;
 +  static bool ready = false;
 +  static bool ok = false;
 +  if (ready) return ok;
@@ -1123,20 +1273,20 @@ index 00000000..de106962
 +
 +}  // namespace freeink
 diff --git a/freeink-sdk/libs/hardware/InputManager/include/InputManager.h b/freeink-sdk/libs/hardware/InputManager/include/InputManager.h
-index 167249f9..616d3172 100644
+index 0a85b93a..0283ef6f 100644
 --- a/freeink-sdk/libs/hardware/InputManager/include/InputManager.h
 +++ b/freeink-sdk/libs/hardware/InputManager/include/InputManager.h
-@@ -466,7 +466,7 @@ class InputManager {
-   uint8_t twoButtonPhysicalState;
+@@ -467,7 +467,7 @@ class InputManager {
    unsigned long twoButtonPressStart;
    bool twoButtonLongPressActive;
+   bool twoButtonChordSeen = false;  // both buttons were down during this press
 -#if FREEINK_DEVICE_PAPERMONO
 +#if FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY
    bool powerButtonClick = false;  // Retained through release; polling latency is not click duration.
  #endif
  
 diff --git a/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp b/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
-index 179efa85..a1cb0945 100644
+index 9db87411..b3818d7b 100644
 --- a/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
 +++ b/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
 @@ -1,5 +1,9 @@
@@ -1190,7 +1340,7 @@ index 179efa85..a1cb0945 100644
    if ((auxiliaryState & (1u << BTN_POWER)) && !isPressed(BTN_POWER)) powerButtonClick = pmicClicked;
  #endif
  
-@@ -610,7 +630,7 @@ void InputManager::updateDigitalTwoButton(const unsigned long currentTime) {
+@@ -612,7 +632,7 @@ void InputManager::updateDigitalTwoButton(const unsigned long currentTime) {
    applyStateChange(nextState, currentTime);
    if (physical == 3 && twoButtonLongPressActive) {
      powerButtonPressStart = twoButtonPressStart;
@@ -1199,7 +1349,7 @@ index 179efa85..a1cb0945 100644
      // A chord can take over a PMIC pulse without a new logical press edge.
      powerButtonClick = false;
  #endif
-@@ -701,7 +721,7 @@ unsigned long InputManager::getHeldTime() const {
+@@ -703,7 +723,7 @@ unsigned long InputManager::getHeldTime() const {
  }
  
  unsigned long InputManager::getPowerButtonHeldTime() const {
@@ -1443,7 +1593,7 @@ index 2b8635a9..8d2f15d1 100644
    uint64_t sdTotalBytes() const;
    // Returns used space in bytes, cached with a 20-second TTL (freeClusterCount
 diff --git a/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp b/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp
-index 8821d8ad..ea4be16d 100644
+index c0039755..4ec5ab38 100644
 --- a/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp
 +++ b/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp
 @@ -23,6 +23,13 @@ SDCardManager::SDCardManager() {}
