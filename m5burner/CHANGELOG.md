@@ -1,7 +1,7 @@
 # Changelog de M5Burner
 
 Última publicación registrada en este repositorio: **2.0.0-2** (tag
-`v2.0.0-2`, 2026-11-09). Las entradas **2.0.0-3** a **2.0.0-8** documentan sus
+`v2.0.0-2`, 2026-11-09). Las entradas **2.0.0-3** a **2.0.0-9** documentan sus
 cambios y el texto preparado para el diálogo Publish; no hay constancia en el
 repositorio de que se hayan subido a M5Burner y el estado del catálogo no está
 verificado.
@@ -10,8 +10,15 @@ de publicar.
 
 ## Short description for M5Burner (EN)
 
-CrossPoint for PaperDIY 2.0.0-8 — cumulative update from 2.0.0-2.
+CrossPoint for PaperDIY 2.0.0-9 — cumulative update from 2.0.0-2.
 
+- Synced with CrossPoint `b6b7a6c1` / FreeInk SDK `77ae8c75`: dictionary side
+  buttons, font-cache release, Recent opened-only filter, OPDS redirect error,
+  EEGO/Picco fixes and branch+hash versions.
+- PM1 I²C bus serialized between tasks and battery status cached to avoid
+  phantom power clicks and redundant reads.
+- `Display Refresh` removed; use `Refresh Screen` and `Refresh Frequency`.
+- Spanish/Catalan/Valencian translations for the new Recent strings.
 - Controls reorganized into Power, Front, Side and Gestures submenus.
 - OPDS browser moved to File Transfer; servers live in Settings > Connectivity.
 - New "Show File Extensions" setting.
@@ -31,11 +38,29 @@ CrossPoint for PaperDIY 2.0.0-8 — cumulative update from 2.0.0-2.
 
 Known limitations: real BLE remote pairing, full Calibre transfer and full OTA
 install remain pending, as do sleep/wake, idle current, autonomy and the visual
-ghosting review. The full `make smoke` passed on `2.0.0-8` (25 steps);
-`2.0.0-6` has no dedicated run. The visual battery-curve jump still needs a
-battery below ~90%.
+ghosting review. The full `make smoke` passed on `2.0.0-9` (25 steps, run
+`20261118-121539`); `2.0.0-6` has no dedicated run. The visual battery-curve
+jump still needs a battery below ~90%.
 
 ## Full changelog (EN)
+
+### 2.0.0-9 — 2026-11-18
+
+Synced with CrossPoint `b6b7a6c1` and FreeInk SDK `77ae8c75`.
+
+- Upstream: dictionary page side buttons, font caches released after chapter
+  builds, Recent opened-only option, OPDS redirect error message, EEGO A4
+  auto-sleep/UID, Picco app-only upload and branch+hash versions.
+- PaperDIY port reapplied; `cleanNextRefresh`, the About row count and the
+  A+B chord suppression resolved against the new upstream code.
+- PM1: shared I²C lock, one-time bus setup and a `BATTERY_POLL_MS` status cache
+  prevent interleaved button/battery access from the loop and render tasks.
+- `Display Refresh` removed from Settings; guides point to `Refresh Screen`
+  under Controls > Power button > Short click and to `Refresh Frequency`.
+- Spanish/Catalan/Valencian translations for the new Recent strings; CA/VA
+  recovery hint now names `-ota.bin`.
+- Build 5,446,272 B (83.0% flash, 33.9% RAM); 935 host tests, `paperdiy-test`
+  build and 25-step hardware smoke passed (`20261118-121539`).
 
 ### 2.0.0-8 — 2026-11-16
 
@@ -142,8 +167,9 @@ Synced with CrossPoint `8276d518` (3 commits) and FreeInk SDK `6a208c0c`.
   in a drain test (45.4 h / 5,448 pages), but both battery curves still need
   validation in normal reading. The original 140 mAh kit cell keeps its
   original curve.
-- Full `make smoke` passed on `2.0.0-8` (25 steps); `2.0.0-6` has no dedicated
-  run. The visual battery-curve jump still needs a battery below ~90%.
+- The latest full `make smoke` passed on `2.0.0-9` (25 steps, run
+  `20261118-121539`); `2.0.0-6` has no dedicated run. The visual battery-curve
+  jump still needs a battery below ~90%.
 
 ## Changelog completo (ES)
 
@@ -260,6 +286,6 @@ Sincronización con CrossPoint `8276d518` (3 commits) y FreeInk SDK `6a208c0c`.
   extendida se midió en una descarga real (45,4 h / 5.448 páginas), pero ambas
   curvas de batería siguen pendientes de validar en lectura normal. La celda
   original de 140 mAh conserva su curva original.
-- El `make smoke` completo pasó en `2.0.0-8` (25 pasos); `2.0.0-6` no tiene una
-  ejecución propia. El salto visual de la curva sigue pendiente con batería
-  por debajo del ~90 %.
+- La última ejecución completa de `make smoke` pasó en `2.0.0-9` (25 pasos,
+  run `20261118-121539`); `2.0.0-6` no tiene una ejecución propia. El salto
+  visual de la curva sigue pendiente con batería por debajo del ~90 %.

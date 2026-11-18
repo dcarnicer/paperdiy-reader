@@ -1,5 +1,30 @@
 # Changelog
 
+## 2.0.0-9 — 2026-11-18
+
+Sincronización con CrossPoint `b6b7a6c1` y FreeInk SDK `77ae8c75`. Mantiene
+CrossPoint `2.0.0`.
+
+- CrossPoint `490813ff` → `b6b7a6c1`: botones laterales en páginas de
+  diccionario, liberación de cachés de fuentes al cerrar capítulos, opción de
+  Recientes solo con libros abiertos, mensaje de error OPDS con redirects,
+  auto-sleep y UID de EEGO A4, upload app-only de Picco y versión branch+hash.
+- SDK `3f3e4c1` → `77ae8c75`: nuevo `InputManager` con supresión del chord A+B,
+  listas interactivas, mejoras de pantalla para Picco/EEGO y cabeceras de
+  `SecureNet`. Port reaplicado sobre el pin nuevo.
+- PM1: el bus I²C se serializa con `I2cBusLock` entre las tareas de render y
+  loop, se configura una sola vez y el estado de batería se cachea durante
+  `BATTERY_POLL_MS`. Evita reinit y lecturas entre tareas.
+- `Display Refresh` eliminado de Ajustes (upstream); las guías usan `Refresh
+  Screen` y `Refresh Frequency`.
+- Traducciones ES/CA/VA para las nuevas cadenas de Recientes; ayuda de
+  recuperación CA/VA alineada con `-ota.bin`.
+- Build `paperdiy`: `firmware.bin` 5.446.272 B, 83,0 % de flash y 33,9 % de
+  RAM. Tests: 935 host, `paperdiy-test` compila y `make smoke` 25/25
+  (`20261118-121539`).
+- Hardware: smoke completo sobre `paperdiy-test`; pendientes ghosting,
+  autonomía, sleep/wake, BLE real, Calibre completo y OTA completa.
+
 ## 2.0.0-8 — 2026-11-16
 
 Sincronización con CrossPoint `490813ff` y FreeInk SDK `3f3e4c1`, más los

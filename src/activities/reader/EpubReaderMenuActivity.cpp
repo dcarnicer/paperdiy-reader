@@ -35,7 +35,7 @@ void EpubReaderMenuActivity::onEnter() {
   RenderLock lock;
   // The reader page is still on the glass. A FAST full-screen replacement
   // leaves its text faintly visible behind the menu; scrub it once.
-  cleanFirstRender = true;
+  cleanNextRefresh = true;
   UiListActivity::onEnter();
   for (size_t i = 0; i < menuItems.size(); ++i) {
     if (menuItems[i].action == selectedAction) {

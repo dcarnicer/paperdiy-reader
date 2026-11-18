@@ -3,8 +3,8 @@
 Este repo es un fork downstream de CrossPoint. La regla es simple: **el motor
 se sigue de upstream; el hardware y la UX PaperDIY viven en nuestro fork**.
 
-Última sincronización: CrossPoint `490813ff` / FreeInk SDK `3f3e4c1`
-(16/11/2026).
+Última sincronización: CrossPoint `b6b7a6c1` / FreeInk SDK `77ae8c75`
+(18/11/2026).
 
 ## Ramas y remotos
 
@@ -169,8 +169,8 @@ git add freeink-sdk && git commit -m "chore: vendor pristine SDK for patch basel
 
 | Patch | Base | Contenido |
 |---|---|---|
-| `patches/sdk.patch` | FreeInk SDK `3f3e4c1` | perfil, BoardPaperDiy, PM1, InputManager, PowerManager, driver LGFX, batería |
-| `patches/firmware.patch` | CrossPoint `490813ff` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main, batería |
+| `patches/sdk.patch` | FreeInk SDK `77ae8c75` | perfil, BoardPaperDiy, PM1/I2C lock, InputManager, PowerManager, driver LGFX, batería |
+| `patches/firmware.patch` | CrossPoint `b6b7a6c1` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main, batería |
 | `patches/paperdiy-support.patch` | ambos | concatenación de los dos anteriores |
 
 Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
@@ -183,6 +183,29 @@ Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
 en el parche, lo hincha y aumenta el riesgo de conflictos en el próximo
 `git apply --3way`. Mantén los cambios limitados a hunks funcionales y regenera
 el parche solo para esos hunks.
+
+## Release `2.0.0-9` (18/11/2026)
+
+Sincronización con CrossPoint `b6b7a6c1` / FreeInk SDK `77ae8c75`. Mantiene
+CrossPoint `2.0.0`.
+
+- Upstream: botones laterales en diccionario, liberación de cachés de fuentes
+  al cerrar capítulos, opción de Recientes solo con libros abiertos, mensaje de
+  error OPDS con redirects, fixes de EEGO A4/Picco y versión branch+hash.
+- Port: conflictos resueltos en `CrossPointSettings`, `UiListActivity`
+  (`cleanNextRefresh` de upstream sustituye a `cleanFirstRender`),
+  `AboutActivity` (15 filas / 16 en EEGO) e `InputManager` (A+B + PaperDIY).
+- PM1: el bus I²C se comparte con `I2cBusLock`, se configura una sola vez y el
+  estado de batería se cachea durante `BATTERY_POLL_MS`; evita reinit y reads
+  entre tareas.
+- `Display Refresh` eliminado de Ajustes; las guías usan `Refresh Screen` +
+  `Refresh Frequency`.
+- Traducciones ES/CA/VA para las cadenas nuevas de Recientes.
+- Build `paperdiy`: `firmware.bin` 5.446.272 B, 83,0 % de flash y 33,9 % de
+  RAM. Tests: 935 host, `paperdiy-test` compila y `make smoke` 25/25
+  (`20261118-121539`).
+- Hardware: smoke completo sobre `paperdiy-test`; pendientes ghosting,
+  autonomía, sleep/wake, BLE real, Calibre completo y OTA completa.
 
 ## Release `2.0.0-8` (16/11/2026)
 
@@ -241,11 +264,10 @@ Estado: release `2.0.0-6` publicada (tag `v2.0.0-6`) sobre CrossPoint
 - Smoke histórico pendiente: BLE real, Calibre completo y OTA completa.
 
 > **Regresión.** La última ejecución completa de `make smoke` es la del
-> 16/11/2026 sobre el árbol del sync `490813ff` (run `20261116-194343`, PASS 25
-> pasos). `2.0.0-6` no tiene una ejecución propia. Antes de publicar la próxima
-> versión hay que repetir el smoke y completar la revisión de ghosting,
-> autonomía y el salto visual de la curva de batería. Los resultados históricos
-> no se reescriben como si hubieran pasado.
+> 18/11/2026 sobre el árbol del sync `b6b7a6c1` (run `20261118-121539`, PASS 25
+> pasos). `2.0.0-6` no tiene una ejecución propia. Queda pendiente completar la
+> revisión de ghosting, autonomía y el salto visual de la curva de batería. Los
+> resultados históricos no se reescriben como si hubieran pasado.
 
 ## OTA
 

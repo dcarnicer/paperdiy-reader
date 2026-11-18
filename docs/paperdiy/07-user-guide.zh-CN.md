@@ -47,6 +47,8 @@
 - 在书上长按 B 打开菜单（打开、详情、删除等）。
 - 元数据和封面缓存于 `/.crosspoint/`；如果显示异常，删除该文件夹后会重新
   生成。
+- 在 设置 > 书库 中打开 `Hide New Files in Recent`，最近标签页只显示已打开
+  的书。
 
 ## 阅读
 
@@ -150,7 +152,7 @@
 |---|---|
 | 白屏 | PM1 GPIO2/GPIO46？DCDC？完整烧录？ |
 | 图像倒置 | 修改 `paperdiyLgfxConfig` 中的 `rotation`（0 ↔ 2） |
-| 翻页残影 | 在 设置 > 显示 中把 `Refresh Frequency` 试为 5，再试 1；新的快速 LUT 仍在验证中。需要立即全屏刷新时：设置 > 系统 > `Display Refresh`（按返回停止） |
+| 翻页残影 | 在 设置 > 显示 中把 `Refresh Frequency` 试为 5，再试 1；新的快速 LUT 仍在验证中。需要立即手动刷新时：在 设置 > 控制 > 电源键 > 短按 中分配 `Refresh Screen`，然后按电源键使用；将 `Refresh Frequency` 设为 1 后，从第二页起每页执行一次 HALF 清洁刷新 |
 | SD 无法挂载 | FAT32/exFAT、接触、换一张卡；启动时没有卡的话，插入后设备会重启 |
 | 无法翻页 | 电池？A/B？是否处于休眠？ |
 | 无法唤醒 | 按键是否正常？`ext1` GPIO3/4？ |

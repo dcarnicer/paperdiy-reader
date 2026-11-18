@@ -33,5 +33,5 @@ se validaron auto-suspensión y sleep screen con portada. La lectura larga
 automatizada aguantó 250+ cambios de página sin errores ni fugas (06/11).
 KOReader Sync se validó contra un servidor KOSync local (06/11). Quedan
 pendientes emparejar un mando BLE, consumo en sleep y la revisión visual física
-del ghosting. El `make smoke` completo pasó en `2.0.0-8` (16/11). Empieza por
+del ghosting. El `make smoke` completo pasó en `2.0.0-9` (18/11). Empieza por
 `06-porting.md`.

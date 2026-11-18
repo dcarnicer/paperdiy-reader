@@ -46,6 +46,10 @@ bool ensurePm1Ready() {
 namespace BoardPaperDiy {
 
 bool ensureBooted() {
+  // The render task also reads the PM1 (battery/charging); enable the shared
+  // bus lock before the first multi-register sequence.
+  freeink::enableI2cBusLock();
+  const freeink::I2cBusLock busLock;
   static bool ready = false;
   static bool ok = false;
   if (ready) return ok;

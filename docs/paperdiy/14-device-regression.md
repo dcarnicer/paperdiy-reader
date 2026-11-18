@@ -60,10 +60,21 @@ falla con un mensaje que pide flashear `paperdiy-test`.
 
 ## Resultado actual
 
-> **Estado:** smoke completo ejecutado el 16/11/2026 sobre el árbol del sync
-> `490813ff` (build previa a la release `2.0.0-8`, que solo cambia la cadena de
-> versión): PASS, 25 pasos. Queda pendiente el salto visual de la curva de
-> batería (necesita <90 %) y la revisión de autonomía.
+> **Estado:** smoke completo ejecutado el 18/11/2026 sobre el árbol del sync
+> `b6b7a6c1` / SDK `77ae8c75` (`paperdiy-test` `2.0.0-9`): PASS, 25 pasos.
+> Queda pendiente el salto visual de la curva de batería (necesita <90 %) y la
+> revisión de autonomía.
+
+`2026-11-18`, PaperDIY `2.0.0-9` (árbol del sync `b6b7a6c1` / SDK
+`77ae8c75`), run `20261118-121539`: **PASS, 25 pasos**. Tras restaurar y hacer
+un ciclo de power, el dispositivo volvió a Home.
+
+> **Nota:** el PASS se ejecutó sobre el `paperdiy-test` del árbol del sync.
+> Después se aplicaron tres ajustes finos al PM1 (init solo si responde, no
+> cachear fallos y suavizado una vez por muestra). El build final compila y
+> pasa los 935 tests host, pero la repetición del smoke quedó bloqueada porque
+> macOS no volvió a enumerar `DABI` tras varios eject. Repetir el smoke en la
+> próxima sesión de hardware.
 
 `2026-11-16`, PaperDIY `2.0.0-8` (árbol del sync `490813ff`; el smoke se
 ejecutó antes del bump de versión), run `20261116-194343`: **PASS, 25 pasos**.

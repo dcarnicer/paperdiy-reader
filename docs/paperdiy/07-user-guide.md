@@ -55,6 +55,8 @@ antes de abrir el menú; es un compromiso de UX pendiente de decidir.
 - B largo sobre un libro abre el menú (abrir, detalles, borrar, etc.).
 - Los metadatos y portadas se cachean en `/.crosspoint/`; si algo queda raro,
   borra esa carpeta y se regenera.
+- En Ajustes > Biblioteca, `Recientes: solo abiertos` limita la pestaña
+  Recientes a los libros que ya has abierto.
 
 ## Leer
 
@@ -176,7 +178,7 @@ primera consulta puede tardar unos segundos porque recorre la FAT.
 |---|---|
 | Pantalla en blanco | ¿PM1 GPIO2/GPIO46? ¿DCDC? ¿flasheo completo? |
 | Imagen invertida | cambiar `rotation` en `paperdiyLgfxConfig` (0 ↔ 2) |
-| Ghosting al pasar páginas | probar `Refresh Frequency` en 5 y luego en 1 en Ajustes > Pantalla; la LUT rápida nueva está en validación. Para un refresco completo inmediato: Ajustes > Sistema > `Display Refresh` (Atrás lo detiene) |
+| Ghosting al pasar páginas | probar `Frecuencia de refresco` en 5 y luego en 1 en Ajustes > Pantalla; la LUT rápida nueva está en validación. Para un refresco manual inmediato: asigna `Refrescar pant.` en Ajustes > Controles > Botón de encendido > Pulsación corta y úsalo con el botón power; con `Frecuencia de refresco` en 1 se hace un HALF de limpieza en cada página a partir de la segunda |
 | No monta la SD | FAT32/exFAT, contacto, probar otra tarjeta; si no hay tarjeta al arrancar, insertarla y el equipo reinicia |
 | No pasa página | ¿batería? ¿A/B? ¿está en modo sleep? |
 | No despierta | ¿el botón está bien? ¿`ext1` GPIO3/4? |

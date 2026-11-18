@@ -17,6 +17,8 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+#include "I2cBusLock.h"
+
 namespace freeink {
 namespace m5pm1 {
 
@@ -100,17 +102,36 @@ constexpr uint8_t GPIO_WAKE_MASK = 0x1F;
 // (SLP_TO=0) so it doesn't drop off the bus between transactions. Idempotent —
 // safe to call from each module's begin().
 inline void beginBus() {
+#if defined(FREEINK_DEVICE_PAPERDIY) && FREEINK_DEVICE_PAPERDIY
+  // The render task and the loop task share this bus. Configure the peripheral
+  // once; a per-read Wire.begin() used to reset it in the middle of the other
+  // task's register-pointer/read pair. Only mark it configured when the PM1
+  // acknowledged both writes, so a failed first bring-up retries.
+  const freeink::I2cBusLock busLock;
+  static bool initialized = false;
+  if (initialized) return;
+  bool configured = true;
+#endif
   Wire.begin(SDA, SCL, I2C_HZ);
   Wire.setTimeOut(4);
   Wire.beginTransmission(ADDR);
   Wire.write(REG_I2C_CFG);
   Wire.write(0x00);
+#if defined(FREEINK_DEVICE_PAPERDIY) && FREEINK_DEVICE_PAPERDIY
+  configured = Wire.endTransmission() == 0;
+#else
   Wire.endTransmission();
+#endif
   delayMicroseconds(500);
   Wire.beginTransmission(ADDR);
   Wire.write(REG_WDT_CNT);
   Wire.write(0x00);
+#if defined(FREEINK_DEVICE_PAPERDIY) && FREEINK_DEVICE_PAPERDIY
+  configured = (Wire.endTransmission() == 0) && configured;
+  initialized = configured;
+#else
   Wire.endTransmission();
+#endif
 }
 
 // The PM1 is a PY32 MCU emulating an I2C slave in firmware, not a hardware
@@ -121,6 +142,7 @@ inline void beginBus() {
 constexpr uint32_t XFER_DELAY_US = 500;
 
 inline bool writeReg(uint8_t reg, uint8_t value) {
+  const freeink::I2cBusLock busLock;
   Wire.beginTransmission(ADDR);
   Wire.write(reg);
   Wire.write(value);
@@ -130,6 +152,7 @@ inline bool writeReg(uint8_t reg, uint8_t value) {
 }
 
 inline bool writeBytes(uint8_t reg, const uint8_t* data, uint8_t len) {
+  const freeink::I2cBusLock busLock;
   Wire.beginTransmission(ADDR);
   Wire.write(reg);
   for (uint8_t i = 0; i < len; ++i) Wire.write(data[i]);
@@ -144,6 +167,7 @@ inline bool writeReg16(uint8_t reg, uint16_t value) {
 }
 
 inline bool readBytes(uint8_t reg, uint8_t* data, uint8_t len) {
+  const freeink::I2cBusLock busLock;
   Wire.beginTransmission(ADDR);
   Wire.write(reg);
   if (Wire.endTransmission(false) != 0) return false;
@@ -164,18 +188,21 @@ inline bool readReg16(uint8_t reg, uint16_t* value) {
 }
 
 inline bool updateReg(uint8_t reg, uint8_t clearMask, uint8_t setMask) {
+  const freeink::I2cBusLock busLock;
   uint8_t value = 0;
   if (!readReg(reg, &value)) return false;
   return writeReg(reg, static_cast<uint8_t>((value & ~clearMask) | setMask));
 }
 
 inline bool updateRegChecked(uint8_t reg, uint8_t clearMask, uint8_t setMask) {
+  const freeink::I2cBusLock busLock;
   if (!updateReg(reg, clearMask, setMask)) return false;
   uint8_t value = 0;
   return readReg(reg, &value) && (value & (clearMask | setMask)) == setMask;
 }
 
 inline bool configureAppPowerButton(uint8_t* configuredValue = nullptr) {
+  const freeink::I2cBusLock busLock;
   uint8_t value = 0;
   if (!readReg(REG_BTN_CFG_1, &value)) return false;
   // Keep the timing fields intact. Only take over the single-click reset and
@@ -203,6 +230,7 @@ inline bool readWakeSource(uint8_t* value) { return readReg(REG_WAKE_SRC, value)
 inline bool clearWakeSource() { return writeReg(REG_WAKE_SRC, 0x00); }
 
 inline bool requestShutdown(bool (*shouldAbort)(void*) = nullptr, void* context = nullptr) {
+  const freeink::I2cBusLock busLock;
   // The PMIC library's reference implementation waits before issuing a system
   // command so any preceding rail writes have reached the PY32 firmware.
   delay(120);
@@ -230,6 +258,7 @@ inline bool requestShutdown(bool (*shouldAbort)(void*) = nullptr, void* context 
 // seen at boot) even while the ESP sleeps. The display is the first PM1 caller,
 // so doing both here kills the green LED before LedManager has even run.
 inline void applyBootPowerPolicy() {
+  const freeink::I2cBusLock busLock;
   updateReg(REG_PWR_CFG, LDO_EN, CHG_EN | DCDC_EN | BOOST_EN);
   writeReg(REG_NEO_CFG, 0x00);
 }

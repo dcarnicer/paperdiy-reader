@@ -54,6 +54,8 @@ opening the menu; it is a UX trade-off still to be decided.
 - Long B on a book opens the menu (open, details, delete, etc.).
 - Metadata and covers are cached in `/.crosspoint/`; if something looks wrong,
   delete that folder and it will be regenerated.
+- Under Settings > Library, `Hide New Files in Recent` limits the Recent tab to
+  books you have opened.
 
 ## Reading
 
@@ -176,7 +178,7 @@ look can take a few seconds because it walks the FAT.
 |---|---|
 | Blank screen | PM1 GPIO2/GPIO46? DCDC? Full flash? |
 | Inverted image | change `rotation` in `paperdiyLgfxConfig` (0 ↔ 2) |
-| Ghosting when turning pages | try `Refresh Frequency` at 5, then 1 in Settings > Display; the new fast LUT is under validation. For an immediate full refresh: Settings > System > `Display Refresh` (Back stops it) |
+| Ghosting when turning pages | try `Refresh Frequency` at 5, then 1 in Settings > Display; the new fast LUT is under validation. For an immediate manual refresh: assign `Refresh Screen` under Settings > Controls > Power button > Short click and use the power button; at 1, `Refresh Frequency` applies a clean half-refresh on every page after the first |
 | SD does not mount | FAT32/exFAT, contact, try another card; if there is no card at boot, insert it and the device restarts |
 | Page does not turn | battery? A/B? is it in sleep mode? |
 | Does not wake | is the button OK? `ext1` GPIO3/4? |

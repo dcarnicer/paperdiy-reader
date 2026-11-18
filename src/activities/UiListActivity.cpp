@@ -5,6 +5,7 @@
 #include <Logging.h>
 
 #include <algorithm>
+#include <utility>
 
 #include "MappedInputManager.h"
 #include "components/UITheme.h"
@@ -261,7 +262,5 @@ void UiListActivity::render(RenderLock&&) {
     renderUi();
   }
   drawFooter();
-  const auto refreshMode = cleanFirstRender ? HalDisplay::HALF_REFRESH : HalDisplay::FAST_REFRESH;
-  cleanFirstRender = false;
-  renderer.displayBuffer(refreshMode);
+  renderer.displayBuffer(std::exchange(cleanNextRefresh, false) ? HalDisplay::HALF_REFRESH : HalDisplay::FAST_REFRESH);
 }

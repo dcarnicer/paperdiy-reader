@@ -19,6 +19,11 @@ class HalPowerManager {
 
   mutable int _batteryCachedPercent = 0;         // Last read battery percentage (0-100)
   mutable unsigned long _batteryLastPollMs = 0;  // Timestamp of last battery read in milliseconds
+  // The PM1 read is several blocking I2C transfers; the status bar asks for it
+  // more than once per frame. Share one snapshot for a poll interval.
+  mutable BatteryMonitor::Status _batteryStatusCache{};
+  mutable unsigned long _batteryStatusLastPollMs = 0;
+  mutable bool _batteryStatusCacheValid = false;
   // PaperDIY has no coulomb counter, so charging voltage cannot estimate SoC.
   // Hold the last discharge estimate while external power is present and wait
   // for the cell to relax after unplugging.

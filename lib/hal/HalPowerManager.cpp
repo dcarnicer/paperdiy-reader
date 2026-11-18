@@ -274,8 +274,31 @@ bool HalPowerManager::holdWhileUsbPowered(HalGPIO& gpio, void (*onStatus)(bool c
 #endif
 
 BatteryMonitor::Status HalPowerManager::readBatteryStatusLocked() const {
+  const unsigned long now = millis();
+  if (BoardConfig::isPaperDiy() && _batteryStatusCacheValid && (now - _batteryStatusLastPollMs) < BATTERY_POLL_MS) {
+    return _batteryStatusCache;
+  }
   BatteryMonitor::Status status = batteryMonitor().readStatus();
   applyPaperDiyBatteryPresentation(status);
+  if (BoardConfig::isPaperDiy()) {
+    // A transient I2C failure must not be cached as a valid zero-percent
+    // sample. Return the last good snapshot and let the next call retry.
+    if (!status.millivoltsKnown && !status.externalPowerKnown) {
+      return _batteryStatusCacheValid ? _batteryStatusCache : status;
+    }
+    // Smooth once per fresh PM1 sample; cache hits above skip this block.
+    const uint16_t sample = status.percentageKnown ? status.percentage : _batteryCachedPercent / 10;
+    if (_batteryPresentationFixed) {
+      _batteryCachedPercent = sample * 10;
+    } else if (_batteryCachedPercent == 0) {
+      _batteryCachedPercent = 10 * sample;
+    } else {
+      _batteryCachedPercent = (_batteryCachedPercent * 9 + sample * 10) / 10;
+    }
+    _batteryStatusCache = status;
+    _batteryStatusLastPollMs = now;
+    _batteryStatusCacheValid = true;
+  }
   return status;
 }
 
@@ -351,8 +374,10 @@ BatteryMonitor::Status HalPowerManager::getBatteryStatus() const {
 
 void HalPowerManager::setPaperDiyBatteryProfile(const bool extended) const {
 #if FREEINK_DEVICE_PAPERDIY
+  const BatteryReadLock lock(batteryMutex);
   BatteryMonitor::setPaperDiyBatteryProfile(extended ? BatteryMonitor::PaperDiyBatteryProfile::Extended
                                                      : BatteryMonitor::PaperDiyBatteryProfile::Kit);
+  _batteryStatusCacheValid = false;
 #else
   (void)extended;
 #endif
@@ -377,6 +402,7 @@ void HalPowerManager::setBatteryHoldForTest(const int percent, const bool forceN
     _hasLastDischargePercent = true;
   }
   _forceNotFullForTest = forceNotFull;
+  _batteryStatusCacheValid = false;
 }
 #endif
 
@@ -397,8 +423,13 @@ uint16_t HalPowerManager::getBatteryPercentage() const {
     return _batteryCachedPercent;
   }
 
-  // smooth the battery %.
   const BatteryMonitor::Status status = readBatteryStatusLocked();
+  if (BoardConfig::isPaperDiy()) {
+    // readBatteryStatusLocked() already smoothed the fresh sample; a cache
+    // hit must not feed the same sample into the filter again.
+    return static_cast<uint16_t>(_batteryCachedPercent / 10);
+  }
+  // smooth the battery %.
   const uint16_t sample = status.percentageKnown ? status.percentage : 0;
   if (_batteryPresentationFixed) {
     _batteryCachedPercent = sample * 10;

@@ -1007,6 +1007,9 @@ bool BatteryMonitor::readM5Pm1Status(Status& status) const {
   status.supported = true;
   if (!hasM5Pm1Backend()) return false;
 
+  // Keep the rail burst, PWR_SRC and CHG_STAT in one PM1 transaction group so
+  // the button poll cannot interleave with a half-read status snapshot.
+  const freeink::I2cBusLock busLock;
   freeink::m5pm1::beginBus();
 
   // VREF/VBAT/VIN/5VOUT are four complete 16-bit little-endian millivolt

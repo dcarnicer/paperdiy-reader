@@ -106,6 +106,10 @@ def run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
 class Device:
     def __init__(self, port: str | None, artifacts: Path) -> None:
         self.port = port or pd.find_port()
+        # With more than one USB serial device attached, reopening by
+        # `find_port()` can select the wrong board. Keep the port this run
+        # started on and wait for it to come back after USB-drive mode.
+        self.preferred_port = self.port
         self.fd = pd.open_port(self.port, 115200)
         self.reader = pd.SerialReader(self.fd)
         self.artifacts = artifacts
@@ -120,14 +124,17 @@ class Device:
         self.close()
         deadline = time.time() + timeout
         while time.time() < deadline:
+            if not os.path.exists(self.preferred_port):
+                time.sleep(0.5)
+                continue
             try:
-                self.port = pd.find_port()
+                self.port = self.preferred_port
                 self.fd = pd.open_port(self.port, 115200)
                 self.reader = pd.SerialReader(self.fd)
                 return
-            except (OSError, SystemExit):
+            except OSError:
                 time.sleep(0.5)
-        raise RegressionError("el puerto serie no reappeared después de expulsar la SD")
+        raise RegressionError(f"el puerto {self.preferred_port} no reapareció después de expulsar la SD")
 
     def key(self, name: str, retry: int = 4, settle: float = 0.7) -> bool:
         args = SimpleNamespace(key=name, retry=retry, settle=settle, timeout=10.0)
@@ -208,7 +215,12 @@ class Device:
 
 
 def home_screen(dev: Device) -> bool:
-    path = dev.screenshot("00-home")
+    try:
+        path = dev.screenshot("00-home")
+    except pd.SerialTimeout:
+        # The reader drops the first console command while it leaves USB-drive
+        # mode; go_home() will send a key and retry.
+        return False
     text = normalize(dev.ocr(path))
     return any(label in text for label in HOME_LABELS_LOWER)
 
