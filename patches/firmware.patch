@@ -1,8 +1,8 @@
 diff --git a/lib/GfxRenderer/GfxRenderer.cpp b/lib/GfxRenderer/GfxRenderer.cpp
-index ea16890c..860b515f 100644
+index 3e643fb6..a2b33f61 100644
 --- a/lib/GfxRenderer/GfxRenderer.cpp
 +++ b/lib/GfxRenderer/GfxRenderer.cpp
-@@ -1783,6 +1783,22 @@ void GfxRenderer::displayBuffer(HalDisplay::RefreshMode refreshMode) const {
+@@ -1755,6 +1755,22 @@ void GfxRenderer::displayBuffer(HalDisplay::RefreshMode refreshMode) const {
    display.displayBuffer(refreshMode, fadingFix);
  }
  
@@ -26,10 +26,10 @@ index ea16890c..860b515f 100644
    refreshMode = applyPromotedRefresh(refreshMode);
    // The async path has no turn-off-screen hook, which the sunlight fading fix
 diff --git a/lib/GfxRenderer/GfxRenderer.h b/lib/GfxRenderer/GfxRenderer.h
-index ad2fc10b..570e0321 100644
+index 9522f4f3..97fe6b61 100644
 --- a/lib/GfxRenderer/GfxRenderer.h
 +++ b/lib/GfxRenderer/GfxRenderer.h
-@@ -264,6 +264,13 @@ class GfxRenderer {
+@@ -248,6 +248,13 @@ class GfxRenderer {
    // EXPERIMENTAL: Windowed update - display only a rectangular region
    // Repaint a B/W rectangle over retained gray pixels; false means the caller must use its normal paint.
    bool displayRetainedGrayscaleOverlay(int x, int y, int width, int height, bool restore = false) const;
@@ -271,10 +271,10 @@ index 2a3571f6..e25b4585 100644
 +  char firmwareAssetName[64];
  };
 diff --git a/lib/hal/HalDisplay.cpp b/lib/hal/HalDisplay.cpp
-index 33e48c68..82bdd5a0 100644
+index 6f5a56d7..a37f07b5 100644
 --- a/lib/hal/HalDisplay.cpp
 +++ b/lib/hal/HalDisplay.cpp
-@@ -67,6 +67,10 @@ void HalDisplay::displayBuffer(HalDisplay::RefreshMode mode, bool turnOffScreen)
+@@ -62,6 +62,10 @@ void HalDisplay::displayBuffer(HalDisplay::RefreshMode mode, bool turnOffScreen)
    einkDisplay.displayBuffer(convertRefreshMode(mode), turnOffScreen);
  }
  
@@ -286,11 +286,11 @@ index 33e48c68..82bdd5a0 100644
    if (gpio.deviceIsX3() && mode == RefreshMode::HALF_REFRESH) {
      einkDisplay.requestResync(1);
 diff --git a/lib/hal/HalDisplay.h b/lib/hal/HalDisplay.h
-index 921e367a..61260e95 100644
+index 4f2badb2..250c2812 100644
 --- a/lib/hal/HalDisplay.h
 +++ b/lib/hal/HalDisplay.h
-@@ -57,6 +57,10 @@ class HalDisplay {
-                             bool fromProgmem = false) const;
+@@ -60,6 +60,10 @@ class HalDisplay {
+                  bool fromProgmem = false) const;
  
    void displayBuffer(RefreshMode mode = RefreshMode::FAST_REFRESH, bool turnOffScreen = false);
 +  // Refresh only a panel-memory rectangle. Coordinates are physical panel
@@ -742,19 +742,21 @@ index 0ddf380c..b5eb0bee 100644
    // Usage: create an instance of Lock in a scope to disable power saving, for example when running a task that needs
    // full performance. When the Lock instance is destroyed (goes out of scope), power saving will be re-enabled.
 diff --git a/lib/hal/HalStorage.cpp b/lib/hal/HalStorage.cpp
-index 29c083b8..e3e9eb15 100644
+index 9fa88677..481f1a7e 100644
 --- a/lib/hal/HalStorage.cpp
 +++ b/lib/hal/HalStorage.cpp
-@@ -37,6 +37,8 @@ bool HalStorage::begin() { return SDCard.begin(); }
+@@ -34,6 +34,10 @@ HalStorage::HalStorage() {
+ // Setup calls begin() before any storage users start.
+ bool HalStorage::begin() { return SDCard.begin(); }
  
- bool HalStorage::ready() const { return SDCard.ready(); }
- 
++bool HalStorage::ready() const { return SDCard.ready(); }
++
 +bool HalStorage::isCardPresent() const { return SDCard.isCardPresent(); }
 +
  // For the rest of the methods, we acquire the mutex to ensure thread safety
  
  class HalStorage::StorageLock {
-@@ -45,6 +47,11 @@ class HalStorage::StorageLock {
+@@ -42,6 +46,11 @@ class HalStorage::StorageLock {
    ~StorageLock() { xSemaphoreGiveRecursive(HalStorage::getInstance().storageMutex); }
  };
  
@@ -767,13 +769,14 @@ index 29c083b8..e3e9eb15 100644
    StorageLock lock;
    SDCard.shutdown();
 diff --git a/lib/hal/HalStorage.h b/lib/hal/HalStorage.h
-index bee6736b..692a5584 100644
+index 57c4ed98..7339df8c 100644
 --- a/lib/hal/HalStorage.h
 +++ b/lib/hal/HalStorage.h
-@@ -24,6 +24,9 @@ class HalStorage {
+@@ -23,6 +23,10 @@ class HalStorage {
+  public:
    HalStorage();
    bool begin();
-   bool ready() const;
++  bool ready() const;
 +  bool isCardPresent() const;
 +  // Unmount and probe again after a card is inserted.
 +  bool remount();
@@ -1051,7 +1054,7 @@ index 06ecd724..1ffce128 100644
    UiListActivity::render(std::move(lock));
  }
 diff --git a/src/activities/settings/AboutActivity.cpp b/src/activities/settings/AboutActivity.cpp
-index 67fde543..0a54fcd3 100644
+index b03c40ee..27e1b206 100644
 --- a/src/activities/settings/AboutActivity.cpp
 +++ b/src/activities/settings/AboutActivity.cpp
 @@ -4,6 +4,7 @@
@@ -1068,34 +1071,20 @@ index 67fde543..0a54fcd3 100644
    ITEM_SD_FREE,
 +  ITEM_BATTERY,
    ITEM_DISPLAY,
-   ITEM_RESOLUTION,
-   ITEM_TOUCH,
-@@ -43,19 +45,8 @@ enum MenuItem {
- // these screenshots across every device language, so the labels must be
- // identical on every unit.
- const char* const menuNames[AboutActivity::ITEM_COUNT] = {
--    "Device",
--    "Firmware",
--    "Chip",
--    "Flash",
--    "SD Size",
--    "SD Used",
--    "SD Free",
--    "Display Controller",
--    "Resolution",
--    "Touch",
--    "Frontlight",
--    "RTC",
--    "Tilt Sensor (IMU)",
-+    "Device",      "Firmware",           "Chip",       "Flash", "SD Size",    "SD Used", "SD Free",
-+    "Battery",     "Display Controller", "Resolution", "Touch", "Frontlight", "RTC",     "Tilt Sensor (IMU)",
-     "MAC Address",
- #if FREEINK_DEVICE_EEGO_A4
-     "UID",
-@@ -159,6 +150,21 @@ void AboutActivity::onEnter() {
-   const char* liveController = display.controllerName();
-   rowValues_[ITEM_DISPLAY] =
-       liveController ? liveController : displayControllerName(BoardConfig::ACTIVE.displayController);
+ #if FREEINK_DEVICE_PICCO
+   ITEM_PANEL,
+@@ -55,6 +57,7 @@ const char* const menuNames[AboutActivity::ITEM_COUNT] = {
+     "SD Size",
+     "SD Used",
+     "SD Free",
++    "Battery",
+     "Display Controller",
+ #if FREEINK_DEVICE_PICCO
+     "Display Panel",
+@@ -171,6 +174,21 @@ void AboutActivity::onEnter() {
+   const char* panel = display.panelName();
+   rowValues_[ITEM_PANEL] = panel ? panel : "Unknown";
+ #endif
 +
 +  // The PM1 has no coulomb counter, so show the raw rails next to the percentage.
 +  // This is also the quickest way to tell a full pack from a charger that has
@@ -1115,21 +1104,20 @@ index 67fde543..0a54fcd3 100644
             static_cast<unsigned>(BoardConfig::ACTIVE.displayHeight));
    rowValues_[ITEM_RESOLUTION] = buf;
 diff --git a/src/activities/settings/AboutActivity.h b/src/activities/settings/AboutActivity.h
-index 1e5fb59d..b6e62a58 100644
+index f356d9f1..e89081f1 100644
 --- a/src/activities/settings/AboutActivity.h
 +++ b/src/activities/settings/AboutActivity.h
-@@ -11,9 +11,9 @@ class AboutActivity final : public UiListActivity {
+@@ -12,8 +12,8 @@ class AboutActivity final : public UiListActivity {
+  public:
    explicit AboutActivity(GfxRenderer& renderer, MappedInputManager& mappedInput);
  
- #if FREEINK_DEVICE_EEGO_A4
--  static constexpr int ITEM_COUNT = 15;
-+  static constexpr int ITEM_COUNT = 16;
- #else
--  static constexpr int ITEM_COUNT = 14;
-+  static constexpr int ITEM_COUNT = 15;
- #endif
+-  // The Picco adds a panel row and the EEGO A4 a UID row.
+-  static constexpr int ITEM_COUNT = 14 + FREEINK_DEVICE_PICCO + FREEINK_DEVICE_EEGO_A4;
++  // Base rows + Picco panel + EEGO UID + the fork's battery row.
++  static constexpr int ITEM_COUNT = 14 + FREEINK_DEVICE_PICCO + FREEINK_DEVICE_EEGO_A4 + 1;
  
    void onEnter() override;
+ 
 diff --git a/src/activities/settings/LauncherExitActivity.cpp b/src/activities/settings/LauncherExitActivity.cpp
 new file mode 100644
 index 00000000..4c832677
@@ -1646,10 +1634,10 @@ index ce66bf4b..703b0393 100644
    mutable std::atomic<bool> uiReady{false};
  };
 diff --git a/src/components/themes/BaseTheme.cpp b/src/components/themes/BaseTheme.cpp
-index 19f90280..1a5f2604 100644
+index 67b4e849..01492199 100644
 --- a/src/components/themes/BaseTheme.cpp
 +++ b/src/components/themes/BaseTheme.cpp
-@@ -83,7 +83,7 @@ void BaseTheme::drawBatteryLightningBolt(const GfxRenderer& renderer, int boltX,
+@@ -80,7 +80,7 @@ void BaseTheme::drawBatteryLightningBolt(const GfxRenderer& renderer, int boltX,
  }
  
  void BaseTheme::fillBatteryIcon(const GfxRenderer& renderer, Rect rect, uint16_t percentage) const {
@@ -1658,7 +1646,7 @@ index 19f90280..1a5f2604 100644
  
    const int maxFillWidth = rect.width - 5;
    const int fillHeight = rect.height - 4;
-@@ -336,7 +336,7 @@ void BaseTheme::applyHeaderStatus(const GfxRenderer& renderer, freeink::ui::Head
+@@ -333,7 +333,7 @@ void BaseTheme::applyHeaderStatus(const GfxRenderer& renderer, freeink::ui::Head
    status.showBattery = true;
    const uint16_t percentage = powerManager.getBatteryPercentage();
    status.battery.percent = static_cast<uint8_t>(percentage > 100 ? 100 : percentage);
@@ -1668,7 +1656,7 @@ index 19f90280..1a5f2604 100644
    // strings only need to outlive the fui::header() call that consumes them.
    static char percentText[8];
 diff --git a/src/main.cpp b/src/main.cpp
-index cb8d769e..37e1baa3 100644
+index 0a4fb0e0..bace285e 100644
 --- a/src/main.cpp
 +++ b/src/main.cpp
 @@ -45,7 +45,9 @@
@@ -1802,7 +1790,7 @@ index cb8d769e..37e1baa3 100644
        // X4 Pro must stay awake so USB Serial/JTAG remains available after leaving
        // USB Drive and reconnecting the cable. Paper Mono has no armable GPIO wake
        // (its button is behind the PMIC). Metalio also needs native USB available
-@@ -850,8 +907,15 @@ void setup() {
+@@ -847,8 +904,15 @@ void setup() {
      gpio.update();
    }
  
@@ -1819,7 +1807,7 @@ index cb8d769e..37e1baa3 100644
  }
  
  void loop() {
-@@ -899,6 +963,7 @@ void loop() {
+@@ -896,6 +960,7 @@ void loop() {
  
    // After the exclusive-storage return: it saves settings to the SD card.
    handleSlideSwitch();
@@ -1827,7 +1815,7 @@ index cb8d769e..37e1baa3 100644
    halTiltSensor.update(SETTINGS.tiltPageTurn, SETTINGS.orientation, activityManager.isReaderActivity());
  
    // Under the render lock, so a step never overlaps the themes' gauge reads.
-@@ -936,18 +1001,101 @@ void loop() {
+@@ -933,18 +998,101 @@ void loop() {
          uint8_t* buf = display.getFrameBuffer();
          logSerial.write(buf, bufferSize);
          logSerial.printf("SCREENSHOT_END\n");
@@ -1931,7 +1919,7 @@ index cb8d769e..37e1baa3 100644
      powerManager.setPowerSaving(false);  // Restore normal CPU frequency on user activity
    }
  
-@@ -991,7 +1139,15 @@ void loop() {
+@@ -988,7 +1136,15 @@ void loop() {
        CrossPointSettings::hasPowerDoubleClick() && SETTINGS.doublePwrBtn != CrossPointSettings::IGNORE;
  
    const unsigned long sleepTimeoutMs = SETTINGS.getSleepTimeoutMs();
@@ -1948,7 +1936,7 @@ index cb8d769e..37e1baa3 100644
      LOG_DBG("SLP", "Auto-sleep triggered after %lu ms of inactivity", sleepTimeoutMs);
      enterDeepSleep(true);
      // This should never be hit as `enterDeepSleep` calls esp_deep_sleep_start
-@@ -1019,10 +1175,10 @@ void loop() {
+@@ -1016,10 +1172,10 @@ void loop() {
    // A completed long hold stays consumed even when sleep is temporarily blocked.
    if (mappedInputManager.wasPowerReleaseConsumed()) return;
  
@@ -1963,7 +1951,7 @@ index cb8d769e..37e1baa3 100644
    if ((SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP ||
         SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::IGNORE) &&
        millis() >= allowSleepAt && mappedInputManager.wasPowerSingleClick()) {
-@@ -1045,20 +1201,67 @@ void loop() {
+@@ -1042,14 +1198,36 @@ void loop() {
      }
    }
  
@@ -2002,8 +1990,9 @@ index cb8d769e..37e1baa3 100644
    }
  
    const unsigned long activityStartTime = millis();
-   activityManager.loop();
-   const unsigned long activityDuration = millis() - activityStartTime;
+@@ -1059,6 +1237,31 @@ void loop() {
+   // time, so it is not counted toward auto-sleep.
+   lastActivityTime += activityDuration;
  
 +#ifdef PAPERDIY_SERIAL_TEST
 +  if (drainTest::enabled && millis() - drainTest::lastTurnMs >= drainTest::intervalMs) {
@@ -2443,10 +2432,10 @@ index 1f64b229..651e6904 100644
      return UPDATE_OLDER_ERROR;
    }
 diff --git a/src/network/OtaUpdater.h b/src/network/OtaUpdater.h
-index 5015a54c..0d678a62 100644
+index 93a8075d..0d678a62 100644
 --- a/src/network/OtaUpdater.h
 +++ b/src/network/OtaUpdater.h
-@@ -22,8 +22,15 @@ class OtaUpdater {
+@@ -22,8 +22,17 @@ class OtaUpdater {
      INTERNAL_UPDATE_ERROR,
      OOM_ERROR,
      WRONG_DEVICE_ERROR,
@@ -2459,9 +2448,11 @@ index 5015a54c..0d678a62 100644
 +  OtaUpdaterError checkLauncherCatalog();
 +
 + public:
-   size_t getOtaSize() const { return otaSize; }
- 
++  size_t getOtaSize() const { return otaSize; }
++
    size_t getProcessedSize() const { return processedSize; }
+ 
+   size_t getTotalSize() const { return totalSize; }
 diff --git a/src/platform/LauncherEnv.cpp b/src/platform/LauncherEnv.cpp
 new file mode 100644
 index 00000000..9712b033
