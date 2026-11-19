@@ -30,6 +30,9 @@ enum MenuItem {
   ITEM_SD_FREE,
   ITEM_BATTERY,
   ITEM_DISPLAY,
+#if FREEINK_DEVICE_PICCO
+  ITEM_PANEL,
+#endif
   ITEM_RESOLUTION,
   ITEM_TOUCH,
   ITEM_FRONTLIGHT,
@@ -39,14 +42,31 @@ enum MenuItem {
 #if FREEINK_DEVICE_EEGO_A4
   ITEM_UID,
 #endif
+  ITEM_ENUM_COUNT,
 };
+static_assert(ITEM_ENUM_COUNT == AboutActivity::ITEM_COUNT, "About rows and ITEM_COUNT differ");
 
 // Deliberately hardcoded English, exempt from the tr() rule: support reads
 // these screenshots across every device language, so the labels must be
 // identical on every unit.
 const char* const menuNames[AboutActivity::ITEM_COUNT] = {
-    "Device",      "Firmware",           "Chip",       "Flash", "SD Size",    "SD Used", "SD Free",
-    "Battery",     "Display Controller", "Resolution", "Touch", "Frontlight", "RTC",     "Tilt Sensor (IMU)",
+    "Device",
+    "Firmware",
+    "Chip",
+    "Flash",
+    "SD Size",
+    "SD Used",
+    "SD Free",
+    "Battery",
+    "Display Controller",
+#if FREEINK_DEVICE_PICCO
+    "Display Panel",
+#endif
+    "Resolution",
+    "Touch",
+    "Frontlight",
+    "RTC",
+    "Tilt Sensor (IMU)",
     "MAC Address",
 #if FREEINK_DEVICE_EEGO_A4
     "UID",
@@ -150,6 +170,10 @@ void AboutActivity::onEnter() {
   const char* liveController = display.controllerName();
   rowValues_[ITEM_DISPLAY] =
       liveController ? liveController : displayControllerName(BoardConfig::ACTIVE.displayController);
+#if FREEINK_DEVICE_PICCO
+  const char* panel = display.panelName();
+  rowValues_[ITEM_PANEL] = panel ? panel : "Unknown";
+#endif
 
   // The PM1 has no coulomb counter, so show the raw rails next to the percentage.
   // This is also the quickest way to tell a full pack from a charger that has
