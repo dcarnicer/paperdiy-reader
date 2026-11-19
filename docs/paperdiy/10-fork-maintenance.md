@@ -48,6 +48,29 @@ git fetch upstream --prune
 git log --oneline main..upstream/develop
 ```
 
+### Comprobación rutinaria (CrossPoint, SDK y M5)
+
+```bash
+make check-upstreams
+```
+
+`scripts/check_upstreams.py` es de solo lectura y revisa siempre las mismas
+fuentes contra las bases de `scripts/upstreams.json`: CrossPoint, el pin del SDK
+FreeInk y los repos de M5 de los que salieron componentes (M5GFX, M5PM1,
+M5IOE1, M5PaperDIY-UserDemo, M5PaperS3-UserDemo, uiflow-micropython, M5Unified
+y M5_Hardware). Clasifica ficheros nuevos, dependencias y posibles componentes;
+no sincroniza nada. La primera ejecución clona esos repos en
+`~/.cache/paperdiy-reader/upstream-check`, fuera del repositorio; las
+siguientes reutilizan la caché.
+
+La skill `upstream-sync` obliga a ejecutar este chequeo antes de responder a
+una petición de actualización. Si se acepta un cambio de base, se actualiza a
+mano en `scripts/upstreams.json`; el script no mueve las bases solo.
+
+El pin de CrossPoint manda: no se vendorizan commits del `main` del SDK que
+CrossPoint todavía no pinnea, ni se sube M5GFX de versión sin compilar y probar
+en hardware.
+
 ### Actualización asistida
 
 ```bash
@@ -79,8 +102,9 @@ reconciliar la edición del fork con la versión nueva en vez de pisarla.
 `.agents/README.md`, `test/CMakeLists.txt` y
 `test/koreader_xpath_resolver/CMakeLists.txt`. Valida todas las anclas antes de
 escribir y falla sin tocar el árbol si upstream movió alguna. Los cambios en
-`scripts/` (incluido el propio helper) tienen que estar ya en `paperdiy` antes de
-ejecutar el sync: el overlay restaura `scripts/` desde esa rama.
+`scripts/` (incluido el propio helper) y en `.agents/skills/upstream-sync`
+tienen que estar ya en `paperdiy` antes de ejecutar el sync: el overlay los
+restaura desde esa rama.
 
 ### Actualización manual
 
@@ -107,8 +131,8 @@ git apply --3way patches/firmware.patch
 # docs/infra y ficheros enteros del fork
 git checkout paperdiy -- README.md README.en.md README.ja.md README.zh-CN.md \
   CHANGELOG.md Makefile NOTICE LICENSE .gitignore .gitattributes hardware m5burner \
-  .agents/rules/release-versioning.md lib/expat test/firmware_version \
-  test/test_release_license.py test/test_battery_log.py \
+  .agents/rules/release-versioning.md .agents/skills/upstream-sync \
+  lib/expat test/firmware_version test/test_release_license.py test/test_battery_log.py \
   docs/paperdiy docs/README.md docs/upstream scripts patches .github
 rm -f ROADMAP.md SCOPE.md GOVERNANCE.md AGENTS.md USER_GUIDE.md CLAUDE.md .gitmodules
 rm -rf .github && git checkout paperdiy -- .github

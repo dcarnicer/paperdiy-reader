@@ -12,7 +12,7 @@ PORT      ?=
 PIO_RUN = PLATFORMIO_CORE_DIR="$(CORE_DIR)" $(PIO) run -e $(ENV)
 UPLOAD_PORT = $(if $(PORT),--upload-port "$(PORT)",)
 
-.PHONY: build flash flash-factory monitor clean size menuconfig smoke
+.PHONY: build flash flash-factory monitor clean size menuconfig smoke check-upstreams
 
 build:
 	$(PIO_RUN)
@@ -37,6 +37,11 @@ smoke:
 
 size:
 	$(PIO_RUN) -t size
+
+# Read-only upstream report. Uses scripts/upstreams.json for the fixed source
+# list and baselines; clones go to the user cache, not the repository.
+check-upstreams:
+	python3 scripts/check_upstreams.py
 
 clean:
 	$(PIO_RUN) -t clean
