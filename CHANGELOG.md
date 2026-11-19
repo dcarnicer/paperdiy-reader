@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — sync `209cb53a`
+## 2.0.0-10 — 2026-11-19
 
 Sincronización con CrossPoint `209cb53a` y FreeInk SDK `634a3f8c`. Mantiene
 CrossPoint `2.0.0`.
@@ -19,6 +19,9 @@ CrossPoint `2.0.0`.
   y verificados con `git apply --check`.
 - Build `paperdiy`: `firmware.bin` 5.446.032 B, 83,0 % de flash y 33,9 % de
   RAM. `paperdiy-test` compila y `make smoke` 25/25 (`20261119-120845`).
+- `2.0.0-10` solo cambia la cadena de versión respecto al árbol probado en el
+  smoke; el build de producción se flashea en el PaperDIY para la comprobación
+  final de arranque.
 - Hardware: smoke completo sobre `paperdiy-test`; pendientes ghosting,
   autonomía, sleep/wake, BLE real, Calibre completo y OTA completa.
 

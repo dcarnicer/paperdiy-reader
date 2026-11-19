@@ -208,15 +208,22 @@ en el parche, lo hincha y aumenta el riesgo de conflictos en el próximo
 `git apply --3way`. Mantén los cambios limitados a hunks funcionales y regenera
 el parche solo para esos hunks.
 
-## Sync `209cb53a` (19/11/2026)
+## Release `2.0.0-10` (19/11/2026)
 
 Sincronización con CrossPoint `209cb53a` / FreeInk SDK `634a3f8c`; mantiene
 CrossPoint `2.0.0`. Conflictos resueltos en `HalStorage` (se conservan
 `ready`, `isCardPresent` y `remount`), `AboutActivity` (fila de batería sobre
 el nuevo `ITEM_COUNT`) y `OtaUpdater` (camino de Launcher). Parches
-regenerados y verificados con `git apply --check`. Builds `paperdiy` y
-`paperdiy-test` OK; smoke 25/25 (`20261119-120845`). Pendiente decidir la
-release (`2.0.0-10`) y completar ghosting/autonomía.
+regenerados y verificados con `git apply --check`.
+
+- Build `paperdiy`: `firmware.bin` 5.446.032 B, 83,0 % de flash y 33,9 % de
+  RAM. `paperdiy-test` compila.
+- Smoke 25/25 sobre el árbol del sync (`20261119-120845`); `2.0.0-10` solo
+  cambia la cadena de versión respecto a ese build.
+- El build de producción `2.0.0-10` se flashea en el PaperDIY para la
+  comprobación final de arranque.
+- Pendientes: ghosting, autonomía, sleep/wake, BLE real, Calibre completo y
+  OTA completa; subida manual a M5Burner.
 
 ## Release `2.0.0-9` (18/11/2026)
 

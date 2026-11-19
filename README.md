@@ -36,7 +36,8 @@ a diario.
 > sin errores ni fugas el 06/11/2026. KOReader Sync validado contra un servidor
 > KOSync local el 06/11/2026. Pendiente: emparejar un mando BLE, consumo en
 > sleep y revisión visual física del ghosting. `make smoke` completo superado
-> en `2.0.0-9` (18/11/2026, run `20261118-132153`). Ver
+> en el árbol de `209cb53a` (19/11/2026, run `20261119-120845`; `2.0.0-10`
+> solo cambia la versión). Ver
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md).
 >
 > **Fork downstream:** `main` es un espejo de `upstream/develop`; `paperdiy`

@@ -32,4 +32,6 @@ Auto-sleep and the cover sleep screen were also validated. Long reading ran
 250+ page turns without errors or leaks (2026-11-06). KOReader Sync was
 validated against a local KOSync server (2026-11-06). Still pending: pairing a
 BLE remote, sleep current and a physical visual review of ghosting. Full
-`make smoke` passed on `2.0.0-9` (2026-11-18). Start with `06-porting.md`.
+`make smoke` passed on the `209cb53a` tree (2026-11-19, run
+`20261119-120845`; `2.0.0-10` only bumps the version). Start with
+`06-porting.md`.

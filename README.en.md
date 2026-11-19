@@ -35,8 +35,9 @@ usable every day.
 > screen were validated on 2026-11-05. Long reading: 250+ page turns without
 > errors or leaks on 2026-11-06. KOReader Sync was validated against a local
 > KOSync server on 2026-11-06. Pending: pairing a BLE remote, sleep current and
-> a physical visual review of ghosting. Full `make smoke` passed on `2.0.0-9`
-> (2026-11-18, run `20261118-132153`). See
+> a physical visual review of ghosting. Full `make smoke` passed on the
+> `209cb53a` tree (2026-11-19, run `20261119-120845`; `2.0.0-10` only bumps
+> the version). See
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md).
 >
 > **Downstream fork:** `main` mirrors `upstream/develop`; `paperdiy` is our

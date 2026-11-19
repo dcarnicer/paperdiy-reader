@@ -61,13 +61,14 @@ falla con un mensaje que pide flashear `paperdiy-test`.
 ## Resultado actual
 
 > **Estado:** smoke completo ejecutado el 19/11/2026 sobre el árbol del sync
-> `209cb53a` / SDK `634a3f8c` (`paperdiy-test` `2.0.0-9`): PASS, 25 pasos.
-> Tras expulsar la unidad, el lector volvió a Home con el estado restaurado.
-> Queda pendiente el salto visual de la curva de batería (necesita <90 %) y la
-> revisión de autonomía.
+> `209cb53a` / SDK `634a3f8c` (`paperdiy-test` `2.0.0-9`; la release
+> `2.0.0-10` solo cambia la versión): PASS, 25 pasos. Tras expulsar la unidad,
+> el lector volvió a Home con el estado restaurado. Queda pendiente el salto
+> visual de la curva de batería (necesita <90 %) y la revisión de autonomía.
 
-`2026-11-19`, PaperDIY `2.0.0-9` (árbol del sync `209cb53a` / SDK
-`634a3f8c`), run `20261119-120845`: **PASS, 25 pasos**. El script restauró los
+`2026-11-19`, PaperDIY `2.0.0-10` (smoke sobre el árbol del sync `209cb53a` /
+SDK `634a3f8c` con `paperdiy-test` `2.0.0-9`; la release solo cambia la
+versión), run `20261119-120845`: **PASS, 25 pasos**. El script restauró los
 ficheros y dejó la SD en modo USB; se expulsó la unidad y el lector volvió a
 Home con el estado restaurado.
 

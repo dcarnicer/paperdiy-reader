@@ -1,7 +1,7 @@
 # Changelog de M5Burner
 
 Última publicación registrada en este repositorio: **2.0.0-2** (tag
-`v2.0.0-2`, 2026-11-09). Las entradas **2.0.0-3** a **2.0.0-9** documentan sus
+`v2.0.0-2`, 2026-11-09). Las entradas **2.0.0-3** a **2.0.0-10** documentan sus
 cambios y el texto preparado para el diálogo Publish; no hay constancia en el
 repositorio de que se hayan subido a M5Burner y el estado del catálogo no está
 verificado.
@@ -10,8 +10,11 @@ de publicar.
 
 ## Short description for M5Burner (EN)
 
-CrossPoint for PaperDIY 2.0.0-9 — cumulative update from 2.0.0-2.
+CrossPoint for PaperDIY 2.0.0-10 — cumulative update from 2.0.0-2.
 
+- Synced with CrossPoint `209cb53a` / FreeInk SDK `634a3f8c`: full-tone images
+  on EEGO/Picco, KOReader Sync preserved during Bluetooth shutdown, auto-sleep
+  accounting fix and dead-code cleanup.
 - Synced with CrossPoint `b6b7a6c1` / FreeInk SDK `77ae8c75`: dictionary side
   buttons, font-cache release, Recent opened-only filter, OPDS redirect error,
   EEGO/Picco fixes and branch+hash versions.
@@ -38,11 +41,26 @@ CrossPoint for PaperDIY 2.0.0-9 — cumulative update from 2.0.0-2.
 
 Known limitations: real BLE remote pairing, full Calibre transfer and full OTA
 install remain pending, as do sleep/wake, idle current, autonomy and the visual
-ghosting review. The full `make smoke` passed on `2.0.0-9` (25 steps, run
-`20261118-132153`); `2.0.0-6` has no dedicated run. The visual battery-curve
-jump still needs a battery below ~90%.
+ghosting review. The full `make smoke` passed on the `209cb53a` tree (25
+steps, run `20261119-120845`); `2.0.0-10` only bumps the version. The visual
+battery-curve jump still needs a battery below ~90%.
 
 ## Full changelog (EN)
+
+### 2.0.0-10 — 2026-11-19
+
+Synced with CrossPoint `209cb53a` and FreeInk SDK `634a3f8c`.
+
+- Upstream: full-tone image rendering on EEGO/Picco, KOReader Sync preserved
+  while Bluetooth shuts down, auto-sleep no longer counts blocked activity, and
+  dead-code cleanup.
+- SDK: faster refresh after Gray3, grayscale overlay, SSD2677/UC8279C A4 LUT
+  and driver updates, and Picco power-pin hold/release ordering.
+- PaperDIY port reapplied; `HalStorage`, `AboutActivity` and `OtaUpdater`
+  conflicts resolved while keeping the fork additions.
+- Patches regenerated against the new pins and verified with `git apply
+  --check`. Build 5.446.032 B (83,0% flash, 33,9% RAM). Full `make smoke`
+  passed on this tree (25 steps, run `20261119-120845`).
 
 ### 2.0.0-9 — 2026-11-18
 
@@ -173,6 +191,21 @@ Synced with CrossPoint `8276d518` (3 commits) and FreeInk SDK `6a208c0c`.
 
 ## Changelog completo (ES)
 
+### 2.0.0-10 — 2026-11-19
+
+Sincronización con CrossPoint `209cb53a` y FreeInk SDK `634a3f8c`.
+
+- Upstream: render full-tone de imágenes en EEGO/Picco, KOReader Sync
+  conservado al apagar Bluetooth, auto-sleep sin contar tiempo bloqueado y
+  limpieza de código muerto.
+- SDK: refresco más rápido tras Gray3, overlay de grises, LUTs/drivers
+  SSD2677 y UC8279C A4 y orden hold/release de pines en Picco.
+- Port PaperDIY reaplicado; conflictos de `HalStorage`, `AboutActivity` y
+  `OtaUpdater` resueltos conservando las adiciones del fork.
+- Parches regenerados contra los pines nuevos y verificados con `git apply
+  --check`. Build 5.446.032 B (83,0 % flash, 33,9 % RAM). `make smoke`
+  completo sobre este árbol (25 pasos, run `20261119-120845`).
+
 ### 2.0.0-8 — 2026-11-16
 
 Sincronización con CrossPoint `490813ff` y FreeInk SDK `3f3e4c1`.
@@ -286,6 +319,6 @@ Sincronización con CrossPoint `8276d518` (3 commits) y FreeInk SDK `6a208c0c`.
   extendida se midió en una descarga real (45,4 h / 5.448 páginas), pero ambas
   curvas de batería siguen pendientes de validar en lectura normal. La celda
   original de 140 mAh conserva su curva original.
-- La última ejecución completa de `make smoke` pasó en `2.0.0-9` (25 pasos,
-  run `20261118-132153`); `2.0.0-6` no tiene una ejecución propia. El salto
-  visual de la curva sigue pendiente con batería por debajo del ~90 %.
+- La última ejecución completa de `make smoke` pasó en el árbol de `209cb53a`
+  (25 pasos, run `20261119-120845`); `2.0.0-10` solo cambia la versión. El
+  salto visual de la curva sigue pendiente con batería por debajo del ~90 %.
