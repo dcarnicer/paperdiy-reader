@@ -20,8 +20,8 @@ CrossPoint `2.0.0`.
 - Build `paperdiy`: `firmware.bin` 5.446.032 B, 83,0 % de flash y 33,9 % de
   RAM. `paperdiy-test` compila y `make smoke` 25/25 (`20261119-120845`).
 - `2.0.0-10` solo cambia la cadena de versión respecto al árbol probado en el
-  smoke; el build de producción se flashea en el PaperDIY para la comprobación
-  final de arranque.
+  smoke; el build de producción se flasheó en el PaperDIY y arranca en Home
+  con el estado del usuario.
 - Hardware: smoke completo sobre `paperdiy-test`; pendientes ghosting,
   autonomía, sleep/wake, BLE real, Calibre completo y OTA completa.
 

@@ -220,8 +220,8 @@ regenerados y verificados con `git apply --check`.
   RAM. `paperdiy-test` compila.
 - Smoke 25/25 sobre el árbol del sync (`20261119-120845`); `2.0.0-10` solo
   cambia la cadena de versión respecto a ese build.
-- El build de producción `2.0.0-10` se flashea en el PaperDIY para la
-  comprobación final de arranque.
+- El build de producción `2.0.0-10` se flasheó en el PaperDIY y arranca en
+  Home con el estado del usuario.
 - Pendientes: ghosting, autonomía, sleep/wake, BLE real, Calibre completo y
   OTA completa; subida manual a M5Burner.
 
