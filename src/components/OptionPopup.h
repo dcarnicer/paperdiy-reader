@@ -161,12 +161,27 @@ class OptionPopup {
     return true;
   }
 
-  bool processRender(GfxRenderer& renderer, const MappedInputManager& input) const {
+  // `partial` refreshes only the dialog and the button-hint strip, leaving the
+  // screen under the popup on the glass. Callers must have rendered that screen
+  // first; standalone activities that clear the framebuffer keep the default
+  // full refresh.
+  bool processRender(GfxRenderer& renderer, const MappedInputManager& input, bool partial = false) const {
     if (!active) return false;
     const auto popupLabels = input.mapLabels(tr(STR_BACK), tr(STR_SELECT), tr(STR_DIR_UP), tr(STR_DIR_DOWN));
     GUI.drawButtonHints(renderer, popupLabels.btn1, popupLabels.btn2, popupLabels.btn3, popupLabels.btn4);
     render(renderer);
-    renderer.displayBuffer();
+    if (partial && lastDialogRect_.width > 0) {
+      renderer.displayWindow(lastDialogRect_.x, lastDialogRect_.y, lastDialogRect_.width, lastDialogRect_.height);
+      constexpr int hintHeight = BaseMetrics::values.buttonHintsHeight;
+      if (!input.hasTouch() && hintHeight > 0) {
+        // drawButtonHints() draws in Portrait regardless of the activity's
+        // orientation, so refresh the same physical strip.
+        renderer.displayWindowPortrait(0, renderer.getDisplayWidth() - hintHeight, renderer.getDisplayHeight(),
+                                       hintHeight);
+      }
+    } else {
+      renderer.displayBuffer();
+    }
     return true;
   }
 
@@ -276,6 +291,7 @@ class OptionPopup {
     props.visibleOptions = static_cast<uint8_t>(visibleCount);
     const int16_t height = fui::optionDialogHeight(target, props, width);
     const fui::Rect dialogRect = fui::centeredRect(screen, fui::Size{width, height});
+    lastDialogRect_ = dialogRect;
 
     // Chrome guard first, options after: route() scans newest-first, so the
     // option buttons win inside the dialog and the guard absorbs the rest.
@@ -331,5 +347,6 @@ class OptionPopup {
   // Written by the render task (frame registration), routed by the loop task;
   // uiReady closes the rebuild window exactly like UiListActivity::uiReady.
   mutable freeink::ui::InteractionBuffer<INTERACTION_CAPACITY> interactions;
+  mutable freeink::ui::Rect lastDialogRect_{};
   mutable std::atomic<bool> uiReady{false};
 };

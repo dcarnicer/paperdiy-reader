@@ -1,0 +1,79 @@
+name: release-paperdiy
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "[0-9]*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Validate release version
+        run: python3 scripts/check_release_version.py "${GITHUB_REF_NAME}"
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Cache PlatformIO core + build
+        uses: actions/cache@v6
+        with:
+          path: |
+            .platformio-core
+            .pio
+          key: paperdiy-release-${{ hashFiles('platformio.ini') }}-${{ github.sha }}
+          restore-keys: |
+            paperdiy-release-${{ hashFiles('platformio.ini') }}-
+
+      - name: Build
+        env:
+          PLATFORMIO_CORE_DIR: ${{ github.workspace }}/.platformio-core
+        run: pio run -e paperdiy
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p dist
+          version="${GITHUB_REF_NAME#v}"
+          full="crosspoint-paperdiy-latest.bin"
+          ota="crosspoint-paperdiy-${version}-ota.bin"
+          # Two files: the full image for people (M5Burner, M5Launcher, esptool)
+          # and the app-only image the reader's own OTA looks up by version
+          # (CROSSPOINT_OTA_ASSET_FORMAT in platformio.ini).
+          cp .pio/build/paperdiy/firmware.factory.bin "dist/${full}"
+          cp .pio/build/paperdiy/firmware.bin "dist/${ota}"
+          python3 scripts/check_release_assets.py "dist/${full}" "dist/${ota}"
+          (cd dist && sha256sum *.bin > SHA256SUMS.txt)
+          base="${version%%-*}"
+          revision="${version#*-}"
+          revision="${revision%%-*}"
+          cat > dist/RELEASE_NOTES.md <<NOTES
+          CrossPoint for PaperDIY ${version}: CrossPoint ${base}, port revision ${revision}.
+
+          | File | Use |
+          |---|---|
+          | \`${full}\` | **Full image (0x0).** Install with M5Burner, esptool, or from M5Launcher (SD, WebUI, Favorites). Always-latest link: \`https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/${full}\` |
+          | \`${ota}\` | App-only image for a standalone reader: *Check for Updates* downloads it, or copy it to the SD root and use *SD Card Firmware Update*. Do not flash it with esptool, M5Burner or M5Launcher. |
+
+          **Under M5Launcher** the reader does not install updates itself: *Check for Updates* only tells you a new version exists. Install it from \`M5Launcher > OTA\` (catalog: *CrossPoint for PaperDIY (community port)*) and then delete the old copy in Launcher: Launcher installs new versions next to the old one. See [13-m5launcher.en.md](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_REF_NAME}/docs/paperdiy/13-m5launcher.en.md). Upstream base and full changes: [CHANGELOG.md](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_REF_NAME}/CHANGELOG.md).
+          NOTES
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.bin
+            dist/SHA256SUMS.txt
+          body_path: dist/RELEASE_NOTES.md
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-rc.') }}
+          fail_on_unmatched_files: true
