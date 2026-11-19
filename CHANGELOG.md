@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased — sync `209cb53a`
+
+Sincronización con CrossPoint `209cb53a` y FreeInk SDK `634a3f8c`. Mantiene
+CrossPoint `2.0.0`.
+
+- CrossPoint `b6b7a6c1` → `209cb53a`: full-tone para imágenes en EPUB en
+  EEGO/Picco, conservación de KOReader Sync al apagar Bluetooth, auto-sleep sin
+  contar el tiempo bloqueado y limpieza de código muerto.
+- SDK `77ae8c75` → `634a3f8c`: refresco rápido tras Gray3, overlay de grises,
+  LUTs/drivers SSD2677 y UC8279C A4, y orden hold/release de pines en Picco.
+  El port se reaplicó; no hay cambios de comportamiento previstos en PaperDIY.
+- Conflictos resueltos: `HalStorage` conserva `ready`, `isCardPresent` y
+  `remount`; `AboutActivity` mantiene la fila de batería sobre el nuevo
+  `ITEM_COUNT`; `OtaUpdater` conserva el camino de Launcher.
+- `patches/sdk.patch`, `patches/firmware.patch` y
+  `patches/paperdiy-support.patch` regenerados contra `634a3f8c` / `209cb53a`
+  y verificados con `git apply --check`.
+- Build `paperdiy`: `firmware.bin` 5.446.032 B, 83,0 % de flash y 33,9 % de
+  RAM. `paperdiy-test` compila y `make smoke` 25/25 (`20261119-120845`).
+- Hardware: smoke completo sobre `paperdiy-test`; pendientes ghosting,
+  autonomía, sleep/wake, BLE real, Calibre completo y OTA completa.
+
 ## 2.0.0-9 — 2026-11-18
 
 Sincronización con CrossPoint `b6b7a6c1` y FreeInk SDK `77ae8c75`. Mantiene

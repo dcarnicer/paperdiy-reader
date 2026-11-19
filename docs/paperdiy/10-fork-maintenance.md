@@ -3,8 +3,8 @@
 Este repo es un fork downstream de CrossPoint. La regla es simple: **el motor
 se sigue de upstream; el hardware y la UX PaperDIY viven en nuestro fork**.
 
-Última sincronización: CrossPoint `b6b7a6c1` / FreeInk SDK `77ae8c75`
-(18/11/2026).
+Última sincronización: CrossPoint `209cb53a` / FreeInk SDK `634a3f8c`
+(19/11/2026).
 
 ## Ramas y remotos
 
@@ -193,8 +193,8 @@ git add freeink-sdk && git commit -m "chore: vendor pristine SDK for patch basel
 
 | Patch | Base | Contenido |
 |---|---|---|
-| `patches/sdk.patch` | FreeInk SDK `77ae8c75` | perfil, BoardPaperDiy, PM1/I2C lock, InputManager, PowerManager, driver LGFX, batería |
-| `patches/firmware.patch` | CrossPoint `b6b7a6c1` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main, batería |
+| `patches/sdk.patch` | FreeInk SDK `634a3f8c` | perfil, BoardPaperDiy, PM1/I2C lock, InputManager, PowerManager, driver LGFX, batería |
+| `patches/firmware.patch` | CrossPoint `209cb53a` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main, batería |
 | `patches/paperdiy-support.patch` | ambos | concatenación de los dos anteriores |
 
 Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
@@ -207,6 +207,16 @@ Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
 en el parche, lo hincha y aumenta el riesgo de conflictos en el próximo
 `git apply --3way`. Mantén los cambios limitados a hunks funcionales y regenera
 el parche solo para esos hunks.
+
+## Sync `209cb53a` (19/11/2026)
+
+Sincronización con CrossPoint `209cb53a` / FreeInk SDK `634a3f8c`; mantiene
+CrossPoint `2.0.0`. Conflictos resueltos en `HalStorage` (se conservan
+`ready`, `isCardPresent` y `remount`), `AboutActivity` (fila de batería sobre
+el nuevo `ITEM_COUNT`) y `OtaUpdater` (camino de Launcher). Parches
+regenerados y verificados con `git apply --check`. Builds `paperdiy` y
+`paperdiy-test` OK; smoke 25/25 (`20261119-120845`). Pendiente decidir la
+release (`2.0.0-10`) y completar ghosting/autonomía.
 
 ## Release `2.0.0-9` (18/11/2026)
 
