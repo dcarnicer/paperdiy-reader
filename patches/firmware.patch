@@ -1,8 +1,8 @@
 diff --git a/lib/GfxRenderer/GfxRenderer.cpp b/lib/GfxRenderer/GfxRenderer.cpp
-index 3e643fb6..a2b33f61 100644
+index f0135e7d..a1da9a34 100644
 --- a/lib/GfxRenderer/GfxRenderer.cpp
 +++ b/lib/GfxRenderer/GfxRenderer.cpp
-@@ -1755,6 +1755,22 @@ void GfxRenderer::displayBuffer(HalDisplay::RefreshMode refreshMode) const {
+@@ -1863,6 +1863,22 @@ void GfxRenderer::displayBuffer(HalDisplay::RefreshMode refreshMode) const {
    display.displayBuffer(refreshMode, fadingFix);
  }
  
@@ -26,7 +26,7 @@ index 3e643fb6..a2b33f61 100644
    refreshMode = applyPromotedRefresh(refreshMode);
    // The async path has no turn-off-screen hook, which the sunlight fading fix
 diff --git a/lib/GfxRenderer/GfxRenderer.h b/lib/GfxRenderer/GfxRenderer.h
-index 9522f4f3..97fe6b61 100644
+index f09383b3..b786628e 100644
 --- a/lib/GfxRenderer/GfxRenderer.h
 +++ b/lib/GfxRenderer/GfxRenderer.h
 @@ -248,6 +248,13 @@ class GfxRenderer {
@@ -44,7 +44,7 @@ index 9522f4f3..97fe6b61 100644
    void clearScreen(uint8_t color = 0xFF) const;
    void getOrientedViewableTRBL(int* outTop, int* outRight, int* outBottom, int* outLeft) const;
 diff --git a/lib/I18n/translations/catalan.yaml b/lib/I18n/translations/catalan.yaml
-index 1c119e37..aa5f51e4 100644
+index 1c119e37..9b7fe3e3 100644
 --- a/lib/I18n/translations/catalan.yaml
 +++ b/lib/I18n/translations/catalan.yaml
 @@ -121,6 +121,7 @@ STR_HAPTIC_MEDIUM: "Mitjana"
@@ -73,8 +73,16 @@ index 1c119e37..aa5f51e4 100644
  STR_ADD_HIDDEN_NETWORK: "Afegeix una xarxa oculta..."
  STR_ENTER_WIFI_SSID: "Introdueix el nom de la xarxa (SSID)"
  STR_DBL_CLICK_PWR_LIGHT: "Doble pulsació d'encesa: llum"
+@@ -586,6 +589,7 @@ STR_SPACING_PLUS_60_PERCENT: "+60%"
+ STR_SPACING_PLUS_75_PERCENT: "+75%"
+ STR_KOSYNC_SERVER: "KoSync"
+ STR_SYNC_CLIPPINGS: "Sincronitza els retalls"
++STR_SYNC_ON_SLEEP: "Sincronitza en entrar en repòs"
+ STR_SYNCING_CLIPPINGS: "S'estan sincronitzant els retalls..."
+ STR_CLIPPING_SYNC_FAILED: "No s'han pogut sincronitzar els retalls"
+ STR_CLIP: "Retalla"
 diff --git a/lib/I18n/translations/english.yaml b/lib/I18n/translations/english.yaml
-index 1e1ba0a5..77b99932 100644
+index ab93036e..c469f6ab 100644
 --- a/lib/I18n/translations/english.yaml
 +++ b/lib/I18n/translations/english.yaml
 @@ -182,6 +182,14 @@ STR_MOVE_FINISHED_TO_READ: "Move Finished Books to Read Folder"
@@ -92,7 +100,7 @@ index 1e1ba0a5..77b99932 100644
  STR_LANGUAGE: "Language"
  STR_KEYBOARD_LAYOUTS: "Keyboard Layouts"
  STR_ABOUT: "About"
-@@ -603,7 +611,7 @@ STR_FIRMWARE_FILE_OPEN_FAILED: "Cannot open file"
+@@ -604,7 +612,7 @@ STR_FIRMWARE_FILE_OPEN_FAILED: "Cannot open file"
  STR_FIRMWARE_WRITE_FAILED: "Firmware write failed"
  STR_FIRMWARE_UPDATE_DO_NOT_POWER_OFF: "Do not power off!"
  STR_RECOVERY_MODE: "Recovery Mode"
@@ -101,7 +109,7 @@ index 1e1ba0a5..77b99932 100644
  
  STR_HOME_SHORTCUT: "Home"
  STR_HOME_BUTTON: "Home Button Gestures"
-@@ -678,3 +686,6 @@ STR_TAPS_AND_GESTURES: "Taps and gestures"
+@@ -679,3 +687,6 @@ STR_TAPS_AND_GESTURES: "Taps and gestures"
  STR_PAGE_TURN_LONG_PRESS: "Page turn long press"
  
  STR_POWER_DOUBLE_CLICK: "Double click"
@@ -145,7 +153,7 @@ index 0fcc22e0..a174ceef 100644
  STR_LONG_PRESS_BEHAVIOR_OFF: "Dezactivat"
  STR_LONG_PRESS_BEHAVIOR_SKIP: "Sărire capitol"
 diff --git a/lib/I18n/translations/spanish.yaml b/lib/I18n/translations/spanish.yaml
-index 6d2c28f4..94cb36d2 100644
+index 6d2c28f4..638a0964 100644
 --- a/lib/I18n/translations/spanish.yaml
 +++ b/lib/I18n/translations/spanish.yaml
 @@ -121,6 +121,7 @@ STR_HAPTIC_MEDIUM: "Media"
@@ -211,7 +219,15 @@ index 6d2c28f4..94cb36d2 100644
  STR_ADD_HIDDEN_NETWORK: "Añadir red oculta..."
  STR_ENTER_WIFI_SSID: "Introduce el nombre de la red (SSID)"
  STR_DBL_CLICK_PWR_LIGHT: "Doble pulsación de encendido: luz"
-@@ -660,3 +674,12 @@ STR_KOREADER_CUSTOM_HEADER_1_NAME: "Nombre de la cabecera personalizada 1 de KOR
+@@ -586,6 +600,7 @@ STR_SPACING_PLUS_60_PERCENT: "+60%"
+ STR_SPACING_PLUS_75_PERCENT: "+75%"
+ STR_KOSYNC_SERVER: "KoSync"
+ STR_SYNC_CLIPPINGS: "Sincronizar recortes"
++STR_SYNC_ON_SLEEP: "Sincronizar al suspender"
+ STR_SYNCING_CLIPPINGS: "Sincronizando los recortes..."
+ STR_CLIPPING_SYNC_FAILED: "No se pudieron sincronizar los recortes"
+ STR_CLIP: "Recortar"
+@@ -660,3 +675,12 @@ STR_KOREADER_CUSTOM_HEADER_1_NAME: "Nombre de la cabecera personalizada 1 de KOR
  STR_KOREADER_CUSTOM_HEADER_1_VALUE: "Valor de la cabecera personalizada 1 de KOReader"
  STR_KOREADER_CUSTOM_HEADER_2_NAME: "Nombre de la cabecera personalizada 2 de KOReader"
  STR_KOREADER_CUSTOM_HEADER_2_VALUE: "Valor de la cabecera personalizada 2 de KOReader"
@@ -225,7 +241,7 @@ index 6d2c28f4..94cb36d2 100644
 +STR_BATTERY_KIT: "Kit original (140 mAh)"
 +STR_BATTERY_EXTENDED: "Extendida (1500 mAh)"
 diff --git a/lib/I18n/translations/valencian.yaml b/lib/I18n/translations/valencian.yaml
-index 771b448e..b7baf5aa 100644
+index 771b448e..aab2b766 100644
 --- a/lib/I18n/translations/valencian.yaml
 +++ b/lib/I18n/translations/valencian.yaml
 @@ -122,6 +122,7 @@ STR_HAPTIC_MEDIUM: "Mitjana"
@@ -254,6 +270,14 @@ index 771b448e..b7baf5aa 100644
  STR_ADD_HIDDEN_NETWORK: "Afig una xarxa oculta..."
  STR_ENTER_WIFI_SSID: "Introduïx el nom de la xarxa (SSID)"
  STR_DBL_CLICK_PWR_LIGHT: "Doble pulsació d'encesa: llum"
+@@ -586,6 +589,7 @@ STR_SPACING_PLUS_60_PERCENT: "+60%"
+ STR_SPACING_PLUS_75_PERCENT: "+75%"
+ STR_KOSYNC_SERVER: "KoSync"
+ STR_SYNC_CLIPPINGS: "Sincronitza els retalls"
++STR_SYNC_ON_SLEEP: "Sincronitza en entrar en repòs"
+ STR_SYNCING_CLIPPINGS: "S'estan sincronitzant els retalls..."
+ STR_CLIPPING_SYNC_FAILED: "No s'han pogut sincronitzar els retalls"
+ STR_CLIP: "Retalla"
 diff --git a/lib/JsonParser/ReleaseJsonParser.h b/lib/JsonParser/ReleaseJsonParser.h
 index 2a3571f6..e25b4585 100644
 --- a/lib/JsonParser/ReleaseJsonParser.h
@@ -377,7 +401,7 @@ index 22932658..64bb2dd7 100644
    // power button (Xteink-style button-energized rail with reliable USB
    // detection). When false, cold boots always proceed to a normal boot.
 diff --git a/lib/hal/HalPowerManager.cpp b/lib/hal/HalPowerManager.cpp
-index 2889e769..3d3ffaf6 100644
+index a192c11d..e0a4b478 100644
 --- a/lib/hal/HalPowerManager.cpp
 +++ b/lib/hal/HalPowerManager.cpp
 @@ -3,6 +3,7 @@
@@ -504,7 +528,7 @@ index 2889e769..3d3ffaf6 100644
  
    if (wakeOnHeldButton) {
      freeink::PowerManager::armPowerButtonWakeup();
-@@ -200,8 +273,141 @@ bool HalPowerManager::holdWhileUsbPowered(HalGPIO& gpio, void (*onStatus)(bool c
+@@ -200,13 +273,154 @@ bool HalPowerManager::holdWhileUsbPowered(HalGPIO& gpio, void (*onStatus)(bool c
  }
  #endif
  
@@ -607,6 +631,21 @@ index 2889e769..3d3ffaf6 100644
 +  return readBatteryStatusLocked();
 +}
 +
+ bool HalPowerManager::readBatteryPercentage(uint16_t& percent) const {
+-  static const BatteryMonitor battery;
+-  return battery.readPercentageChecked(percent);
++  const BatteryReadLock lock(batteryMutex);
++  if (BoardConfig::isPaperDiy()) {
++    // The PM1 reads high while charging and the PaperDIY presentation holds
++    // the discharge estimate; use it instead of the raw voltage curve.
++    const BatteryMonitor::Status status = readBatteryStatusLocked();
++    if (!status.percentageKnown) return false;
++    percent = status.percentage;
++    return true;
++  }
++  return batteryMonitor().readPercentageChecked(percent);
+ }
+ 
 +void HalPowerManager::setPaperDiyBatteryProfile(const bool extended) const {
 +#if FREEINK_DEVICE_PAPERDIY
 +  const BatteryReadLock lock(batteryMutex);
@@ -647,7 +686,7 @@ index 2889e769..3d3ffaf6 100644
    if (BoardConfig::ACTIVE.batteryGauge.gaugeAddr != 0) {
      const unsigned long now = millis();
      if (_batteryLastPollMs != 0 && (now - _batteryLastPollMs) < BATTERY_POLL_MS) {
-@@ -210,18 +416,29 @@ uint16_t HalPowerManager::getBatteryPercentage() const {
+@@ -215,18 +429,29 @@ uint16_t HalPowerManager::getBatteryPercentage() const {
  
      _batteryLastPollMs = now;
      uint16_t percent = 0;
@@ -681,7 +720,7 @@ index 2889e769..3d3ffaf6 100644
    return _batteryCachedPercent / 10;
  }
 diff --git a/lib/hal/HalPowerManager.h b/lib/hal/HalPowerManager.h
-index 0ddf380c..b5eb0bee 100644
+index fa8bcc9a..095dd8ab 100644
 --- a/lib/hal/HalPowerManager.h
 +++ b/lib/hal/HalPowerManager.h
 @@ -19,6 +19,30 @@ class HalPowerManager {
@@ -715,9 +754,14 @@ index 0ddf380c..b5eb0bee 100644
  
    enum LockMode { None, NormalSpeed };
    LockMode currentLockMode = None;
-@@ -56,6 +80,25 @@ class HalPowerManager {
-   // Get battery percentage (range 0-100)
+@@ -57,9 +81,29 @@ class HalPowerManager {
    uint16_t getBatteryPercentage() const;
+ 
+   // One fresh reading. False when the battery cannot be read, which
+-  // getBatteryPercentage() reports as its last value or 0.
++  // getBatteryPercentage() reports as its last value or 0. On PaperDIY it
++  // goes through the same charger/settling presentation as getBatteryStatus().
+   bool readBatteryPercentage(uint16_t& percent) const;
  
 +  // Full battery snapshot (voltage, percentage, charger/USB state). Serialized
 +  // with the percentage path because both touch the same I2C/ADC backend.
@@ -784,7 +828,7 @@ index 57c4ed98..7339df8c 100644
    // the bus pads (no-op on SPI boards). Call only after all file users have
    // stopped; open HalFiles become invalid. A deep-sleep wake resets the MCU and
 diff --git a/platformio.ini b/platformio.ini
-index f4eeda76..9e3a8767 100644
+index f4eeda76..81cf43a7 100644
 --- a/platformio.ini
 +++ b/platformio.ini
 @@ -4,7 +4,7 @@ build_cache_dir = .cache
@@ -792,7 +836,7 @@ index f4eeda76..9e3a8767 100644
  
  [crosspoint]
 -version = 2.0.0
-+version = 2.0.0-10
++version = 2.0.0-11
  
  [base]
  platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip
@@ -967,7 +1011,7 @@ index 763fa749..7a5db6f7 100644
    uint8_t longPressButtonBehavior = OFF;
    // Long-press Confirm function in EPUB reader (cycles through LONG_PRESS_MENU_FUNCTION values).
 diff --git a/src/SettingsList.cpp b/src/SettingsList.cpp
-index 0c01f586..13f805b4 100644
+index f8f05ed5..37b89c48 100644
 --- a/src/SettingsList.cpp
 +++ b/src/SettingsList.cpp
 @@ -1,5 +1,7 @@
@@ -1004,11 +1048,44 @@ index 0c01f586..13f805b4 100644
    emit(SettingInfo::Value(
        StrId::STR_TIME_TO_SLEEP, &CrossPointSettings::sleepTimeoutMinutes,
        {CrossPointSettings::MIN_SLEEP_TIMEOUT_MINUTES, CrossPointSettings::MAX_SLEEP_TIMEOUT_MINUTES, 1},
+diff --git a/src/activities/UiListActivity.cpp b/src/activities/UiListActivity.cpp
+index 73035444..39e15838 100644
+--- a/src/activities/UiListActivity.cpp
++++ b/src/activities/UiListActivity.cpp
+@@ -5,6 +5,7 @@
+ #include <Logging.h>
+ 
+ #include <algorithm>
++#include <utility>
+ 
+ #include "MappedInputManager.h"
+ #include "components/UITheme.h"
+@@ -261,5 +262,5 @@ void UiListActivity::render(RenderLock&&) {
+     renderUi();
+   }
+   drawFooter();
+-  renderer.displayBuffer(HalDisplay::FAST_REFRESH);
++  renderer.displayBuffer(std::exchange(cleanNextRefresh, false) ? HalDisplay::HALF_REFRESH : HalDisplay::FAST_REFRESH);
+ }
+diff --git a/src/activities/UiListActivity.h b/src/activities/UiListActivity.h
+index 2f8e3705..75b60db5 100644
+--- a/src/activities/UiListActivity.h
++++ b/src/activities/UiListActivity.h
+@@ -91,6 +91,9 @@ class UiListActivity : public Activity, protected UiAppHost {
+   // activeNav() in shared code; `nav` is the single-list default storage.
+   freeink::ui::ListNav nav;
+   ButtonNavigator buttonNavigator;
++  // The next render uses a cleanup (HALF) refresh instead of a fast one.
++  // PaperDIY: the reader menu scrubs the page left on the glass.
++  bool cleanNextRefresh = false;
+ 
+  private:
+   static void screenTrampoline(UiScreen& screen, void* user);
 diff --git a/src/activities/home/FileBrowserActivity.cpp b/src/activities/home/FileBrowserActivity.cpp
-index 77d1e584..17ac23da 100644
+index ad4c0a3f..21f3b5e5 100644
 --- a/src/activities/home/FileBrowserActivity.cpp
 +++ b/src/activities/home/FileBrowserActivity.cpp
-@@ -594,7 +594,7 @@ bool FileBrowserActivity::handleButtons() {
+@@ -601,7 +601,7 @@ bool FileBrowserActivity::handleButtons() {
  }
  
  void FileBrowserActivity::render(RenderLock&& lock) {
@@ -1634,7 +1711,7 @@ index ce66bf4b..703b0393 100644
    mutable std::atomic<bool> uiReady{false};
  };
 diff --git a/src/components/themes/BaseTheme.cpp b/src/components/themes/BaseTheme.cpp
-index 67b4e849..01492199 100644
+index df91e7c3..098ca106 100644
 --- a/src/components/themes/BaseTheme.cpp
 +++ b/src/components/themes/BaseTheme.cpp
 @@ -80,7 +80,7 @@ void BaseTheme::drawBatteryLightningBolt(const GfxRenderer& renderer, int boltX,
@@ -1646,7 +1723,7 @@ index 67b4e849..01492199 100644
  
    const int maxFillWidth = rect.width - 5;
    const int fillHeight = rect.height - 4;
-@@ -333,7 +333,7 @@ void BaseTheme::applyHeaderStatus(const GfxRenderer& renderer, freeink::ui::Head
+@@ -336,7 +336,7 @@ void BaseTheme::applyHeaderStatus(const GfxRenderer& renderer, freeink::ui::Head
    status.showBattery = true;
    const uint16_t percentage = powerManager.getBatteryPercentage();
    status.battery.percent = static_cast<uint8_t>(percentage > 100 ? 100 : percentage);
@@ -1656,20 +1733,21 @@ index 67b4e849..01492199 100644
    // strings only need to outlive the fui::header() call that consumes them.
    static char percentText[8];
 diff --git a/src/main.cpp b/src/main.cpp
-index 0a4fb0e0..bace285e 100644
+index 38769355..4462338e 100644
 --- a/src/main.cpp
 +++ b/src/main.cpp
-@@ -45,7 +45,9 @@
+@@ -48,8 +48,10 @@
  #include "activities/settings/SdFirmwareUpdateActivity.h"
  #include "components/UITheme.h"
  #include "fontIds.h"
 +#include "platform/LauncherEnv.h"
  #include "platform/UsbSerialJtagHandoff.h"
+ #include "sync/SyncEngine.h"
 +#include "util/BatteryLog.h"
  #include "util/ButtonNavigator.h"
  #include "util/PluginEvents.h"
  #include "util/ScreenshotUtil.h"
-@@ -67,8 +69,26 @@ MappedInputManager mappedInputManager(gpio, renderer);
+@@ -71,8 +73,26 @@ MappedInputManager mappedInputManager(gpio, renderer);
  ActivityManager activityManager(renderer, mappedInputManager);
  FontDecompressor fontDecompressor;
  SdCardFontSystem sdFontSystem;
@@ -1696,7 +1774,7 @@ index 0a4fb0e0..bace285e 100644
  
  // Fonts
  EpdFont notosans14RegularFont(&notosans_14_regular);
-@@ -459,6 +479,8 @@ void enterDeepSleep(bool fromTimeout = false) {
+@@ -573,6 +593,8 @@ void enterDeepSleep(bool fromTimeout = false) {
    // Sleep may end in a power-off (battery death, latch); persist the clock
    // floor now so a later cold boot resumes from it.
    trustedtime::note();
@@ -1705,7 +1783,7 @@ index 0a4fb0e0..bace285e 100644
  
    // Stop Bluetooth before plugin delivery can start WiFi; a timeout defers delivery.
    deepSleepInProgress = true;
-@@ -618,8 +640,11 @@ void setup() {
+@@ -735,8 +757,11 @@ void setup() {
    const auto recoveryButton = (BoardConfig::isX4Pro() || BoardConfig::isX4Classic()) ? MappedInputManager::Button::Down
                                                                                       : MappedInputManager::Button::Up;
    // The Picco has no second app slot to flash into (partitions_picco.csv).
@@ -1718,7 +1796,7 @@ index 0a4fb0e0..bace285e 100644
  
    halTiltSensor.begin();
    halClock.begin();
-@@ -629,12 +654,42 @@ void setup() {
+@@ -746,12 +771,42 @@ void setup() {
  #else
    LOG_INF("MAIN", "Device: %s", BoardConfig::ACTIVE.name);
  #endif
@@ -1763,7 +1841,7 @@ index 0a4fb0e0..bace285e 100644
      activityManager.goToFullScreenMessage("SD card error", EpdFontFamily::BOLD);
      return;
    }
-@@ -658,6 +713,7 @@ void setup() {
+@@ -775,6 +830,7 @@ void setup() {
      SETTINGS.readerMenuStyle = CrossPointSettings::READER_MENU_TOOLBAR;
    }
    SETTINGS.loadFromFile();
@@ -1771,7 +1849,7 @@ index 0a4fb0e0..bace285e 100644
    // Push the saved timezone's POSIX rule into the clock (migrating the legacy
    // UTC-offset setting on first boot after the update).
    timezones::applyToClock();
-@@ -685,6 +741,7 @@ void setup() {
+@@ -802,6 +858,7 @@ void setup() {
    // Restore the monotonic clock floor before anything reads time() (event
    // timestamps, loan-expiry checks).
    trustedtime::init();
@@ -1779,7 +1857,7 @@ index 0a4fb0e0..bace285e 100644
    bleturner::begin(pageturner::host, SETTINGS.ble);
  
    switch (wakeupReason) {
-@@ -707,8 +764,8 @@ void setup() {
+@@ -824,8 +881,8 @@ void setup() {
      case HalGPIO::WakeupReason::AfterUSBPower:
        // Most devices return to sleep after a USB-powered cold boot.
        LOG_DBG("MAIN", "Wakeup reason: After USB Power");
@@ -1790,7 +1868,7 @@ index 0a4fb0e0..bace285e 100644
        // X4 Pro must stay awake so USB Serial/JTAG remains available after leaving
        // USB Drive and reconnecting the cable. Paper Mono has no armable GPIO wake
        // (its button is behind the PMIC). Metalio also needs native USB available
-@@ -847,8 +904,15 @@ void setup() {
+@@ -964,8 +1021,15 @@ void setup() {
      gpio.update();
    }
  
@@ -1807,7 +1885,7 @@ index 0a4fb0e0..bace285e 100644
  }
  
  void loop() {
-@@ -896,6 +960,7 @@ void loop() {
+@@ -1013,6 +1077,7 @@ void loop() {
  
    // After the exclusive-storage return: it saves settings to the SD card.
    handleSlideSwitch();
@@ -1815,7 +1893,7 @@ index 0a4fb0e0..bace285e 100644
    halTiltSensor.update(SETTINGS.tiltPageTurn, SETTINGS.orientation, activityManager.isReaderActivity());
  
    // Under the render lock, so a step never overlaps the themes' gauge reads.
-@@ -933,18 +998,101 @@ void loop() {
+@@ -1050,18 +1115,101 @@ void loop() {
          uint8_t* buf = display.getFrameBuffer();
          logSerial.write(buf, bufferSize);
          logSerial.printf("SCREENSHOT_END\n");
@@ -1919,7 +1997,7 @@ index 0a4fb0e0..bace285e 100644
      powerManager.setPowerSaving(false);  // Restore normal CPU frequency on user activity
    }
  
-@@ -988,7 +1136,15 @@ void loop() {
+@@ -1108,7 +1256,15 @@ void loop() {
        CrossPointSettings::hasPowerDoubleClick() && SETTINGS.doublePwrBtn != CrossPointSettings::IGNORE;
  
    const unsigned long sleepTimeoutMs = SETTINGS.getSleepTimeoutMs();
@@ -1936,7 +2014,7 @@ index 0a4fb0e0..bace285e 100644
      LOG_DBG("SLP", "Auto-sleep triggered after %lu ms of inactivity", sleepTimeoutMs);
      enterDeepSleep(true);
      // This should never be hit as `enterDeepSleep` calls esp_deep_sleep_start
-@@ -1016,10 +1172,10 @@ void loop() {
+@@ -1136,10 +1292,10 @@ void loop() {
    // A completed long hold stays consumed even when sleep is temporarily blocked.
    if (mappedInputManager.wasPowerReleaseConsumed()) return;
  
@@ -1950,8 +2028,8 @@ index 0a4fb0e0..bace285e 100644
 +  // normal power-button meaning and shut down; explicit alternate bindings win.
    if ((SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP ||
         SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::IGNORE) &&
-       millis() >= allowSleepAt && mappedInputManager.wasPowerSingleClick()) {
-@@ -1042,14 +1198,36 @@ void loop() {
+       loopStartTime >= allowSleepAt && mappedInputManager.wasPowerSingleClick()) {
+@@ -1162,14 +1318,36 @@ void loop() {
      }
    }
  
@@ -1990,7 +2068,7 @@ index 0a4fb0e0..bace285e 100644
    }
  
    const unsigned long activityStartTime = millis();
-@@ -1059,6 +1237,31 @@ void loop() {
+@@ -1179,6 +1357,31 @@ void loop() {
    // time, so it is not counted toward auto-sleep.
    lastActivityTime += activityDuration;
  
