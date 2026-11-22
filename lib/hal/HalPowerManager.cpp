@@ -372,6 +372,19 @@ BatteryMonitor::Status HalPowerManager::getBatteryStatus() const {
   return readBatteryStatusLocked();
 }
 
+bool HalPowerManager::readBatteryPercentage(uint16_t& percent) const {
+  const BatteryReadLock lock(batteryMutex);
+  if (BoardConfig::isPaperDiy()) {
+    // The PM1 reads high while charging and the PaperDIY presentation holds
+    // the discharge estimate; use it instead of the raw voltage curve.
+    const BatteryMonitor::Status status = readBatteryStatusLocked();
+    if (!status.percentageKnown) return false;
+    percent = status.percentage;
+    return true;
+  }
+  return batteryMonitor().readPercentageChecked(percent);
+}
+
 void HalPowerManager::setPaperDiyBatteryProfile(const bool extended) const {
 #if FREEINK_DEVICE_PAPERDIY
   const BatteryReadLock lock(batteryMutex);

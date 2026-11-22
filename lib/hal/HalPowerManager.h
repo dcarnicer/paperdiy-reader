@@ -80,6 +80,11 @@ class HalPowerManager {
   // Get battery percentage (range 0-100)
   uint16_t getBatteryPercentage() const;
 
+  // One fresh reading. False when the battery cannot be read, which
+  // getBatteryPercentage() reports as its last value or 0. On PaperDIY it
+  // goes through the same charger/settling presentation as getBatteryStatus().
+  bool readBatteryPercentage(uint16_t& percent) const;
+
   // Full battery snapshot (voltage, percentage, charger/USB state). Serialized
   // with the percentage path because both touch the same I2C/ADC backend.
   BatteryMonitor::Status getBatteryStatus() const;

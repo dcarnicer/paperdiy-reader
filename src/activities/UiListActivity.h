@@ -92,6 +92,7 @@ class UiListActivity : public Activity, protected UiAppHost {
   freeink::ui::ListNav nav;
   ButtonNavigator buttonNavigator;
   // The next render uses a cleanup (HALF) refresh instead of a fast one.
+  // PaperDIY: the reader menu scrubs the page left on the glass.
   bool cleanNextRefresh = false;
 
  private:
