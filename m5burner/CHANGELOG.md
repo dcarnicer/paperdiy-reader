@@ -1,56 +1,54 @@
 # Changelog de M5Burner
 
-Última publicación registrada en este repositorio: **2.0.0-2** (tag
-`v2.0.0-2`, 2026-11-09). Las entradas **2.0.0-3** a **2.0.0-11** documentan sus
-cambios y el texto preparado para el diálogo Publish; no hay constancia en el
-repositorio de que se hayan subido a M5Burner y el estado del catálogo no está
-verificado.
+Última publicación registrada en este repositorio: **2.0.0-10** (subida
+confirmada por el usuario el 22/11/2026). La entrada **2.0.0-11** documenta sus
+cambios y el texto preparado para el diálogo Publish; actualiza esta línea
+cuando el catálogo la muestre.
 La subida es manual: confirma el catálogo y actualiza esta línea solo después
 de publicar.
 
 ## Short description for M5Burner (EN)
 
-CrossPoint for PaperDIY 2.0.0-11 — cumulative update from 2.0.0-2.
+## CrossPoint for PaperDIY 2.0.0-11
 
-- Synced with CrossPoint `177d0694` / FreeInk SDK `995d9bd5`: Sync On Sleep,
-  reading-session and bookmark sync with CrossPoint Sync servers, Indic script
-  support, clock and battery placement normalized across themes, reading
-  progress on Lyra, WebUI plugin navigation, and file-browser, web-rename,
-  sleep-image and clipping fixes.
-- Spanish/Catalan/Valencian translations for Sync On Sleep.
-- Synced with CrossPoint `209cb53a` / FreeInk SDK `634a3f8c`: full-tone images
-  on EEGO/Picco, KOReader Sync preserved during Bluetooth shutdown, auto-sleep
-  accounting fix and dead-code cleanup.
-- Synced with CrossPoint `b6b7a6c1` / FreeInk SDK `77ae8c75`: dictionary side
-  buttons, font-cache release, Recent opened-only filter, OPDS redirect error,
-  EEGO/Picco fixes and branch+hash versions.
-- PM1 I²C bus serialized between tasks and battery status cached to avoid
-  phantom power clicks and redundant reads.
-- `Display Refresh` removed; use `Refresh Screen` and `Refresh Frequency`.
-- Spanish/Catalan/Valencian translations for the new Recent strings.
-- Controls reorganized into Power, Front, Side and Gestures submenus.
-- OPDS browser moved to File Transfer; servers live in Settings > Connectivity.
-- New "Show File Extensions" setting.
-- Reader fixes: progress-bar margin, last-page counter, no hyphenation in
-  headings, TTF advance rounding.
-- Stability: screenshot rotation, PageLink, plugin tokens, WebDAV credentials,
-  clipping-sync Basic auth, Hebrew/Arabic dictionary lookup, Home cover cache.
-- Faster Home cover grid; TLS 2 KB records; updated FreeInk SDK for font
-  downloads.
-- Battery: selectable kit/extended profile, discharge log, measured 1500 mAh
-  curve and percentage held while charging; profile changes now apply live
-  from the UI and web and persist across reboots.
-- Synced with CrossPoint `490813ff` / FreeInk SDK `3f3e4c1`: power-gesture
-  disambiguation, reader/Home/WebDAV/font-download fixes and EPD/TTF
-  improvements from the previous sync.
-- Spanish translations and user-guide updates.
+Synced with CrossPoint `177d0694` and FreeInk SDK `995d9bd5`. Update from
+2.0.0-10.
 
-Known limitations: real BLE remote pairing, full Calibre transfer and full OTA
-install remain pending, as do sleep/wake, idle current, autonomy and the visual
-ghosting review, and Sync On Sleep has not been tried against a real server.
-The full `make smoke` passed on the `177d0694` tree (25 steps, run
-`20261122-193337`); `2.0.0-11` only bumps the version and adds translations.
-The visual battery-curve jump still needs a battery below ~90%.
+### New
+
+- **Sync On Sleep** (optional, off by default): when you put the reader to
+  sleep from an EPUB, it joins a saved Wi-Fi network in range (battery at
+  least 20%) and syncs that book: position, bookmarks, reading sessions and,
+  if enabled, clippings.
+- Manual **Sync Progress** also syncs bookmarks and uploads reading sessions
+  on servers that support it (CrossPoint Sync).
+- Indic script support without HarfBuzz (Devanagari, Bengali, Tamil, Sinhala
+  and more).
+- Reading progress on the Lyra theme.
+- Web UI: browse installed plugins.
+
+### Improvements and fixes
+
+- Clock and battery placement normalized across the built-in themes.
+- The file browser popup shows the selected file name.
+- Renaming a file in the web UI keeps its extension.
+- The sleep image is cleared when the device replaces it.
+- Clipping handles are no longer hidden at the top edge of the screen.
+- Safer SD file reads: oversized files are rejected instead of truncated.
+- Spanish, Catalan and Valencian translations for Sync On Sleep.
+
+### PaperDIY
+
+- Port reapplied on the new upstream. The sleep Wi-Fi battery check uses the
+  PaperDIY battery reading, and the reader menu still clears the page
+  underneath.
+- Full hardware smoke test passed (25 steps).
+
+### Known limitations
+
+- Sync On Sleep has not been tried against a real server yet.
+- Still pending: real BLE remote pairing, full Calibre transfer, full OTA
+  install, sleep/wake, idle current, autonomy and the visual ghosting review.
 
 ## Full changelog (EN)
 
