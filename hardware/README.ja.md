@@ -7,17 +7,22 @@
 v21 は PaperDIY の現行ケースです。[`3d/v21/`](3d/v21/) に STL で置いて
 あるので、どのスライサーでも使えます。Complete Kit 改造版より少し大きく
 （120 × 67 mm に対して 124.4 × 71.4 mm）、3 個の独立したボタンを A/B 用の
-シーソーバーと C ボタン（電源）用のレバーに置き換えています。
+シーソーバーと C ボタン（電源）用のレバーに置き換えています。リアカバーには
+MagSafe 磁気リングを貼るための溝があります。
 
 ![v21 ケースのプレビュー](3d/v21/PaperDIY_v21_preview.png)
 
 | 部品 | ファイル | 寸法（mm） |
 |---|---|---|
-| リアカバー | [`PaperDIY_v21_tapa_trasera.stl`](3d/v21/PaperDIY_v21_tapa_trasera.stl) | 124.4 × 71.4 × 8.9 |
+| リアカバー（MagSafe 用の溝） | [`PaperDIY_v21_tapa_trasera.stl`](3d/v21/PaperDIY_v21_tapa_trasera.stl) | 124.4 × 71.4 × 8.9 |
 | フロントフレーム | [`PaperDIY_v21_marco_frontal_boca_abajo.stl`](3d/v21/PaperDIY_v21_marco_frontal_boca_abajo.stl) | 124.4 × 71.4 × 5.7 |
 | A/B シーソーバー | [`PaperDIY_v21_barra_basculante_AB.stl`](3d/v21/PaperDIY_v21_barra_basculante_AB.stl) | 22.0 × 5.5 × 1.7 |
 | C レバー（電源） | [`PaperDIY_v21_palanca_C.stl`](3d/v21/PaperDIY_v21_palanca_C.stl) | 5.1 × 9.9 × 1.7 |
 
+- **MagSafe：** リアカバー外側の環状の溝で、外径 Ø 56.4 mm、内径 Ø 44.6 mm、
+  深さ 0.8 mm です。幅方向の中央、一端から 38.4 mm の位置にあります。この
+  寸法以内の貼り付け式磁気リングが入ります。購入前にリングの寸法を確認して
+  ください。
 - **向き：** 各部品はプリント向きに配置済みです。フロントフレームは表面を
   下にして、見える面がベッドに接する向きです。
 - **形式：** ミリ単位のバイナリ STL。スライサープロファイルは含みません。

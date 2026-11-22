@@ -79,8 +79,8 @@ I²C 控制）。
 ### 3D 外壳
 
 M5Stack **PaperDIY Complete Kit** 附带 PLA 打印外壳。我们当前的外壳是
-**v21**，以 STL 文件形式放在 [`hardware/3d/v21/`](hardware/3d/v21/)：后盖、
-前框、A/B 翘板和 C 键（电源）拨杆。旧版本
+**v21**，以 STL 文件形式放在 [`hardware/3d/v21/`](hardware/3d/v21/)：带 MagSafe
+磁吸环凹槽的后盖、前框、A/B 翘板和 C 键（电源）拨杆。旧版本
 [`hardware/3d/PaperDIY_kit_completo.3mf`](hardware/3d/PaperDIY_kit_completo.3mf)
 是保留三个原装按键的官方模型修改版，可作为 Bambu Studio 项目打开。
 

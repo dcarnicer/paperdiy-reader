@@ -2,8 +2,9 @@
 
 ## Unreleased
 
-- Hardware: carcasa v21 en STL (`hardware/3d/v21/`): tapa trasera, marco
-  frontal orientado boca abajo, barra basculante A/B y palanca del botón C
+- Hardware: carcasa v21 en STL (`hardware/3d/v21/`): tapa trasera con
+  hendidura para un anillo MagSafe (Ø 56,4/44,6 mm, 0,8 mm), marco frontal
+  orientado boca abajo, barra basculante A/B y palanca del botón C
   (power), con vista previa. El remix `PaperDIY_kit_completo.3mf` se conserva
   como versión anterior.
 - Licencias: el firmware compilado es GPLv3 (incluye wolfSSL). Las releases
@@ -12,6 +13,11 @@
   `v2.0.0-11`. Los READMEs distinguen código MIT y binario GPLv3, y el enlace
   de FreeInk apunta a su repositorio. La descripción de M5Burner incluye la
   licencia.
+- M5Burner: descripción de la app al día y guardada en `m5burner/README.md`;
+  `m5burner.json` usa el nombre del catálogo, `CrossPoint for PaperDIY
+  (community port)`, el mismo que busca el aviso de actualizaciones, y
+  `PACKAGE_README.md` añade funciones, actualizaciones bajo M5Launcher y
+  limitaciones vigentes.
 - `NOTICE` vuelve a registrar el commit de CrossPoint y el pin del SDK
   (estaban en `b6b7a6c1` / `77ae8c75`); `scripts/update_notice_pins.py` los
   actualiza en cada sync.

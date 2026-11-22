@@ -93,7 +93,8 @@ Web UI、OTA をすでに解決しています。足りなかったのは PaperD
 
 M5Stack の **PaperDIY Complete Kit** には PLA プリントのケースが付属します。
 現行のケースは **v21** で、[`hardware/3d/v21/`](hardware/3d/v21/) に STL で
-置いています。リアカバー、フロントフレーム、A/B 用シーソーバー、C ボタン
+置いています。MagSafe リング用の溝付きリアカバー、フロントフレーム、
+A/B 用シーソーバー、C ボタン
 （電源）用レバーを含みます。旧バージョンの
 [`hardware/3d/PaperDIY_kit_completo.3mf`](hardware/3d/PaperDIY_kit_completo.3mf)
 は純正の 3 個のボタンを使う公式モデルの改造版で、Bambu Studio の

@@ -145,7 +145,8 @@ CrossPoint already has auto-sleep; the timeout needs tuning and measurement.
 ## 3D case
 
 The current case is **v21**, as STL files in
-[`hardware/3d/v21/`](../../hardware/3d/v21/): back cover, front frame
+[`hardware/3d/v21/`](../../hardware/3d/v21/): back cover with a MagSafe ring
+recess (Ø 56.4/44.6 mm, 0.8 mm deep), front frame
 (oriented upside down for printing), a rocker bar for A/B and a lever for
 button C (power). It measures 124.4 × 71.4 mm.
 

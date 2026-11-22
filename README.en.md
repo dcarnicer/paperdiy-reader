@@ -90,7 +90,8 @@ I²C on SDA41/SCL42).
 
 The M5Stack **PaperDIY Complete Kit** includes a PLA-printed case. Our current
 case is **v21**, as STL files in [`hardware/3d/v21/`](hardware/3d/v21/): back
-cover, front frame, a rocker bar for A/B and a lever for button C (power). The
+cover with a MagSafe ring recess, front frame, a rocker bar for A/B and a lever
+for button C (power). The
 previous version,
 [`hardware/3d/PaperDIY_kit_completo.3mf`](hardware/3d/PaperDIY_kit_completo.3mf),
 is a modified official model with the three original buttons and opens as a

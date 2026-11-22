@@ -1,12 +1,14 @@
 {
-  "name": "PaperDIY Reader (CrossPoint port)",
-  "description": "CrossPoint-based EPUB reader for M5Stack PaperDIY (K159): library, fonts, dictionary, OPDS, Calibre, KOReader Sync and web UI. Production build; not for PaperS3.",
-  "keywords": "EPUB, e-reader, CrossPoint, PaperDIY, M5Stack",
+  "name": "CrossPoint for PaperDIY (community port)",
+  "description": "EPUB reader for the M5Stack PaperDIY (K159), built on CrossPoint Reader: library, fonts, dictionary, clippings, OPDS, Calibre, KOReader/CrossPoint Sync and web UI. GPLv3 firmware; only for PaperDIY, not PaperS3 or PaperColor. Not official M5Stack firmware.",
+  "keywords": "EPUB, e-reader, CrossPoint, PaperDIY, M5Stack, MagSafe",
   "author": "dcarnicer",
   "repository": "https://github.com/dcarnicer/paperdiy-reader",
   "firmware_category": {
     "path": "firmware",
-    "device": ["M5Stack PaperDIY"],
+    "device": [
+      "M5Stack PaperDIY"
+    ],
     "default_baud": 921600
   },
   "version": "2.0.0-11",

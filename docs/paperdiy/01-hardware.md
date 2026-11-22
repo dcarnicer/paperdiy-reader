@@ -144,7 +144,8 @@ tiene auto-sleep; hay que ajustar el timeout y medir.
 ## Carcasa 3D
 
 La carcasa actual es la **v21**, en STL en
-[`hardware/3d/v21/`](../../hardware/3d/v21/): tapa trasera, marco frontal
+[`hardware/3d/v21/`](../../hardware/3d/v21/): tapa trasera con hendidura para un
+anillo MagSafe (Ø 56,4/44,6 mm, 0,8 mm de profundidad), marco frontal
 (orientado boca abajo para imprimir), una barra basculante para A/B y una
 palanca para el botón C (power). Mide 124,4 × 71,4 mm.
 

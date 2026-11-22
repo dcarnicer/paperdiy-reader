@@ -91,8 +91,9 @@ I²C en SDA41/SCL42).
 
 El **PaperDIY Complete Kit** de M5Stack incluye una carcasa impresa en PLA. La
 versión actual de nuestra carcasa es la **v21**, en STL en
-[`hardware/3d/v21/`](hardware/3d/v21/): tapa trasera, marco frontal, una barra
-basculante para A/B y una palanca para el botón C (power). La versión anterior,
+[`hardware/3d/v21/`](hardware/3d/v21/): tapa trasera con hendidura para un
+anillo MagSafe, marco frontal, una barra basculante para A/B y una palanca para
+el botón C (power). La versión anterior,
 [`hardware/3d/PaperDIY_kit_completo.3mf`](hardware/3d/PaperDIY_kit_completo.3mf),
 es una modificación del modelo oficial con los tres botones originales y se
 abre como proyecto de Bambu Studio.

@@ -1,7 +1,13 @@
-# PaperDIY Reader (CrossPoint port)
+# CrossPoint for PaperDIY (community port)
 
 EPUB reader firmware for the **M5Stack PaperDIY (K159)**. Built on CrossPoint
-Reader and the FreeInk SDK.
+Reader and the FreeInk SDK. Community port; not an official M5Stack firmware.
+
+Library and file browser, SD and downloadable fonts, StarDict dictionary,
+clippings, OPDS, Calibre wireless, KOReader Sync and CrossPoint Sync
+(bookmarks, reading sessions, Sync On Sleep), web UI, USB drive mode,
+two-button controls and kit/extended battery profiles. A MagSafe-ready 3D
+case (STL) is in the repository.
 
 > This package is only for the M5Stack PaperDIY. Do not flash it on a PaperS3,
 > PaperColor or another board.
@@ -17,20 +23,27 @@ Reader and the FreeInk SDK.
 The first book open builds a cache in `/.crosspoint/` and takes a few seconds.
 The first `About` visit scans the SD FAT to show used/free space.
 
+## Updates
+
+- **Standalone:** *Check for Updates* in the reader, or copy the release's
+  `-ota.bin` to the SD root and use *SD Card Firmware Update*.
+- **Under M5Launcher:** *Check for Updates* only tells you a new version is
+  out. Install it from `M5Launcher > OTA` and delete the old copy.
+
 ## Known limitations
 
 - BLE page-turner pairing is not validated with a real BLE remote yet.
 - Sleep current is not measured. Battery life was measured only with the
-  extended 604050 cell (45.4 h / 5,448 pages in a drain test); the original
-  140 mAh kit cell was not measured in that test. Both curves still need
+  extended 604050 cell (1500 mAh; 45.4 h / 5,448 pages in a drain test); the
+  original 140 mAh kit cell gives short battery life. Both curves still need
   validation in normal reading.
-- The original 140 mAh cell gives short battery life. If you install a larger
-  cell, select **Extended (1500 mAh)** under **Settings > System > Battery
-  profile**; it changes only the percentage curve, not charging.
+- If you install a larger cell, select **Extended (1500 mAh)** under
+  **Settings > System > Battery profile**; it changes only the percentage
+  curve, not charging.
 - Ghosting after long reading is slight with the default 5-page refresh; the
   1-page setting is available but slower.
 - KOReader Sync was validated against a local KOSync server, not the public
-  service.
+  service. Sync On Sleep is not yet tested against a real server.
 
 ## Source and license
 

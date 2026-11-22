@@ -8,17 +8,22 @@ La v21 es la versión actual de la carcasa del PaperDIY. Está en
 [`3d/v21/`](3d/v21/) como STL, así que sirve para cualquier slicer. Es algo más
 grande que el remix del kit completo (124,4 × 71,4 mm frente a 120 × 67 mm) y
 cambia los tres botones sueltos por una barra basculante para A/B y una
-palanca para el botón C (power).
+palanca para el botón C (power). La tapa trasera tiene una hendidura para
+pegar un anillo magnético MagSafe.
 
 ![Vista previa de la carcasa v21](3d/v21/PaperDIY_v21_preview.png)
 
 | Pieza | Fichero | Medidas (mm) |
 |---|---|---|
-| Tapa trasera | [`PaperDIY_v21_tapa_trasera.stl`](3d/v21/PaperDIY_v21_tapa_trasera.stl) | 124,4 × 71,4 × 8,9 |
+| Tapa trasera (hendidura MagSafe) | [`PaperDIY_v21_tapa_trasera.stl`](3d/v21/PaperDIY_v21_tapa_trasera.stl) | 124,4 × 71,4 × 8,9 |
 | Marco frontal | [`PaperDIY_v21_marco_frontal_boca_abajo.stl`](3d/v21/PaperDIY_v21_marco_frontal_boca_abajo.stl) | 124,4 × 71,4 × 5,7 |
 | Barra basculante A/B | [`PaperDIY_v21_barra_basculante_AB.stl`](3d/v21/PaperDIY_v21_barra_basculante_AB.stl) | 22,0 × 5,5 × 1,7 |
 | Palanca C (power) | [`PaperDIY_v21_palanca_C.stl`](3d/v21/PaperDIY_v21_palanca_C.stl) | 5,1 × 9,9 × 1,7 |
 
+- **MagSafe:** hendidura anular en la cara exterior de la tapa trasera, de
+  Ø 56,4 mm por fuera, Ø 44,6 mm por dentro y 0,8 mm de profundidad, centrada
+  a lo ancho y a 38,4 mm de un extremo. Cabe un anillo magnético adhesivo de
+  hasta esas medidas; comprueba las del anillo antes de comprarlo.
 - **Orientación:** las piezas vienen orientadas para imprimir. El marco
   frontal va boca abajo, con la cara vista sobre la cama.
 - **Formato:** STL binario en milímetros, sin perfil de slicer.

@@ -7,17 +7,22 @@
 v21 is the current PaperDIY case. It lives in [`3d/v21/`](3d/v21/) as STL
 files, so any slicer can use it. It is slightly larger than the complete-kit
 remix (124.4 × 71.4 mm instead of 120 × 67 mm) and replaces the three loose
-buttons with a rocker bar for A/B and a lever for button C (power).
+buttons with a rocker bar for A/B and a lever for button C (power). The back
+cover has a recess for a stick-on MagSafe magnetic ring.
 
 ![v21 case preview](3d/v21/PaperDIY_v21_preview.png)
 
 | Part | File | Size (mm) |
 |---|---|---|
-| Back cover | [`PaperDIY_v21_tapa_trasera.stl`](3d/v21/PaperDIY_v21_tapa_trasera.stl) | 124.4 × 71.4 × 8.9 |
+| Back cover (MagSafe recess) | [`PaperDIY_v21_tapa_trasera.stl`](3d/v21/PaperDIY_v21_tapa_trasera.stl) | 124.4 × 71.4 × 8.9 |
 | Front frame | [`PaperDIY_v21_marco_frontal_boca_abajo.stl`](3d/v21/PaperDIY_v21_marco_frontal_boca_abajo.stl) | 124.4 × 71.4 × 5.7 |
 | A/B rocker bar | [`PaperDIY_v21_barra_basculante_AB.stl`](3d/v21/PaperDIY_v21_barra_basculante_AB.stl) | 22.0 × 5.5 × 1.7 |
 | C lever (power) | [`PaperDIY_v21_palanca_C.stl`](3d/v21/PaperDIY_v21_palanca_C.stl) | 5.1 × 9.9 × 1.7 |
 
+- **MagSafe:** annular recess on the outer face of the back cover, Ø 56.4 mm
+  outside, Ø 44.6 mm inside and 0.8 mm deep, centred across the width and
+  38.4 mm from one end. A stick-on magnetic ring up to those sizes fits; check
+  the ring's dimensions before buying one.
 - **Orientation:** the parts come oriented for printing. The front frame is
   upside down, with its visible face on the bed.
 - **Format:** binary STL in millimetres, no slicer profile.

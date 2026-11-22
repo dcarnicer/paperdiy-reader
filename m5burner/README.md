@@ -39,6 +39,28 @@ it exposes serial key injection.
 4. Verify the package starts with an empty NVS: no Wi-Fi credentials or
    KOReader credentials from the development device.
 
+## App description (EN)
+
+Text for the app's **description** field in M5Burner. Keep it in step with the
+firmware and the repository; the per-version notes are in
+`m5burner/CHANGELOG.md`.
+
+```text
+CrossPoint for PaperDIY (community port) is an EPUB reader for the M5Stack PaperDIY (K159), built on CrossPoint Reader and the FreeInk SDK.
+
+Features: library and file browser, SD and downloadable fonts, StarDict dictionary, clippings, OPDS, Calibre wireless, KOReader Sync and CrossPoint Sync (bookmarks, reading sessions, Sync On Sleep), web UI, USB drive mode, two-button controls and kit/extended battery profiles.
+
+Under M5Launcher: "Check for Updates" tells you when a new version is out; install it from M5Launcher > OTA and delete the old copy.
+
+Source, MagSafe case STL, releases and issues: https://github.com/dcarnicer/paperdiy-reader
+
+Only for the M5Stack PaperDIY (not PaperS3 or PaperColor). This is not an official M5Stack firmware.
+
+License: GPLv3 (the firmware includes wolfSSL); the source code is MIT. License texts and third-party notices are attached to each GitHub release.
+
+Known limitations: BLE page-turner pairing is not validated with a real remote; sleep current is not measured; battery life was measured only with an extended 1500 mAh cell (45.4 h / 5,448 pages in a drain test), and the original 140 mAh cell gives short battery life; slight ghosting after long reading at the default 5-page refresh; KOReader Sync was tested only against a local KOSync server; Sync On Sleep is not yet tested against a real server.
+```
+
 ## Publish
 
 Use your own M5Stack account. There are two supported routes:
