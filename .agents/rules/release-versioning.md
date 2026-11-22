@@ -40,8 +40,16 @@ accept long strings, and the M5Burner version must equal the release version.
   - `crosspoint-paperdiy-<version>-ota.bin`: app-only image for the
     standalone in-app OTA. The reader builds this name from the tag through
     `CROSSPOINT_OTA_ASSET_FORMAT` in `platformio.ini`; keep both in sync.
+- The binaries are GPLv3 (wolfSSL), so every release also attaches `LICENSE`
+  (license texts, third-party notices, source and SDK revisions), built by
+  `scripts/build_release_license.py`, and its notes state the license. The
+  script reads the vendored SDK revision from `NOTICE`: after each sync run
+  `scripts/update_notice_pins.py` (`sync-upstream.sh` does) and check it with
+  `--check` before tagging.
 - The M5Burner upload is `crosspoint-paperdiy-latest.bin`, and its version
-  field is the tag without the `v`. The upload is manual and independent of
+  field is the tag without the `v`. Its description ends with the license
+  (GPLv3, wolfSSL) and the source link, because the Publish dialog only takes
+  the `.bin`. The upload is manual and independent of
   the GitHub release: a tag does not update the catalog. After publishing,
   record the version in `m5burner/CHANGELOG.md` and keep
   `m5burner/m5burner.json` at the latest release version (matching

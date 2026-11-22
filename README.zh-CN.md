@@ -241,13 +241,18 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 
 ## 致谢与许可
 
-MIT。引擎和大部分代码来自
+源代码采用 MIT 许可。引擎和大部分代码来自
 [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader)
 （Copyright 2025 CrossPoint Reader organization）；硬件 SDK 是
-[FreeInk](https://github.com/crosspoint-reader/crosspoint-reader)（MIT）；
-屏幕由 M5GFX/LovyanGFX 驱动。3D 外壳是
-[M5Stack](https://github.com/m5stack/M5_Hardware) MIT 模型的修改版。见
-[LICENSE](LICENSE) 和 [NOTICE](NOTICE)。
+[FreeInk](https://github.com/Free-Ink/freeink-sdk)（MIT）；屏幕由
+M5GFX/LovyanGFX 驱动。第三方库保留各自的许可。
+
+**编译后的固件**（发布版和 M5Burner 的 `.bin`）因包含 wolfSSL 而采用
+**GPLv3**。每个发布版都附带 `LICENSE`，内含完整许可文本、第三方声明和源码
+版本；见 [`licenses/README.md`](licenses/README.md)。
+
+3D 外壳是 [M5Stack](https://github.com/m5stack/M5_Hardware) MIT 模型的修改版，
+同样采用 MIT。见 [LICENSE](LICENSE) 和 [NOTICE](NOTICE)。
 
 > 本文是西班牙语 README 的翻译；如有出入，以西班牙语版为准。详细文档目前
 > 只有西班牙语。

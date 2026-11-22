@@ -50,6 +50,12 @@ Synced with CrossPoint `177d0694` and FreeInk SDK `995d9bd5`. Update from
 - Still pending: real BLE remote pairing, full Calibre transfer, full OTA
   install, sleep/wake, idle current, autonomy and the visual ghosting review.
 
+### License
+
+GPLv3: the combined firmware includes wolfSSL. The source code is MIT. Source
+code, license texts and third-party notices (`LICENSE`):
+https://github.com/dcarnicer/paperdiy-reader/releases/tag/v2.0.0-11
+
 ## Full changelog (EN)
 
 ### 2.0.0-11 — 2026-11-22

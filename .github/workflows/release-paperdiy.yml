@@ -65,7 +65,16 @@ jobs:
           | \`${ota}\` | App-only image for a standalone reader: *Check for Updates* downloads it, or copy it to the SD root and use *SD Card Firmware Update*. Do not flash it with esptool, M5Burner or M5Launcher. |
 
           **Under M5Launcher** the reader does not install updates itself: *Check for Updates* only tells you a new version exists. Install it from \`M5Launcher > OTA\` (catalog: *CrossPoint for PaperDIY (community port)*) and then delete the old copy in Launcher: Launcher installs new versions next to the old one. See [13-m5launcher.en.md](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_REF_NAME}/docs/paperdiy/13-m5launcher.en.md). Upstream base and full changes: [CHANGELOG.md](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_REF_NAME}/CHANGELOG.md).
+
+          **License:** the source code is MIT; the combined firmware in these images is GPLv3 because it includes wolfSSL. The attached \`LICENSE\` holds the full license texts, third-party notices and the source revisions. Source for this release: [${GITHUB_REF_NAME}](https://github.com/${GITHUB_REPOSITORY}/tree/${GITHUB_REF_NAME}).
           NOTES
+
+      - name: Collect release licenses
+        env:
+          PLATFORMIO_CORE_DIR: ${{ github.workspace }}/.platformio-core
+        # GPLv3 binary: ship the license texts and third-party notices with it.
+        # The script reads the vendored SDK revision from NOTICE.
+        run: python3 scripts/build_release_license.py --env paperdiy --output dist/LICENSE --repository "${GITHUB_REPOSITORY}"
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
@@ -73,6 +82,7 @@ jobs:
           files: |
             dist/*.bin
             dist/SHA256SUMS.txt
+            dist/LICENSE
           body_path: dist/RELEASE_NOTES.md
           generate_release_notes: true
           prerelease: ${{ contains(github.ref_name, '-rc.') }}

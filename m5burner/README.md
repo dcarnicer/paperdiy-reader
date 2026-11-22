@@ -46,7 +46,9 @@ Use your own M5Stack account. There are two supported routes:
 1. **M5Burner desktop app**: `USER CUSTOM` → `Publish`, fill name, version,
    description, device type, GitHub URL, the `.bin` firmware and cover. Use
    `m5burner/CHANGELOG.md` for the cumulative description since the last
-   published version.
+   published version. Keep its License section: the dialog only takes the
+   `.bin`, so the description has to state GPLv3 and link the source and the
+   release `LICENSE`.
 2. **M5Stack-Firmware PR**: fork `m5stack/M5Stack-Firmware`, add this
    repository to `firmware-repo.list`, and include `m5burner.json` plus the
    `firmware/` folder in this repository. M5Stack reviews the first submission.

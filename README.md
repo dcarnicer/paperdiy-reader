@@ -286,10 +286,17 @@ disponibles en [English](docs/paperdiy/README.en.md),
 
 ## Créditos y licencia
 
-MIT. El motor y la mayor parte del código son de
+El código fuente es MIT. El motor y la mayor parte del código son de
 [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader)
 (Copyright 2025 CrossPoint Reader organization); el SDK de hardware es
-[FreeInk](https://github.com/crosspoint-reader/crosspoint-reader) (MIT); el
-panel se maneja con M5GFX/LovyanGFX. La carcasa 3D es un remix del modelo MIT
-de [M5Stack](https://github.com/m5stack/M5_Hardware). Ver [LICENSE](LICENSE) y
-[NOTICE](NOTICE).
+[FreeInk](https://github.com/Free-Ink/freeink-sdk) (MIT); el panel se maneja con
+M5GFX/LovyanGFX. Las librerías de terceros conservan sus licencias.
+
+El **firmware compilado** (los `.bin` de las releases y de M5Burner) es
+**GPLv3** porque incluye wolfSSL. Cada release adjunta un `LICENSE` con los
+textos completos, los avisos de terceros y las revisiones del código fuente;
+ver [`licenses/README.md`](licenses/README.md).
+
+La carcasa 3D es un remix del modelo MIT de
+[M5Stack](https://github.com/m5stack/M5_Hardware) y también es MIT. Ver
+[LICENSE](LICENSE) y [NOTICE](NOTICE).

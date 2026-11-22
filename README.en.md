@@ -283,13 +283,19 @@ The detailed documentation is in Spanish. The
 
 ## Credits and license
 
-MIT. The engine and most of the code are from
+The source code is MIT. The engine and most of the code are from
 [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader)
 (Copyright 2025 CrossPoint Reader organization); the hardware SDK is
-[FreeInk](https://github.com/crosspoint-reader/crosspoint-reader) (MIT); the
-panel is driven by M5GFX/LovyanGFX. The 3D case is a remix of
-[M5Stack](https://github.com/m5stack/M5_Hardware)'s MIT model. See
-[LICENSE](LICENSE) and [NOTICE](NOTICE).
+[FreeInk](https://github.com/Free-Ink/freeink-sdk) (MIT); the panel is driven by
+M5GFX/LovyanGFX. Third-party libraries keep their own licenses.
+
+The **compiled firmware** (the release and M5Burner `.bin` files) is
+**GPLv3** because it includes wolfSSL. Every release attaches a `LICENSE` with
+the full license texts, third-party notices and source revisions; see
+[`licenses/README.md`](licenses/README.md).
+
+The 3D case is a remix of [M5Stack](https://github.com/m5stack/M5_Hardware)'s
+MIT model and is MIT as well. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 > This is a translation of the Spanish README. If they differ, the Spanish
 > version is authoritative. Detailed documentation is currently Spanish-only.

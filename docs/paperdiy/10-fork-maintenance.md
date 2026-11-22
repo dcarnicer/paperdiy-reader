@@ -88,7 +88,8 @@ El script:
    `test/test_release_license.py`, `test/test_battery_log.py`, `.gitattributes`,
    `.gitignore`, `LICENSE`) desde `paperdiy`; añade las líneas
    downstream de `.agents/README.md` y los `CMakeLists` con
-   `scripts/apply_downstream_overlay.py`.
+   `scripts/apply_downstream_overlay.py`, y apunta en `NOTICE` el commit de
+   CrossPoint y el pin del SDK nuevos con `scripts/update_notice_pins.py`.
 6. Deja el árbol listo e imprime el comando `make build`; la compilación es
    manual.
 
@@ -140,6 +141,10 @@ rm -rf .github && git checkout paperdiy -- .github
 # Líneas del fork en ficheros que upstream también edita. Falla si el ancla
 # cambió, en vez de sustituir el fichero entero y perder cambios de upstream.
 python3 scripts/apply_downstream_overlay.py
+
+# NOTICE: commit de CrossPoint y pin del SDK del sync. El LICENSE de la release
+# lee de aquí la revisión del SDK vendorizado.
+python3 scripts/update_notice_pins.py
 
 # Refrescar el snapshot de docs de upstream
 for doc in README AGENTS GOVERNANCE ROADMAP USER_GUIDE; do
@@ -353,6 +358,13 @@ completa debe ser idéntica a la de la OTA):
 - `crosspoint-paperdiy-<versión>-ota.bin`: solo la app, para la OTA
   standalone.
 
+Además adjunta `SHA256SUMS.txt` y `LICENSE`. Los binarios son GPLv3 porque
+incluyen wolfSSL, así que cada release lleva los textos de licencia, los avisos
+de terceros y las revisiones del código y del SDK
+(`scripts/build_release_license.py`), y las notas lo indican. La revisión del
+SDK sale de `NOTICE`; `python3 scripts/update_notice_pins.py --check` debe
+pasar antes de crear el tag.
+
 Tag: `v<versión>` (por ejemplo `v2.0.0-1`, ver Versionado).
 
 Bajo M5Launcher el lector **no escribe en la flash**: `installUpdate` devuelve
@@ -438,4 +450,6 @@ eso.
 - [ ] Recuperación por download mode.
 - [ ] Release notes incluyen el aviso de OTA bajo M5Launcher y el enlace a
       `13-m5launcher.md`.
-- [ ] Changelog y artefactos.
+- [ ] `NOTICE` al día: `python3 scripts/update_notice_pins.py --check`.
+- [ ] Changelog y artefactos; la release incluye `LICENSE`.
+- [ ] Descripción de M5Burner con la licencia (GPLv3) y el enlace al código.

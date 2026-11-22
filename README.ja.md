@@ -268,13 +268,21 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 
 ## クレジットとライセンス
 
-MIT。エンジンと大部分のコードは
+ソースコードは MIT です。エンジンと大部分のコードは
 [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader)
 （Copyright 2025 CrossPoint Reader organization）由来です。ハードウェア SDK は
-[FreeInk](https://github.com/crosspoint-reader/crosspoint-reader)（MIT）、
-パネルは M5GFX/LovyanGFX で制御しています。3D ケースは
-[M5Stack](https://github.com/m5stack/M5_Hardware) の MIT モデルの改造版です。
-[LICENSE](LICENSE) と [NOTICE](NOTICE) を参照してください。
+[FreeInk](https://github.com/Free-Ink/freeink-sdk)（MIT）、パネルは
+M5GFX/LovyanGFX で制御しています。サードパーティのライブラリはそれぞれの
+ライセンスに従います。
+
+**ビルド済みファームウェア**（リリースと M5Burner の `.bin`）は wolfSSL を
+含むため **GPLv3** です。各リリースには、ライセンス全文、サードパーティの
+表示、ソースのリビジョンをまとめた `LICENSE` を添付しています。
+[`licenses/README.md`](licenses/README.md) を参照してください。
+
+3D ケースは [M5Stack](https://github.com/m5stack/M5_Hardware) の MIT モデルの
+改造版で、こちらも MIT です。[LICENSE](LICENSE) と [NOTICE](NOTICE) を参照
+してください。
 
 > これはスペイン語 README の翻訳です。内容が異なる場合はスペイン語版を
 > 優先します。詳細ドキュメントは現在スペイン語のみです。

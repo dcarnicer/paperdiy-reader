@@ -6,6 +6,15 @@
   frontal orientado boca abajo, barra basculante A/B y palanca del botón C
   (power), con vista previa. El remix `PaperDIY_kit_completo.3mf` se conserva
   como versión anterior.
+- Licencias: el firmware compilado es GPLv3 (incluye wolfSSL). Las releases
+  adjuntan `LICENSE` con los textos completos, los avisos de terceros y las
+  revisiones del código y del SDK, y sus notas lo indican; se añadió a
+  `v2.0.0-11`. Los READMEs distinguen código MIT y binario GPLv3, y el enlace
+  de FreeInk apunta a su repositorio. La descripción de M5Burner incluye la
+  licencia.
+- `NOTICE` vuelve a registrar el commit de CrossPoint y el pin del SDK
+  (estaban en `b6b7a6c1` / `77ae8c75`); `scripts/update_notice_pins.py` los
+  actualiza en cada sync.
 
 ## 2.0.0-11 — 2026-11-22
 

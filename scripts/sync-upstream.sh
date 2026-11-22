@@ -137,6 +137,9 @@ git checkout paperdiy -- README.md README.en.md README.ja.md README.zh-CN.md \
   test/test_release_license.py test/test_battery_log.py \
   docs/paperdiy docs/README.md docs/upstream scripts patches .github
 python3 scripts/apply_downstream_overlay.py
+# NOTICE comes from paperdiy with the previous pins; the release LICENSE reads
+# the SDK revision from it, so record the new upstream commit and SDK pin.
+python3 scripts/update_notice_pins.py
 
 # scripts/ is overlaid from paperdiy, but upstream also edits some of it. Put
 # back upstream's version when the fork did not customize that file. A file
