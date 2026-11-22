@@ -3,8 +3,8 @@
 Este repo es un fork downstream de CrossPoint. La regla es simple: **el motor
 se sigue de upstream; el hardware y la UX PaperDIY viven en nuestro fork**.
 
-Última sincronización: CrossPoint `209cb53a` / FreeInk SDK `634a3f8c`
-(19/11/2026).
+Última sincronización: CrossPoint `177d0694` / FreeInk SDK `995d9bd5`
+(22/11/2026).
 
 ## Ramas y remotos
 
@@ -193,8 +193,8 @@ git add freeink-sdk && git commit -m "chore: vendor pristine SDK for patch basel
 
 | Patch | Base | Contenido |
 |---|---|---|
-| `patches/sdk.patch` | FreeInk SDK `634a3f8c` | perfil, BoardPaperDiy, PM1/I2C lock, InputManager, PowerManager, driver LGFX, batería |
-| `patches/firmware.patch` | CrossPoint `209cb53a` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main, batería |
+| `patches/sdk.patch` | FreeInk SDK `995d9bd5` | perfil, BoardPaperDiy, PM1/I2C lock, InputManager, PowerManager, driver LGFX, batería |
+| `patches/firmware.patch` | CrossPoint `177d0694` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main, batería |
 | `patches/paperdiy-support.patch` | ambos | concatenación de los dos anteriores |
 
 Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
@@ -207,6 +207,28 @@ Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
 en el parche, lo hincha y aumenta el riesgo de conflictos en el próximo
 `git apply --3way`. Mantén los cambios limitados a hunks funcionales y regenera
 el parche solo para esos hunks.
+
+## Release `2.0.0-11` (22/11/2026)
+
+Sincronización con CrossPoint `177d0694` / FreeInk SDK `995d9bd5`; mantiene
+CrossPoint `2.0.0`. Conflictos resueltos en `BoardConfig.h` (E1001 junto a
+PaperDIY), `HalPowerManager` (el nuevo `readBatteryPercentage` del Wi-Fi al
+dormir usa la presentación de batería de PaperDIY bajo el mutex) y `main.cpp`.
+Upstream quitó `UiListActivity::cleanNextRefresh` (`79ae14ff`); el fork lo
+conserva porque el menú del lector lo usa para limpiar la página de debajo.
+Parches regenerados y verificados con `git apply --check`.
+
+- Build `paperdiy`: `firmware.bin` 5.528.960 B, 84,3 % de flash y 34,1 % de
+  RAM. `paperdiy-test` compila; 1027 tests de host.
+- Smoke 25/25 sobre el árbol del sync (`20261122-193337`); `2.0.0-11` solo
+  cambia la versión y añade la traducción ES/CA/VA de `Sync On Sleep`.
+- El build de producción `2.0.0-11` se flashea en el PaperDIY para la
+  comprobación final de arranque.
+- `test/test_firmware_stats.py` falla en el fork desde antes de este sync: usa
+  `.github/scripts/firmware-stats.py`, que el overlay de `.github` no lleva.
+- Pendientes: ghosting (también el menú del lector), autonomía, sleep/wake,
+  Sync On Sleep real, BLE real, Calibre completo y OTA completa; subida manual
+  a M5Burner.
 
 ## Release `2.0.0-10` (19/11/2026)
 

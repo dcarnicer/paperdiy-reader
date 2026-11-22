@@ -36,7 +36,7 @@ usable every day.
 > errors or leaks on 2026-11-06. KOReader Sync was validated against a local
 > KOSync server on 2026-11-06. Pending: pairing a BLE remote, sleep current and
 > a physical visual review of ghosting. Full `make smoke` passed on the
-> `209cb53a` tree (2026-11-19, run `20261119-120845`; `2.0.0-10` only bumps
+> `177d0694` tree (2026-11-22, run `20261122-193337`; `2.0.0-11` only bumps
 > the version). See
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md).
 >

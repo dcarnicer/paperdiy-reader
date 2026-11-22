@@ -1,5 +1,40 @@
 # Changelog
 
+## 2.0.0-11 — 2026-11-22
+
+Sincronización con CrossPoint `177d0694` y FreeInk SDK `995d9bd5`. Mantiene
+CrossPoint `2.0.0`.
+
+- CrossPoint `209cb53a` → `177d0694` (14 commits): Sync On Sleep, sesiones de
+  lectura y sincronización de marcadores con servidores CrossPoint Sync;
+  soporte de escrituras índicas sin HarfBuzz; reloj y batería normalizados en
+  las cabeceras de los temas; progreso de lectura en Lyra; navegación de
+  plugins en la WebUI; nombre del fichero en el popup del explorador;
+  renombrar en la web conserva la extensión; la imagen de sleep se limpia al
+  sustituirla; y fixes de recortes y BMP.
+- SDK `634a3f8c` → `995d9bd5` (8 commits): nuevo Seeed reTerminal E1001,
+  lectura de ficheros de la SD con límite de tamaño, y mejoras de refresco en
+  modo oscuro y del driver UC8279C A4. Sin cambios previstos en PaperDIY.
+- Conflictos resueltos: `BoardConfig.h` lista E1001 junto a PaperDIY;
+  `HalPowerManager::readBatteryPercentage` (nuevo, usado por el Wi-Fi al
+  dormir) pasa en PaperDIY por la presentación de batería del PM1 y el mutex;
+  `main.cpp` conserva los dos includes. Upstream quitó
+  `UiListActivity::cleanNextRefresh`; el fork lo mantiene para limpiar la
+  página bajo el menú del lector.
+- Traducción ES/CA/VA de `Sync On Sleep`.
+- `patches/sdk.patch`, `patches/firmware.patch` y
+  `patches/paperdiy-support.patch` regenerados contra `995d9bd5` / `177d0694`
+  y verificados con `git apply --check`.
+- Build `paperdiy`: `firmware.bin` 5.528.960 B, 84,3 % de flash y 34,1 % de
+  RAM. `paperdiy-test` compila, 1027 tests de host y `make smoke` 25/25
+  (`20261122-193337`).
+- `2.0.0-11` solo cambia la cadena de versión y las traducciones respecto al
+  árbol probado en el smoke; el build de producción se flashea en el PaperDIY
+  para la comprobación final de arranque.
+- Hardware: smoke completo sobre `paperdiy-test`; pendientes ghosting (incluido
+  el menú del lector), autonomía, sleep/wake, Sync On Sleep real, BLE real,
+  Calibre completo y OTA completa.
+
 ## 2.0.0-10 — 2026-11-19
 
 Sincronización con CrossPoint `209cb53a` y FreeInk SDK `634a3f8c`. Mantiene

@@ -1,7 +1,7 @@
 # Changelog de M5Burner
 
 Última publicación registrada en este repositorio: **2.0.0-2** (tag
-`v2.0.0-2`, 2026-11-09). Las entradas **2.0.0-3** a **2.0.0-10** documentan sus
+`v2.0.0-2`, 2026-11-09). Las entradas **2.0.0-3** a **2.0.0-11** documentan sus
 cambios y el texto preparado para el diálogo Publish; no hay constancia en el
 repositorio de que se hayan subido a M5Burner y el estado del catálogo no está
 verificado.
@@ -10,8 +10,14 @@ de publicar.
 
 ## Short description for M5Burner (EN)
 
-CrossPoint for PaperDIY 2.0.0-10 — cumulative update from 2.0.0-2.
+CrossPoint for PaperDIY 2.0.0-11 — cumulative update from 2.0.0-2.
 
+- Synced with CrossPoint `177d0694` / FreeInk SDK `995d9bd5`: Sync On Sleep,
+  reading-session and bookmark sync with CrossPoint Sync servers, Indic script
+  support, clock and battery placement normalized across themes, reading
+  progress on Lyra, WebUI plugin navigation, and file-browser, web-rename,
+  sleep-image and clipping fixes.
+- Spanish/Catalan/Valencian translations for Sync On Sleep.
 - Synced with CrossPoint `209cb53a` / FreeInk SDK `634a3f8c`: full-tone images
   on EEGO/Picco, KOReader Sync preserved during Bluetooth shutdown, auto-sleep
   accounting fix and dead-code cleanup.
@@ -41,11 +47,33 @@ CrossPoint for PaperDIY 2.0.0-10 — cumulative update from 2.0.0-2.
 
 Known limitations: real BLE remote pairing, full Calibre transfer and full OTA
 install remain pending, as do sleep/wake, idle current, autonomy and the visual
-ghosting review. The full `make smoke` passed on the `209cb53a` tree (25
-steps, run `20261119-120845`); `2.0.0-10` only bumps the version. The visual
-battery-curve jump still needs a battery below ~90%.
+ghosting review, and Sync On Sleep has not been tried against a real server.
+The full `make smoke` passed on the `177d0694` tree (25 steps, run
+`20261122-193337`); `2.0.0-11` only bumps the version and adds translations.
+The visual battery-curve jump still needs a battery below ~90%.
 
 ## Full changelog (EN)
+
+### 2.0.0-11 — 2026-11-22
+
+Synced with CrossPoint `177d0694` and FreeInk SDK `995d9bd5`.
+
+- Upstream: Sync On Sleep (optional, off by default), reading-session and
+  bookmark sync with CrossPoint Sync servers, Indic script support without
+  HarfBuzz, clock and battery placement normalized across built-in themes,
+  reading progress on Lyra, WebUI plugin navigation, selected file name in the
+  file-browser popup, web rename keeps the extension, sleep image cleared when
+  replaced, and clipping and BMP fixes.
+- SDK: new Seeed reTerminal E1001 board, size-checked SD file reads, and dark
+  mode and UC8279C A4 refresh improvements. No PaperDIY behaviour change
+  expected.
+- PaperDIY port reapplied. The new sleep-WiFi battery check uses the PaperDIY
+  battery presentation, and the reader menu still scrubs the page underneath
+  with a cleanup refresh.
+- Spanish, Catalan and Valencian translations for Sync On Sleep.
+- Patches regenerated against the new pins and verified with `git apply
+  --check`. Build 5,528,960 B (84.3% flash, 34.1% RAM). Full `make smoke`
+  passed on this tree (25 steps, run `20261122-193337`).
 
 ### 2.0.0-10 — 2026-11-19
 
@@ -185,11 +213,34 @@ Synced with CrossPoint `8276d518` (3 commits) and FreeInk SDK `6a208c0c`.
   in a drain test (45.4 h / 5,448 pages), but both battery curves still need
   validation in normal reading. The original 140 mAh kit cell keeps its
   original curve.
-- The latest full `make smoke` passed on `2.0.0-9` (25 steps, run
-  `20261118-132153`); `2.0.0-6` has no dedicated run. The visual battery-curve
-  jump still needs a battery below ~90%.
+- Sync On Sleep has not been tried against a real CrossPoint Sync server.
+- The latest full `make smoke` passed on the `177d0694` tree (25 steps, run
+  `20261122-193337`); `2.0.0-11` only bumps the version and adds translations.
+  The visual battery-curve jump still needs a battery below ~90%.
 
 ## Changelog completo (ES)
+
+### 2.0.0-11 — 2026-11-22
+
+Sincronización con CrossPoint `177d0694` y FreeInk SDK `995d9bd5`.
+
+- Upstream: Sync On Sleep (opcional, desactivado por defecto), sincronización
+  de sesiones de lectura y marcadores con servidores CrossPoint Sync, soporte
+  de escrituras índicas sin HarfBuzz, reloj y batería normalizados en los temas,
+  progreso de lectura en Lyra, navegación de plugins en la WebUI, nombre del
+  fichero en el popup del explorador, renombrar en la web conserva la
+  extensión, la imagen de sleep se limpia al sustituirla y fixes de recortes y
+  BMP.
+- SDK: nueva placa Seeed reTerminal E1001, lectura de la SD con límite de
+  tamaño y mejoras de refresco en modo oscuro y UC8279C A4. Sin cambios
+  previstos en PaperDIY.
+- Port PaperDIY reaplicado. La comprobación de batería del Wi-Fi al dormir usa
+  la presentación de batería de PaperDIY y el menú del lector sigue limpiando
+  la página de debajo con un refresco de limpieza.
+- Traducciones ES/CA/VA de Sync On Sleep.
+- Parches regenerados contra los pines nuevos y verificados con `git apply
+  --check`. Build 5.528.960 B (84,3 % flash, 34,1 % RAM). `make smoke`
+  completo sobre este árbol (25 pasos, run `20261122-193337`).
 
 ### 2.0.0-10 — 2026-11-19
 
@@ -319,6 +370,8 @@ Sincronización con CrossPoint `8276d518` (3 commits) y FreeInk SDK `6a208c0c`.
   extendida se midió en una descarga real (45,4 h / 5.448 páginas), pero ambas
   curvas de batería siguen pendientes de validar en lectura normal. La celda
   original de 140 mAh conserva su curva original.
-- La última ejecución completa de `make smoke` pasó en el árbol de `209cb53a`
-  (25 pasos, run `20261119-120845`); `2.0.0-10` solo cambia la versión. El
-  salto visual de la curva sigue pendiente con batería por debajo del ~90 %.
+- Sync On Sleep no se ha probado contra un servidor CrossPoint Sync real.
+- La última ejecución completa de `make smoke` pasó en el árbol de `177d0694`
+  (25 pasos, run `20261122-193337`); `2.0.0-11` solo cambia la versión y añade
+  traducciones. El salto visual de la curva sigue pendiente con batería por
+  debajo del ~90 %.
