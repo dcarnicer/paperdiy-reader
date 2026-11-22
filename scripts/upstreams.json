@@ -1,0 +1,131 @@
+{
+  "crosspoint": {
+    "repo_url": "https://github.com/crosspoint-reader/crosspoint-reader.git",
+    "upstream_ref": "upstream/develop",
+    "mirror_ref": "main",
+    "version_file": "platformio.ini",
+    "build_files": [
+      "platformio.ini",
+      "sdkconfig.default",
+      "sdkconfig.defaults",
+      "partitions.csv",
+      "partitions_picco.csv",
+      ".gitmodules"
+    ]
+  },
+  "freeink_sdk": {
+    "repo_url": "https://github.com/Free-Ink/freeink-sdk.git",
+    "submodule_path": "freeink-sdk"
+  },
+  "m5_sources": [
+    {
+      "id": "m5gfx",
+      "repo_url": "https://github.com/m5stack/M5GFX.git",
+      "kind": "dependency",
+      "branch": "master",
+      "pin_file": "platformio.ini",
+      "pin_pattern": "m5stack/M5GFX\\s*@\\s*([^\\s#]+)",
+      "watch": [
+        "src/M5GFX.cpp",
+        "src/lgfx/boards.hpp",
+        "src/lgfx/v1/platforms/esp32/Panel_EPD.inl",
+        "src/board_detect",
+        "extras/board_spec/boards/m5paperdiy.json"
+      ],
+      "highlight_pattern": "paperdiy|epd|panel|pm1|pmic|grayscale|gray"
+    },
+    {
+      "id": "m5pm1",
+      "repo_url": "https://github.com/m5stack/M5PM1.git",
+      "kind": "reference",
+      "branch": "main",
+      "baseline": "1.0.7",
+      "baseline_label": "tag 1.0.7",
+      "watch": [
+        "src"
+      ],
+      "highlight_pattern": "paperdiy|pm1|power|batt|wake|gpio|chg"
+    },
+    {
+      "id": "m5ioe1",
+      "repo_url": "https://github.com/m5stack/M5IOE1.git",
+      "kind": "reference",
+      "branch": "main",
+      "baseline": "846eec7",
+      "baseline_label": "last code commit 846eec7 (v1.0.9)",
+      "watch": [
+        "src"
+      ],
+      "highlight_pattern": "paperdiy|ioe1|power|gpio|led"
+    },
+    {
+      "id": "m5paperdiy-userdemo",
+      "repo_url": "https://github.com/m5stack/M5PaperDIY-UserDemo.git",
+      "kind": "reference",
+      "branch": "main",
+      "baseline": "60a26f0",
+      "baseline_label": "init 60a26f0",
+      "watch": [
+        "main",
+        "patches"
+      ],
+      "highlight_pattern": "paperdiy|epd|pm1|power|display|lut|batt"
+    },
+    {
+      "id": "m5papers3-userdemo",
+      "repo_url": "https://github.com/m5stack/M5PaperS3-UserDemo.git",
+      "kind": "reference",
+      "branch": "main",
+      "baseline": "5e275ad",
+      "baseline_label": "last code commit 5e275ad",
+      "watch": [
+        "main"
+      ],
+      "highlight_pattern": "epd|power|display|lut|pm1"
+    },
+    {
+      "id": "uiflow-micropython",
+      "repo_url": "https://github.com/m5stack/uiflow-micropython.git",
+      "kind": "reference",
+      "branch": "master",
+      "baseline": "e0201f59",
+      "baseline_label": "m5pm1.py at e0201f59 (2026-09-14)",
+      "watch": [
+        "m5stack/libs/driver/m5pm1.py"
+      ],
+      "highlight_pattern": "pm1|power|paperdiy"
+    },
+    {
+      "id": "m5unified",
+      "repo_url": "https://github.com/m5stack/M5Unified.git",
+      "kind": "reference",
+      "branch": "master",
+      "baseline": "0.2.9",
+      "baseline_label": "tag 0.2.9",
+      "watch": [
+        "src/M5Unified.inl",
+        "src/utility/Power_Class.inl",
+        "src/utility/power/M5PM1_Class.hpp",
+        "src/utility/power/M5PM1_Class.inl",
+        "src/utility/M5IOE1_Class.hpp",
+        "src/utility/M5IOE1_Class.inl",
+        "src/utility/led",
+        "src/utility/LED_Class.hpp",
+        "src/utility/LED_Class.inl"
+      ],
+      "highlight_pattern": "paperdiy|pm1|pmic|ioe1|power|led|wake"
+    },
+    {
+      "id": "m5-hardware",
+      "repo_url": "https://github.com/m5stack/M5_Hardware.git",
+      "kind": "hardware",
+      "branch": "master",
+      "baseline": "2c79a0f",
+      "baseline_label": "PaperDIY 3D files at 2c79a0f (2026-10-19)",
+      "watch": [
+        "Products/K159-B_PaperDIY_Complete_Kit"
+      ],
+      "highlight_pattern": "paperdiy|K159"
+    }
+  ]
+}

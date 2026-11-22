@@ -48,8 +48,10 @@
 #include "activities/settings/SdFirmwareUpdateActivity.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
+#include "platform/LauncherEnv.h"
 #include "platform/UsbSerialJtagHandoff.h"
 #include "sync/SyncEngine.h"
+#include "util/BatteryLog.h"
 #include "util/ButtonNavigator.h"
 #include "util/PluginEvents.h"
 #include "util/ScreenshotUtil.h"
@@ -71,8 +73,26 @@ MappedInputManager mappedInputManager(gpio, renderer);
 ActivityManager activityManager(renderer, mappedInputManager);
 FontDecompressor fontDecompressor;
 SdCardFontSystem sdFontSystem;
+BatteryLog batteryLog;
 FontCacheManager fontCacheManager(renderer.getFontMap(), renderer.getSdCardFonts(), renderer.getTtfFonts());
 static unsigned long allowSleepAt = 0;
+static unsigned long lastActivityTime = 0;
+
+static void noteActivity() { lastActivityTime = millis(); }
+
+#ifdef PAPERDIY_SERIAL_TEST
+// Autonomous reading-session driver for battery drain tests. It only sends
+// page turns; the reader keeps its normal rendering path. At the end of a book
+// it reverses direction, so the test can run for hours on one book.
+namespace drainTest {
+bool enabled = false;
+bool forward = true;
+unsigned long intervalMs = 30000;
+unsigned long lastTurnMs = 0;
+uint32_t turns = 0;
+uint8_t stalls = 0;
+}  // namespace drainTest
+#endif
 
 // Fonts
 EpdFont notosans14RegularFont(&notosans_14_regular);
@@ -573,6 +593,8 @@ void enterDeepSleep(bool fromTimeout = false) {
   // Sleep may end in a power-off (battery death, latch); persist the clock
   // floor now so a later cold boot resumes from it.
   trustedtime::note();
+  batteryLog.logSleep(APP_STATE.lastSleepFromReader, WiFi.getMode() != WIFI_MODE_NULL);
+  powerManager.persistBatteryEstimate();
 
   // Stop Bluetooth before plugin delivery can start WiFi; a timeout defers delivery.
   deepSleepInProgress = true;
@@ -735,8 +757,11 @@ void setup() {
   const auto recoveryButton = (BoardConfig::isX4Pro() || BoardConfig::isX4Classic()) ? MappedInputManager::Button::Down
                                                                                      : MappedInputManager::Button::Up;
   // The Picco has no second app slot to flash into (partitions_picco.csv).
+  // Under M5Launcher the launcher owns the app slots, and holding a key at
+  // power-on is how Launcher itself is opened, so never enter recovery there.
   const bool recoveryFirmwareMode = wakeupReason == HalGPIO::WakeupReason::PowerButton && !BoardConfig::isPaperMono() &&
-                                    !BoardConfig::isPicco() && mappedInputManager.isPressed(recoveryButton);
+                                    !BoardConfig::isPicco() && !launcher_env::isUnderLauncher() &&
+                                    mappedInputManager.isPressed(recoveryButton);
 
   halTiltSensor.begin();
   halClock.begin();
@@ -746,12 +771,42 @@ void setup() {
 #else
   LOG_INF("MAIN", "Device: %s", BoardConfig::ACTIVE.name);
 #endif
+  launcher_env::logStatus();
 
   // SD Card Initialization
-  // We need 6 open files concurrently when parsing a new chapter
-  if (!Storage.begin()) {
+  // We need 6 open files concurrently when parsing a new chapter. A card that
+  // was just reinserted can take a moment to answer, so retry the mount before
+  // declaring an error.
+  bool storageReady = Storage.begin();
+  if (!storageReady && BoardConfig::ACTIVE.sd.detect >= 0 && Storage.isCardPresent()) {
+    for (uint8_t attempt = 0; attempt < 4 && !storageReady; ++attempt) {
+      delay(200);
+      storageReady = Storage.remount();
+    }
+  }
+  if (!storageReady) {
     LOG_ERR("MAIN", "SD card initialization failed");
     setupDisplayAndFonts(isSilentReboot);
+    // Boards with a card-detect switch can wait for a missing card instead of
+    // ending in a dead error screen.
+    if (BoardConfig::ACTIVE.sd.detect >= 0 && !Storage.isCardPresent()) {
+      activityManager.goToFullScreenMessage("Insert SD card", EpdFontFamily::BOLD);
+      while (!Storage.isCardPresent()) delay(200);
+      delay(500);
+      ESP.restart();
+      return;
+    }
+    // A present but unmountable card is recoverable: ask for a reinsert and
+    // restart when the card has been cycled. This avoids a dead-end screen
+    // after a hot removal/insertion left the card in a bad state.
+    if (BoardConfig::ACTIVE.sd.detect >= 0) {
+      activityManager.goToFullScreenMessage("SD card error - reinsert", EpdFontFamily::BOLD);
+      while (Storage.isCardPresent()) delay(200);
+      while (!Storage.isCardPresent()) delay(200);
+      delay(500);
+      ESP.restart();
+      return;
+    }
     activityManager.goToFullScreenMessage("SD card error", EpdFontFamily::BOLD);
     return;
   }
@@ -775,6 +830,7 @@ void setup() {
     SETTINGS.readerMenuStyle = CrossPointSettings::READER_MENU_TOOLBAR;
   }
   SETTINGS.loadFromFile();
+  powerManager.setPaperDiyBatteryProfile(SETTINGS.batteryProfile == CrossPointSettings::BATTERY_EXTENDED);
   // Push the saved timezone's POSIX rule into the clock (migrating the legacy
   // UTC-offset setting on first boot after the update).
   timezones::applyToClock();
@@ -802,6 +858,7 @@ void setup() {
   // Restore the monotonic clock floor before anything reads time() (event
   // timestamps, loan-expiry checks).
   trustedtime::init();
+  batteryLog.begin();
   bleturner::begin(pageturner::host, SETTINGS.ble);
 
   switch (wakeupReason) {
@@ -824,8 +881,8 @@ void setup() {
     case HalGPIO::WakeupReason::AfterUSBPower:
       // Most devices return to sleep after a USB-powered cold boot.
       LOG_DBG("MAIN", "Wakeup reason: After USB Power");
-#if FREEINK_DEVICE_X4PRO || FREEINK_DEVICE_X4CLASSIC || FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_EEGO_A4 || \
-    FREEINK_DEVICE_METALIO_EINK4 || FREEINK_DEVICE_PICCO
+#if FREEINK_DEVICE_X4PRO || FREEINK_DEVICE_X4CLASSIC || FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY || \
+    FREEINK_DEVICE_EEGO_A4 || FREEINK_DEVICE_METALIO_EINK4 || FREEINK_DEVICE_PICCO
       // X4 Pro must stay awake so USB Serial/JTAG remains available after leaving
       // USB Drive and reconnecting the cable. Paper Mono has no armable GPIO wake
       // (its button is behind the PMIC). Metalio also needs native USB available
@@ -964,8 +1021,15 @@ void setup() {
     gpio.update();
   }
 
-  mappedInputManager.beginPowerInput(!isSilentReboot || suppressRestartPower, mappedInputManager.isPowerHeld());
+  // PMIC-only power buttons report the wake click as a one-tick event that can
+  // arrive after setup. Suppress that first release so the wake click cannot
+  // become an in-app page turn, refresh, or shutdown.
+  const bool pmicPowerWake = wakeupReason == HalGPIO::WakeupReason::PowerButton &&
+                             (BoardConfig::isPaperDiy() || BoardConfig::isPaperMono());
+  mappedInputManager.beginPowerInput(!isSilentReboot || suppressRestartPower || pmicPowerWake,
+                                     mappedInputManager.isPowerHeld() || pmicPowerWake);
   allowSleepAt = millis() + (isSilentReboot ? 0 : 2000);
+  lastActivityTime = millis();
 }
 
 void loop() {
@@ -1013,6 +1077,7 @@ void loop() {
 
   // After the exclusive-storage return: it saves settings to the SD card.
   handleSlideSwitch();
+  batteryLog.tick(activityManager.isReaderActivity(), WiFi.getMode() != WIFI_MODE_NULL);
   halTiltSensor.update(SETTINGS.tiltPageTurn, SETTINGS.orientation, activityManager.isReaderActivity());
 
   // Under the render lock, so a step never overlaps the themes' gauge reads.
@@ -1050,18 +1115,101 @@ void loop() {
         uint8_t* buf = display.getFrameBuffer();
         logSerial.write(buf, bufferSize);
         logSerial.printf("SCREENSHOT_END\n");
+      } else if (cmd == "BATLOG") {
+        // Stream the drain log over USB serial. Unlike CMD:KEY this stays in
+        // production builds: it needs no UI navigation and no USB MSC session.
+        HalFile file = Storage.open("/battery-log.csv");
+        if (!file || !file.isOpen()) {
+          logSerial.printf("BATLOG_START:0\nBATLOG_END\n");
+        } else {
+          const size_t size = file.fileSize();
+          logSerial.printf("BATLOG_START:%u\n", static_cast<unsigned>(size));
+          uint8_t buffer[256];
+          int read = 0;
+          while ((read = file.read(buffer, sizeof(buffer))) > 0) {
+            logSerial.write(buffer, read);
+          }
+          logSerial.printf("BATLOG_END\n");
+        }
       }
+#ifdef PAPERDIY_SERIAL_TEST
+      else if (cmd.startsWith("KEY:")) {
+        // Development-only input injection for automated UI tests. The test
+        // build defines PAPERDIY_SERIAL_TEST; release builds do not expose it.
+        String key = cmd.substring(4);
+        key.trim();
+        key.toUpperCase();
+
+        bool ok = false;
+        if (key == "B" || key == "NEXT" || key == "DOWN") {
+          ok = activityManager.isForegroundReader() ? activityManager.remoteTurn(true, false)
+                                                    : mappedInputManager.injectRemoteClick(RemoteButton::Next);
+        } else if (key == "A" || key == "PREV" || key == "UP") {
+          ok = activityManager.isForegroundReader() ? activityManager.remoteTurn(false, false)
+                                                    : mappedInputManager.injectRemoteClick(RemoteButton::Previous);
+        } else if (key == "B_LONG" || key == "CONFIRM" || key == "OK") {
+          ok = mappedInputManager.injectRemoteClick(RemoteButton::Confirm);
+        } else if (key == "A_LONG" || key == "BACK") {
+          ok = mappedInputManager.injectRemoteClick(RemoteButton::Back);
+        }
+        logSerial.printf("KEY:%s:%d\n", key.c_str(), ok ? 1 : 0);
+      } else if (cmd.startsWith("OPEN:")) {
+        String path = cmd.substring(5);
+        path.trim();
+        if (!Storage.exists(path.c_str())) {
+          logSerial.printf("OPEN:NO_FILE\n");
+        } else {
+          activityManager.goToReader(path.c_str());
+          logSerial.printf("OPEN:OK\n");
+        }
+      } else if (cmd.startsWith("BATHOLD")) {
+        const int separator = cmd.indexOf(':');
+        if (separator < 0) {
+          powerManager.setBatteryHoldForTest(-1, false);
+          logSerial.printf("BATHOLD:CLEARED\n");
+        } else {
+          const int percent = cmd.substring(separator + 1).toInt();
+          if (percent >= 0 && percent <= 100) {
+            powerManager.setBatteryHoldForTest(percent, true);
+            logSerial.printf("BATHOLD:%d\n", percent);
+          } else {
+            logSerial.printf("BATHOLD:BAD\n");
+          }
+        }
+      } else if (cmd.startsWith("DRAIN")) {
+        if (cmd == "DRAIN:STOP") {
+          drainTest::enabled = false;
+          logSerial.printf("DRAIN:STOPPED:%lu\n", static_cast<unsigned long>(drainTest::turns));
+        } else {
+          int interval = 30000;
+          const int separator = cmd.indexOf(':', 6);
+          if (separator >= 0) interval = cmd.substring(separator + 1).toInt();
+          if (interval < 1000) interval = 1000;
+          if (activityManager.getScreenshotInfo().readerType == ScreenshotInfo::ReaderType::None) {
+            logSerial.printf("DRAIN:NO_READER\n");
+          } else {
+            drainTest::enabled = true;
+            drainTest::forward = true;
+            drainTest::intervalMs = static_cast<unsigned long>(interval);
+            drainTest::lastTurnMs = millis() - drainTest::intervalMs;
+            drainTest::turns = 0;
+            drainTest::stalls = 0;
+            noteActivity();
+            logSerial.printf("DRAIN:STARTED:%d\n", interval);
+          }
+        }
+      }
+#endif
     }
   }
 
   // Check for any user activity (button press or release) or active background work
-  static unsigned long lastActivityTime = millis();
   const bool userInput = gpio.wasAnyPressed() || gpio.wasAnyReleased() || gpio.wasTouchActivity() ||
                          halTiltSensor.hadActivity() || remoteActed;
   if (userInput) lastInputTime = millis();
   idleDisplayWhileAwake();
   if (userInput || activityManager.preventAutoSleep()) {
-    lastActivityTime = millis();         // Reset inactivity timer
+    noteActivity();                      // Reset inactivity timer
     powerManager.setPowerSaving(false);  // Restore normal CPU frequency on user activity
   }
 
@@ -1108,7 +1256,15 @@ void loop() {
       CrossPointSettings::hasPowerDoubleClick() && SETTINGS.doublePwrBtn != CrossPointSettings::IGNORE;
 
   const unsigned long sleepTimeoutMs = SETTINGS.getSleepTimeoutMs();
-  if (sleepTimeoutMs > 0 && millis() - lastActivityTime >= sleepTimeoutMs) {
+#if defined(ENABLE_SERIAL_LOG)
+  // A USB CDC host (serial monitor/flasher) is a development session, not a
+  // battery-powered reader. Keep the board awake so a flash/reset does not race
+  // the auto-sleep timer; a dumb USB charger has no CDC host and still sleeps.
+  const bool serialHostConnected = static_cast<bool>(Serial);
+#else
+  const bool serialHostConnected = false;
+#endif
+  if (!serialHostConnected && sleepTimeoutMs > 0 && millis() - lastActivityTime >= sleepTimeoutMs) {
     LOG_DBG("SLP", "Auto-sleep triggered after %lu ms of inactivity", sleepTimeoutMs);
     enterDeepSleep(true);
     // This should never be hit as `enterDeepSleep` calls esp_deep_sleep_start
@@ -1136,10 +1292,10 @@ void loop() {
   // A completed long hold stays consumed even when sleep is temporarily blocked.
   if (mappedInputManager.wasPowerReleaseConsumed()) return;
 
-#if FREEINK_DEVICE_PAPERMONO
-  // Paper Mono reports the PMIC power button as a one-tick click, so the held
-  // path above cannot fire. With the default Ignore action, retain the normal
-  // power-button meaning and shut down; explicit alternate bindings still win.
+#if FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY
+  // Paper Mono/PaperDIY report the PMIC power button as a one-tick click, so
+  // the held path above cannot fire. With the default Ignore action, retain the
+  // normal power-button meaning and shut down; explicit alternate bindings win.
   if ((SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP ||
        SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::IGNORE) &&
       loopStartTime >= allowSleepAt && mappedInputManager.wasPowerSingleClick()) {
@@ -1162,14 +1318,36 @@ void loop() {
     }
   }
 
+  // Card-detect hot-plug. The board profile may leave detect unassigned; in
+  // that case isCardPresent() stays true and this is a no-op. Do not unmount on
+  // removal: open files/activities may still hold handles, and the next insert
+  // re-probes the card through remount().
+  static bool lastCardPresent = Storage.isCardPresent();
+  static unsigned long lastCardPollMs = 0;
+  if (millis() - lastCardPollMs >= 500) {
+    lastCardPollMs = millis();
+    const bool cardPresent = Storage.isCardPresent();
+    if (cardPresent != lastCardPresent) {
+      lastCardPresent = cardPresent;
+      if (cardPresent) {
+        LOG_INF("SD", "Card inserted, remounting");
+        if (Storage.remount()) activityManager.requestUpdate();
+      } else {
+        LOG_INF("SD", "Card removed");
+        activityManager.requestUpdate();
+      }
+    }
+  }
+
   // Refresh the battery icon when USB is plugged or unplugged.
   // Placed after sleep guards so we never queue a render that won't be processed.
   // Not while reading: there a repaint is a full page re-render (visible
   // flash, the AA pass re-running, and a frontlight dip under the refresh
   // load); the reader's status bar picks the charging state up on the next
   // page turn instead.
-  if (gpio.wasUsbStateChanged() && !activityManager.isReaderActivity()) {
-    activityManager.requestUpdate();
+  if (gpio.wasUsbStateChanged()) {
+    batteryLog.logEvent("usb", activityManager.isReaderActivity(), WiFi.getMode() != WIFI_MODE_NULL);
+    if (!activityManager.isReaderActivity()) activityManager.requestUpdate();
   }
 
   const unsigned long activityStartTime = millis();
@@ -1178,6 +1356,31 @@ void loop() {
   // Time blocked in the activity (e.g. a synchronous download) is not idle
   // time, so it is not counted toward auto-sleep.
   lastActivityTime += activityDuration;
+
+#ifdef PAPERDIY_SERIAL_TEST
+  if (drainTest::enabled && millis() - drainTest::lastTurnMs >= drainTest::intervalMs) {
+    drainTest::lastTurnMs = millis();
+    if (activityManager.getScreenshotInfo().readerType == ScreenshotInfo::ReaderType::None) {
+      LOG_INF("DRAIN", "Reader lost; stopping");
+      drainTest::enabled = false;
+    } else if (activityManager.remoteTurn(drainTest::forward, false)) {
+      ++drainTest::turns;
+      drainTest::stalls = 0;
+      batteryLog.notePageTurn();
+      noteActivity();
+      if ((drainTest::turns % 10) == 0) {
+        LOG_INF("DRAIN", "Page turns: %lu", static_cast<unsigned long>(drainTest::turns));
+      }
+    } else if (++drainTest::stalls >= 3) {
+      // A real end-of-book/start-of-book refusal persists across retries; a
+      // render that is still busy clears on the next tick. Flip only after
+      // three consecutive refusals.
+      drainTest::stalls = 0;
+      drainTest::forward = !drainTest::forward;
+      LOG_INF("DRAIN", "Turn refused; direction=%s", drainTest::forward ? "forward" : "backward");
+    }
+  }
+#endif
 
   const unsigned long loopDuration = millis() - loopStartTime;
   if (loopDuration > maxLoopDuration) {

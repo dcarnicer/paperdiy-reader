@@ -13,11 +13,20 @@
 #include "components/UITheme.h"
 #include "fontIds.h"
 #include "network/FirmwareFlasher.h"
+#include "platform/LauncherEnv.h"
 
 void SdFirmwareUpdateActivity::onEnter() {
   Activity::onEnter();
   // Build-identity marker — confirms which firmware build owns the SD update flow.
   LOG_INF("FW", "SdFirmwareUpdateActivity build=%s %s recovery=%d", __DATE__, __TIME__, recoveryMode ? 1 : 0);
+  if (recoveryMode && launcher_env::isUnderLauncher()) {
+    // Launcher owns the OTA slots. Its recovery hatch would target another
+    // installed app's partition, so show the explanation and go home.
+    errorMessage = tr(STR_UPDATE_VIA_LAUNCHER);
+    state = State::FAILED;
+    requestUpdate();
+    return;
+  }
   state = State::PICKING;
   launchPicker();
 }
@@ -66,6 +75,12 @@ void SdFirmwareUpdateActivity::onPickerResult(const ActivityResult& result) {
 }
 
 bool SdFirmwareUpdateActivity::validateFirmware() {
+  if (launcher_env::isUnderLauncher()) {
+    LOG_INF("FW", "Updates are managed by M5Launcher");
+    errorMessage = tr(STR_UPDATE_VIA_LAUNCHER);
+    return false;
+  }
+
   HalFile file;
   if (!Storage.openFileForRead("FW", firmwarePath.c_str(), file) || !file) {
     errorMessage = tr(STR_FIRMWARE_FILE_OPEN_FAILED);
@@ -174,7 +189,8 @@ void SdFirmwareUpdateActivity::performUpdate() {
     // was swapped).
     errorMessage = result == firmware_flash::Result::BAD_CHIP || result == firmware_flash::Result::WRONG_BOARD
                        ? tr(STR_FIRMWARE_WRONG_DEVICE)
-                       : tr(STR_FIRMWARE_WRITE_FAILED);
+                   : result == firmware_flash::Result::LAUNCHER_MANAGED ? tr(STR_UPDATE_VIA_LAUNCHER)
+                                                                        : tr(STR_FIRMWARE_WRITE_FAILED);
     RenderLock lock(*this);
     state = State::FAILED;
     requestUpdate();
@@ -198,6 +214,12 @@ void SdFirmwareUpdateActivity::loop() {
     if (mappedInput.wasPressed(MappedInputManager::Button::Back) ||
         mappedInput.wasPressed(MappedInputManager::Button::Confirm) || mappedInput.wasScreenTapped(x, y)) {
       if (recoveryMode) {
+        if (launcher_env::isUnderLauncher()) {
+          // The picker cannot flash under Launcher; return to Home instead of
+          // trapping the user in a loop that always fails.
+          finish();
+          return;
+        }
         // Go back to picker so user can try a different .bin
         state = State::PICKING;
         launchPicker();
