@@ -88,11 +88,13 @@ I²C on SDA41/SCL42).
 
 ### 3D case
 
-The M5Stack **PaperDIY Complete Kit** includes a PLA-printed case. In
-[`hardware/3d/PaperDIY_kit_completo.3mf`](hardware/3d/PaperDIY_kit_completo.3mf)
-we keep a modified version of the official model for anyone who wants to print
-or adapt it. It includes the back shell, front frame and buttons, and opens as
-a Bambu Studio project (the geometry can also be reused in another slicer).
+The M5Stack **PaperDIY Complete Kit** includes a PLA-printed case. Our current
+case is **v21**, as STL files in [`hardware/3d/v21/`](hardware/3d/v21/): back
+cover, front frame, a rocker bar for A/B and a lever for button C (power). The
+previous version,
+[`hardware/3d/PaperDIY_kit_completo.3mf`](hardware/3d/PaperDIY_kit_completo.3mf),
+is a modified official model with the three original buttons and opens as a
+Bambu Studio project.
 
 The original model, the M5Stack MIT license and the M2 screw warning are in
 [`hardware/README.en.md`](hardware/README.en.md).
@@ -231,7 +233,7 @@ held at power-on. See
 │       └── BoardPaperDiy/# ED047TC1 bus, PM1 rail, power-off
 ├── docs/paperdiy/        # research, hardware, roadmap, port
 ├── docs/upstream/        # original CrossPoint README/user guide
-├── hardware/3d/          # 3D case (complete-kit remix)
+├── hardware/3d/          # 3D case (v21 and complete-kit remix)
 ├── platformio.ini        # `paperdiy` environment
 └── Makefile
 ```

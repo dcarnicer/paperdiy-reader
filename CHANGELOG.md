@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Hardware: carcasa v21 en STL (`hardware/3d/v21/`): tapa trasera, marco
+  frontal orientado boca abajo, barra basculante A/B y palanca del botón C
+  (power), con vista previa. El remix `PaperDIY_kit_completo.3mf` se conserva
+  como versión anterior.
+
 ## 2.0.0-11 — 2026-11-22
 
 Sincronización con CrossPoint `177d0694` y FreeInk SDK `995d9bd5`. Mantiene

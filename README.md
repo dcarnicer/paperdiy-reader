@@ -89,12 +89,13 @@ I²C en SDA41/SCL42).
 
 ### Carcasa 3D
 
-El **PaperDIY Complete Kit** de M5Stack incluye una carcasa impresa en PLA. En
-[`hardware/3d/PaperDIY_kit_completo.3mf`](hardware/3d/PaperDIY_kit_completo.3mf)
-dejamos una versión modificada del modelo oficial por si alguien quiere
-imprimirla o adaptarla. Incluye carcasa trasera, marco frontal y botones, y se
-abre como proyecto de Bambu Studio (también se puede reutilizar la geometría en
-otro slicer).
+El **PaperDIY Complete Kit** de M5Stack incluye una carcasa impresa en PLA. La
+versión actual de nuestra carcasa es la **v21**, en STL en
+[`hardware/3d/v21/`](hardware/3d/v21/): tapa trasera, marco frontal, una barra
+basculante para A/B y una palanca para el botón C (power). La versión anterior,
+[`hardware/3d/PaperDIY_kit_completo.3mf`](hardware/3d/PaperDIY_kit_completo.3mf),
+es una modificación del modelo oficial con los tres botones originales y se
+abre como proyecto de Bambu Studio.
 
 El modelo original, la licencia MIT de M5Stack y el aviso de los tornillos M2
 están en [`hardware/README.md`](hardware/README.md).
@@ -236,7 +237,7 @@ con A pulsado. Ver
 │       └── BoardPaperDiy/# bus ED047TC1, rail PM1, power-off
 ├── docs/paperdiy/        # investigación, hardware, roadmap, port
 ├── docs/upstream/        # README/user guide originales de CrossPoint
-├── hardware/3d/          # carcasa 3D (remix del kit completo)
+├── hardware/3d/          # carcasa 3D (v21 y remix del kit completo)
 ├── platformio.ini        # env `paperdiy`
 └── Makefile
 ```

@@ -2,11 +2,33 @@
 
 **语言：** [Español](README.md) · [English](README.en.md) · **简体中文** · [日本語](README.ja.md)
 
-## PaperDIY Complete Kit 的 3D 外壳
+## v21 外壳
+
+v21 是 PaperDIY 当前的外壳版本，以 STL 文件形式放在 [`3d/v21/`](3d/v21/)，
+任何切片软件都能使用。它比完整套件修改版略大（124.4 × 71.4 mm，原为
+120 × 67 mm），并把三个独立按键换成一根用于 A/B 的翘板和一个用于 C 键
+（电源）的拨杆。
+
+![v21 外壳预览](3d/v21/PaperDIY_v21_preview.png)
+
+| 部件 | 文件 | 尺寸（mm） |
+|---|---|---|
+| 后盖 | [`PaperDIY_v21_tapa_trasera.stl`](3d/v21/PaperDIY_v21_tapa_trasera.stl) | 124.4 × 71.4 × 8.9 |
+| 前框 | [`PaperDIY_v21_marco_frontal_boca_abajo.stl`](3d/v21/PaperDIY_v21_marco_frontal_boca_abajo.stl) | 124.4 × 71.4 × 5.7 |
+| A/B 翘板 | [`PaperDIY_v21_barra_basculante_AB.stl`](3d/v21/PaperDIY_v21_barra_basculante_AB.stl) | 22.0 × 5.5 × 1.7 |
+| C 拨杆（电源） | [`PaperDIY_v21_palanca_C.stl`](3d/v21/PaperDIY_v21_palanca_C.stl) | 5.1 × 9.9 × 1.7 |
+
+- **摆放方向：** 各部件已按打印方向摆好。前框正面朝下，外观面贴在热床上。
+- **格式：** 二进制 STL，单位为毫米，不含切片配置。
+- **许可：** 基于 M5Stack 官方模型修改版继续演进；MIT（原始模型 © 2021
+  M5Stack；v21 © 2026 PaperDIY Reader contributors）。见
+  [`3d/LICENSE-M5Stack.txt`](3d/LICENSE-M5Stack.txt) 和 [`../LICENSE`](../LICENSE)。
+
+## 完整套件修改版（旧版本）
 
 [`3d/PaperDIY_kit_completo.3mf`](3d/PaperDIY_kit_completo.3mf) 是 **M5Stack
-PaperDIY Complete Kit（K159-B）** 官方外壳模型的修改版。适合想打印完整套件、
-重新打印某个部件，或以此为基础设计自己外壳的人。
+PaperDIY Complete Kit（K159-B）** 官方外壳模型的修改版，保留三个原装按键。
+适合打印完整套件、重新打印某个部件，或以此为基础设计自己的外壳。
 
 ![模型预览](3d/PaperDIY_kit_completo_preview.png)
 
@@ -20,5 +42,7 @@ PaperDIY Complete Kit（K159-B）** 官方外壳模型的修改版。适合想�
 - **内容：** 后壳、前框和三个按键。
 - **预览：** [`3d/PaperDIY_kit_completo_preview.png`](3d/PaperDIY_kit_completo_preview.png)。
 
-> **装配警告：** 螺丝为 M2，长度必须**小于 3 mm**。更长的螺丝可能碰到屏幕
+## 装配
+
+> **警告：** 螺丝为 M2，长度必须**小于 3 mm**。更长的螺丝可能碰到屏幕
 > 并将其损坏。这也是 M5Stack 对原始套件发布的警告。

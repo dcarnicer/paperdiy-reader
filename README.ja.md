@@ -92,10 +92,12 @@ Web UI、OTA をすでに解決しています。足りなかったのは PaperD
 ### 3D ケース
 
 M5Stack の **PaperDIY Complete Kit** には PLA プリントのケースが付属します。
+現行のケースは **v21** で、[`hardware/3d/v21/`](hardware/3d/v21/) に STL で
+置いています。リアカバー、フロントフレーム、A/B 用シーソーバー、C ボタン
+（電源）用レバーを含みます。旧バージョンの
 [`hardware/3d/PaperDIY_kit_completo.3mf`](hardware/3d/PaperDIY_kit_completo.3mf)
-に、公式モデルを改造した版を置いています。プリントや改造の出発点として
-使えます。リアシェル、フロントフレーム、ボタンを含み、Bambu Studio の
-プロジェクトとして開けます（形状は他のスライサーでも再利用できます）。
+は純正の 3 個のボタンを使う公式モデルの改造版で、Bambu Studio の
+プロジェクトとして開けます。
 
 元モデル、M5Stack の MIT ライセンス、M2 ネジの注意事項は
 [`hardware/README.ja.md`](hardware/README.ja.md) にあります。
@@ -216,7 +218,7 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 │       └── BoardPaperDiy/# ED047TC1 バス、PM1 レール、電源オフ
 ├── docs/paperdiy/        # 調査、ハードウェア、ロードマップ、移植
 ├── docs/upstream/        # CrossPoint の元 README/ユーザーガイド
-├── hardware/3d/          # 3D ケース（Complete Kit 改造版）
+├── hardware/3d/          # 3D ケース（v21 と Complete Kit 改造版）
 ├── platformio.ini        # `paperdiy` 環境
 └── Makefile
 ```

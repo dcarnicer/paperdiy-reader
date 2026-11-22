@@ -143,7 +143,12 @@ tiene auto-sleep; hay que ajustar el timeout y medir.
 
 ## Carcasa 3D
 
-El modelo del kit completo está en
+La carcasa actual es la **v21**, en STL en
+[`hardware/3d/v21/`](../../hardware/3d/v21/): tapa trasera, marco frontal
+(orientado boca abajo para imprimir), una barra basculante para A/B y una
+palanca para el botón C (power). Mide 124,4 × 71,4 mm.
+
+El modelo anterior, del kit completo, está en
 [`hardware/3d/PaperDIY_kit_completo.3mf`](../../hardware/3d/PaperDIY_kit_completo.3mf).
 Es un remix del STL oficial del **PaperDIY Complete Kit (K159-B)** publicado por
 M5Stack en

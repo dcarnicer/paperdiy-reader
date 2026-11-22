@@ -144,7 +144,12 @@ CrossPoint already has auto-sleep; the timeout needs tuning and measurement.
 
 ## 3D case
 
-The complete-kit model is in
+The current case is **v21**, as STL files in
+[`hardware/3d/v21/`](../../hardware/3d/v21/): back cover, front frame
+(oriented upside down for printing), a rocker bar for A/B and a lever for
+button C (power). It measures 124.4 × 71.4 mm.
+
+The previous complete-kit model is in
 [`hardware/3d/PaperDIY_kit_completo.3mf`](../../hardware/3d/PaperDIY_kit_completo.3mf).
 It is a remix of the official STL of the **PaperDIY Complete Kit (K159-B)**
 published by M5Stack in

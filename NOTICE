@@ -30,6 +30,9 @@ Display / board support:
   Remix: hardware/3d/PaperDIY_kit_completo.3mf
   Copyright (c) 2026 PaperDIY Reader contributors
   License: MIT
+  Remix v21: hardware/3d/v21/
+  Copyright (c) 2026 PaperDIY Reader contributors
+  License: MIT
 
 Other third-party libraries (SdFat, ArduinoJson, PNGdec, JPEGDEC,
 AnimatedGIF, WebSockets, wolfSSL, NimBLE-Arduino, QRCode, expat, FreeType,

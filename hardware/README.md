@@ -2,12 +2,38 @@
 
 **Idiomas:** **Español** · [English](README.en.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 
-## Carcasa 3D del PaperDIY Complete Kit
+## Carcasa v21
+
+La v21 es la versión actual de la carcasa del PaperDIY. Está en
+[`3d/v21/`](3d/v21/) como STL, así que sirve para cualquier slicer. Es algo más
+grande que el remix del kit completo (124,4 × 71,4 mm frente a 120 × 67 mm) y
+cambia los tres botones sueltos por una barra basculante para A/B y una
+palanca para el botón C (power).
+
+![Vista previa de la carcasa v21](3d/v21/PaperDIY_v21_preview.png)
+
+| Pieza | Fichero | Medidas (mm) |
+|---|---|---|
+| Tapa trasera | [`PaperDIY_v21_tapa_trasera.stl`](3d/v21/PaperDIY_v21_tapa_trasera.stl) | 124,4 × 71,4 × 8,9 |
+| Marco frontal | [`PaperDIY_v21_marco_frontal_boca_abajo.stl`](3d/v21/PaperDIY_v21_marco_frontal_boca_abajo.stl) | 124,4 × 71,4 × 5,7 |
+| Barra basculante A/B | [`PaperDIY_v21_barra_basculante_AB.stl`](3d/v21/PaperDIY_v21_barra_basculante_AB.stl) | 22,0 × 5,5 × 1,7 |
+| Palanca C (power) | [`PaperDIY_v21_palanca_C.stl`](3d/v21/PaperDIY_v21_palanca_C.stl) | 5,1 × 9,9 × 1,7 |
+
+- **Orientación:** las piezas vienen orientadas para imprimir. El marco
+  frontal va boca abajo, con la cara vista sobre la cama.
+- **Formato:** STL binario en milímetros, sin perfil de slicer.
+- **Licencia:** evolución del remix del modelo oficial de M5Stack; MIT
+  (© 2021 M5Stack el original, © 2026 PaperDIY Reader contributors la v21).
+  Ver [`3d/LICENSE-M5Stack.txt`](3d/LICENSE-M5Stack.txt) y
+  [`../LICENSE`](../LICENSE).
+
+## Remix del kit completo (versión anterior)
 
 [`3d/PaperDIY_kit_completo.3mf`](3d/PaperDIY_kit_completo.3mf) es una
 modificación del modelo oficial de la carcasa del **M5Stack PaperDIY Complete
-Kit (K159-B)**. Está pensada para quien quiera imprimir el kit completo,
-reimprimir una pieza o partir de una base para hacer su propia carcasa.
+Kit (K159-B)**, con los tres botones originales. Sirve para imprimir el kit
+completo, reimprimir una pieza o partir de una base para hacer tu propia
+carcasa.
 
 ![Vista previa del modelo](3d/PaperDIY_kit_completo_preview.png)
 
@@ -21,6 +47,8 @@ reimprimir una pieza o partir de una base para hacer su propia carcasa.
 - **Contenido:** carcasa trasera, marco frontal y los tres botones.
 - **Vista previa:** [`3d/PaperDIY_kit_completo_preview.png`](3d/PaperDIY_kit_completo_preview.png).
 
-> **Aviso de montaje:** los tornillos son M2 y deben medir **menos de 3 mm**.
-> Un tornillo más largo puede tocar la pantalla y romperla. Es el mismo aviso
-> que publica M5Stack para el kit original.
+## Montaje
+
+> **Aviso:** los tornillos son M2 y deben medir **menos de 3 mm**. Un
+> tornillo más largo puede tocar la pantalla y romperla. Es el mismo aviso que
+> publica M5Stack para el kit original.

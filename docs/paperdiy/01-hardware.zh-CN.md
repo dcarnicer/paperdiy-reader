@@ -140,7 +140,11 @@ CrossPoint 使用 1 bpp 帧缓冲 + 灰度平面进行抗锯齿；`LgfxEpdDriver
 
 ## 3D 外壳
 
-完整套件的模型位于
+当前外壳为 **v21**，以 STL 文件形式放在
+[`hardware/3d/v21/`](../../hardware/3d/v21/)：后盖、前框（已按正面朝下摆放以便
+打印）、A/B 翘板和 C 键（电源）拨杆，尺寸为 124.4 × 71.4 mm。
+
+旧版完整套件的模型位于
 [`hardware/3d/PaperDIY_kit_completo.3mf`](../../hardware/3d/PaperDIY_kit_completo.3mf)。
 它是 M5Stack 发布的 **PaperDIY Complete Kit（K159-B）** 官方 STL 的修改版，
 原始文件在

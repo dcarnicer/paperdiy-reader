@@ -78,11 +78,11 @@ I²C 控制）。
 
 ### 3D 外壳
 
-M5Stack **PaperDIY Complete Kit** 附带 PLA 打印外壳。我们在
+M5Stack **PaperDIY Complete Kit** 附带 PLA 打印外壳。我们当前的外壳是
+**v21**，以 STL 文件形式放在 [`hardware/3d/v21/`](hardware/3d/v21/)：后盖、
+前框、A/B 翘板和 C 键（电源）拨杆。旧版本
 [`hardware/3d/PaperDIY_kit_completo.3mf`](hardware/3d/PaperDIY_kit_completo.3mf)
-中保留了一份官方模型的修改版，方便需要打印或改造的人使用。它包含后壳、
-前框和按键，可作为 Bambu Studio 项目打开（几何模型也可以在其他切片软件
-中复用）。
+是保留三个原装按键的官方模型修改版，可作为 Bambu Studio 项目打开。
 
 原始模型、M5Stack 的 MIT 许可证以及 M2 螺丝警告见
 [`hardware/README.zh-CN.md`](hardware/README.zh-CN.md)。
@@ -197,7 +197,7 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 │       └── BoardPaperDiy/# ED047TC1 总线、PM1 电源轨、关机
 ├── docs/paperdiy/        # 研究、硬件、路线图、移植
 ├── docs/upstream/        # CrossPoint 原始 README/用户指南
-├── hardware/3d/          # 3D 外壳（完整套件修改版）
+├── hardware/3d/          # 3D 外壳（v21 和完整套件修改版）
 ├── platformio.ini        # `paperdiy` 环境
 └── Makefile
 ```

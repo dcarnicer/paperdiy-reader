@@ -146,7 +146,12 @@ CrossPoint には自動スリープがあるため、タイムアウトを調整
 
 ## 3D ケース
 
-Complete Kit のモデルは
+現行のケースは **v21** で、[`hardware/3d/v21/`](../../hardware/3d/v21/) に
+STL で置いています。リアカバー、フロントフレーム（プリント用に表面を下に
+配置）、A/B 用シーソーバー、C ボタン（電源）用レバーで構成され、寸法は
+124.4 × 71.4 mm です。
+
+旧バージョンの Complete Kit のモデルは
 [`hardware/3d/PaperDIY_kit_completo.3mf`](../../hardware/3d/PaperDIY_kit_completo.3mf)
 にあります。M5Stack が公開している **PaperDIY Complete Kit（K159-B）** の
 公式 STL の改造版で、元ファイルは
