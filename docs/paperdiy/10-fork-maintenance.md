@@ -222,8 +222,8 @@ Parches regenerados y verificados con `git apply --check`.
   RAM. `paperdiy-test` compila; 1027 tests de host.
 - Smoke 25/25 sobre el árbol del sync (`20261122-193337`); `2.0.0-11` solo
   cambia la versión y añade la traducción ES/CA/VA de `Sync On Sleep`.
-- El build de producción `2.0.0-11` se flashea en el PaperDIY para la
-  comprobación final de arranque.
+- El build de producción `2.0.0-11` se flasheó en el PaperDIY y arranca en
+  Home con el estado del usuario.
 - `test/test_firmware_stats.py` falla en el fork desde antes de este sync: usa
   `.github/scripts/firmware-stats.py`, que el overlay de `.github` no lleva.
 - Pendientes: ghosting (también el menú del lector), autonomía, sleep/wake,

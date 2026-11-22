@@ -29,8 +29,8 @@ CrossPoint `2.0.0`.
   RAM. `paperdiy-test` compila, 1027 tests de host y `make smoke` 25/25
   (`20261122-193337`).
 - `2.0.0-11` solo cambia la cadena de versión y las traducciones respecto al
-  árbol probado en el smoke; el build de producción se flashea en el PaperDIY
-  para la comprobación final de arranque.
+  árbol probado en el smoke; el build de producción se flasheó en el PaperDIY
+  y arranca en Home con el estado del usuario.
 - Hardware: smoke completo sobre `paperdiy-test`; pendientes ghosting (incluido
   el menú del lector), autonomía, sleep/wake, Sync On Sleep real, BLE real,
   Calibre completo y OTA completa.

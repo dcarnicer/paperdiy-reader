@@ -63,16 +63,17 @@ falla con un mensaje que pide flashear `paperdiy-test`.
 > **Estado:** smoke completo ejecutado el 22/11/2026 sobre el árbol del sync
 > `177d0694` / SDK `995d9bd5` (`paperdiy-test` `2.0.0-10`; la release
 > `2.0.0-11` solo cambia la versión y añade traducciones): PASS, 25 pasos.
-> Queda pendiente la comprobación de arranque del build de producción
-> `2.0.0-11`, la revisión visual del menú del lector (limpieza de la página de
-> debajo), el salto visual de la curva de batería (necesita <90 %) y la
-> revisión de autonomía.
+> Tras el ciclo de power, el build de producción `2.0.0-11` arranca en Home
+> con el estado restaurado. Queda pendiente la revisión visual del menú del
+> lector (limpieza de la página de debajo), el salto visual de la curva de
+> batería (necesita <90 %) y la revisión de autonomía.
 
 `2026-11-22`, PaperDIY `2.0.0-11` (smoke sobre el árbol del sync `177d0694` /
 SDK `995d9bd5` con `paperdiy-test` `2.0.0-10`; la release solo cambia la
 versión y añade traducciones), run `20261122-193337`: **PASS, 25 pasos**. El
-script restauró los ficheros y dejó la SD en modo USB a la espera del ciclo de
-power.
+script restauró los ficheros y dejó la SD en modo USB; tras el ciclo de power
+se flasheó el build de producción `2.0.0-11`, que arranca en Home con el estado
+restaurado.
 
 `2026-11-19`, PaperDIY `2.0.0-10` (smoke sobre el árbol del sync `209cb53a` /
 SDK `634a3f8c` con `paperdiy-test` `2.0.0-9`; la release solo cambia la
