@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- Waveshare ESP32-S3-ePaper-3.97 (experimental): envs `ws397` y `ws397-test`.
+  Lleva los PRs de upstream CrossPoint #3386 y FreeInk SDK #218 (Alexey
+  Pazyuk), todavía sin fusionar. En el SDK: el refresco HALF usa la secuencia
+  rápida del fabricante, los raíles del panel se apagan tras la pasada de
+  grises (solo ws397) y se añade `hasHorizontalKeys()`. Aún no hay release para esta placa:
+  se compila desde el código y *Verificar actualizaciones* responde «No hay
+  actualizaciones disponibles». Ver
+  [`15-waveshare-397.md`](docs/paperdiy/15-waveshare-397.md).
+- PaperDIY: en el teclado en pantalla, A/B recorren ahora todas las teclas en
+  orden de lectura y saltan de fila al final de cada una; antes solo se
+  llegaba a la primera columna. La fila de pistas de botones se mantiene en
+  las placas de dos botones; en las de botonera lateral (ws397) se oculta.
+- En placas donde Atrás y encendido son la misma tecla, Atrás actúa solo con
+  pulsación corta. No afecta a la PaperDIY.
+- Validado el 23/11/2026: `make smoke` PaperDIY PASS 25 pasos (run
+  `20261123-173924`) y teclado probado a mano en las dos placas; ws397 en una
+  unidad (arranque, lector, Ajustes, Wi-Fi, botonera, dormir y despertar con
+  BOOT). El CI compila también `ws397`.
 - Hardware: carcasa v21 en STL (`hardware/3d/v21/`): tapa trasera con
   hendidura para un anillo MagSafe (Ø 56,4/44,6 mm, 0,8 mm), marco frontal
   orientado boca abajo, barra basculante A/B y palanca del botón C

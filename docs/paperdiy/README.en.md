@@ -23,6 +23,7 @@ remains in `docs/` and `docs/upstream/`).
 12. [Draft comment for issue #4005](11-upstream-note.md)
 13. [USB testing](12-serial-testing.md) (Spanish)
 14. [M5Launcher](13-m5launcher.en.md) — [Español](13-m5launcher.md)
+15. [Waveshare ESP32-S3-ePaper-3.97 (experimental)](15-waveshare-397.md) (Spanish)
 
 ## One-line status
 

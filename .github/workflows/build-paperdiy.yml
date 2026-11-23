@@ -35,6 +35,13 @@ jobs:
           PLATFORMIO_CORE_DIR: ${{ github.workspace }}/.platformio-core
         run: pio run -e paperdiy
 
+      - name: Build Waveshare 3.97 (ws397)
+        env:
+          PLATFORMIO_CORE_DIR: ${{ github.workspace }}/.platformio-core
+        # Shares BoardConfig.h, main.cpp and the themes with paperdiy, so an
+        # upstream sync can break it without touching the PaperDIY build.
+        run: pio run -e ws397
+
       - name: Check release images
         run: python3 scripts/check_release_assets.py .pio/build/paperdiy/firmware.factory.bin .pio/build/paperdiy/firmware.bin
 

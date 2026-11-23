@@ -21,6 +21,7 @@
 11. [维护 fork 与更新上游](10-fork-maintenance.md)
 12. [issue #4005 评论草稿](11-upstream-note.md)
 13. [USB 测试](12-serial-testing.md)（西班牙语）
+14. [Waveshare ESP32-S3-ePaper-3.97（实验性）](15-waveshare-397.md)（西班牙语）
 
 ## 一句话状态
 

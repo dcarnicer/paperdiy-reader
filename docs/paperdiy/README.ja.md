@@ -22,6 +22,7 @@
 11. [フォークの維持と上流の更新](10-fork-maintenance.md)
 12. [issue #4005 向けコメント草稿](11-upstream-note.md)
 13. [USB テスト](12-serial-testing.md)（スペイン語）
+14. [Waveshare ESP32-S3-ePaper-3.97（実験的）](15-waveshare-397.md)（スペイン語）
 
 ## 一言ステータス
 

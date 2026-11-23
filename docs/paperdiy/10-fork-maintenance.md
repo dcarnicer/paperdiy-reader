@@ -213,6 +213,35 @@ en el parche, lo hincha y aumenta el riesgo de conflictos en el próximo
 `git apply --3way`. Mantén los cambios limitados a hunks funcionales y regenera
 el parche solo para esos hunks.
 
+## PRs de upstream que llevamos
+
+El fork lleva commits de PRs de upstream que aún no están fusionados. Al
+regenerar `patches/` quedan mezclados con el port de PaperDIY, así que se
+listan aquí para poder quitarlos cuando upstream los fusione.
+
+| PR | Commits originales | Qué aporta |
+|---|---|---|
+| [FreeInk SDK #218](https://github.com/Free-Ink/freeink-sdk/pull/218) | `b328dc5b`, `0d20526e`, `906acd9c`, `a6c2c543` (aquí `a621e5ea`, `53e837b1`, `6f89481e`, `fa49c49e`) | ws397: HALF con la secuencia rápida del fabricante, apagado tras grises, `hasHorizontalKeys()`, config 3.97 solo para ws397 |
+| [CrossPoint #3386](https://github.com/crosspoint-reader/crosspoint-reader/pull/3386) | `366ee088`, `c499e274`, `58d647e2`, `30910d4e` | envs ws397, board tag, teclado sin izquierda/derecha, pistas ocultas sin botones frontales, Atrás/encendido compartidos |
+
+Cambios propios del fork encima de esos PRs:
+
+- `[env:ws397]` y `[env:ws397-test]`: versión del fork, OTA a nuestras
+  releases, PSRAM y flash QIO como `paperdiy`. Upstream tiene `ws397` sobre
+  `firmware_tuned`, con sufijo `-ws397` y un `ws397-gh_release` aparte.
+- `BaseTheme::buttonHintsHidden()` excluye `DigitalTwoButton`, para que la
+  PaperDIY conserve la fila de pistas. `OptionPopup` usa ese mismo criterio.
+- CI: `build-paperdiy.yml` compila también `ws397`.
+
+Al fusionar una rama que añade commits de este tipo, regenera `patches/` en el
+mismo momento: `sync-upstream.sh` reconstruye `paperdiy-next` desde esos
+parches, y un sync con parches viejos perdería esos commits sin avisar.
+
+Cuando upstream fusione uno de estos PRs: en el sync, quédate con la versión
+de upstream de sus hunks, conserva solo los cambios propios de arriba y borra
+la fila de la tabla. Si el `[env:ws397]` de upstream entra en `platformio.ini`,
+deja uno solo.
+
 ## Release `2.0.0-11` (22/11/2026)
 
 Sincronización con CrossPoint `177d0694` / FreeInk SDK `995d9bd5`; mantiene

@@ -24,6 +24,7 @@ CrossPoint sigue en `docs/` y `docs/upstream/`).
 13. [Testing por USB](12-serial-testing.md)
 14. [M5Launcher](13-m5launcher.md) — [English](13-m5launcher.en.md)
 15. [Regresión determinista en hardware](14-device-regression.md)
+16. [Waveshare ESP32-S3-ePaper-3.97 (experimental)](15-waveshare-397.md)
 
 ## Estado en una frase
 
