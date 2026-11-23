@@ -249,7 +249,8 @@ class BaseTheme {
   // boards drive the UI by tapping, and boards with only a side rocker never had
   // that row, so on both the labels name controls the user cannot see. Every
   // theme's drawButtonHints() returns early on this, and UITheme::getMetrics()
-  // reclaims the reserved strip.
+  // reclaims the reserved strip. Two-button boards (PaperDIY) keep the row: it
+  // labels their short A/B and hold actions.
   static bool buttonHintsHidden();
   // Shared by every theme's drawButtonHints(): centres a hint label in its box,
   // wrapping to two lines rather than overflowing when it's too wide to fit.

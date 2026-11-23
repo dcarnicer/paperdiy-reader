@@ -173,7 +173,8 @@ class OptionPopup {
     if (partial && lastDialogRect_.width > 0) {
       renderer.displayWindow(lastDialogRect_.x, lastDialogRect_.y, lastDialogRect_.width, lastDialogRect_.height);
       constexpr int hintHeight = BaseMetrics::values.buttonHintsHeight;
-      if (!input.hasTouch() && hintHeight > 0) {
+      // Same owner as the themes: no strip is drawn on touch or side-rocker boards.
+      if (!BaseTheme::buttonHintsHidden() && hintHeight > 0) {
         // drawButtonHints() draws in Portrait regardless of the activity's
         // orientation, so refresh the same physical strip.
         renderer.displayWindowPortrait(0, renderer.getDisplayWidth() - hintHeight, renderer.getDisplayHeight(),

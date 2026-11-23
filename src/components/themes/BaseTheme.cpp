@@ -211,7 +211,13 @@ void BaseTheme::drawHintLabel(const GfxRenderer& renderer, const int fontId, con
   }
 }
 
-bool BaseTheme::buttonHintsHidden() { return gpio.hasTouch() || !BoardConfig::hasHorizontalKeys(); }
+// Fork change: two-button boards have no Left/Right keys either, but their hint
+// row labels the short A/B and hold actions, so it stays. In practice this is
+// the PaperDIY; Paper Mono is also DigitalTwoButton but hasTouch() hides it.
+bool BaseTheme::buttonHintsHidden() {
+  return gpio.hasTouch() || (!BoardConfig::hasHorizontalKeys() &&
+                             BoardConfig::ACTIVE.inputStyle != BoardConfig::InputStyle::DigitalTwoButton);
+}
 
 void BaseTheme::drawButtonHints(GfxRenderer& renderer, const char* btn1, const char* btn2, const char* btn3,
                                 const char* btn4) const {
