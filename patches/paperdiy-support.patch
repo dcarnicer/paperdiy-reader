@@ -18,6 +18,73 @@ index 5764315c..f803b360 100644
  
  The book suite also needs `zip`. It uses `sips` or ImageMagick's `convert` for
  JPEG fixtures and optionally Pillow for progressive JPEG fixtures; the related
+diff --git a/freeink-sdk/docs/waveshare-epaper-397-support.md b/freeink-sdk/docs/waveshare-epaper-397-support.md
+index 3b7ef9c1..7668f969 100644
+--- a/freeink-sdk/docs/waveshare-epaper-397-support.md
++++ b/freeink-sdk/docs/waveshare-epaper-397-support.md
+@@ -36,8 +36,43 @@ guess:
+ The controller is SSD1677-class and the vendor bring-up is byte-identical to the
+ Seeed Sticky's — booster `AE C7 C3 C0 80`, driver output scan `0x02`, data entry
+ `0x01`, border `0x01`, and update sequences `0x22 = F7` (full) / `FF` (partial) /
+-`D7` (fast). `ssd1677ActiveConfig()` therefore returns `ssd1677StickyConfig()` for
+-this board, including its grayscale LUT.
++`D7` (fast). `ssd1677Ws397Config()` is therefore `ssd1677StickyConfig()` plus the
++vendor's fast clean, and reuses its grayscale LUT.
++
++### Refresh sequences
++
++| CrossPoint mode | `0x22` | `0x3C` | Vendor equivalent | Cost |
++|---|---|---|---|---|
++| FAST (page turn) | `FF` | `80` | `EPD_3IN97_Display_Partial` | ~407 ms |
++| HALF (periodic clean, boot paint) | `D7` after `0x1A = 6A` | `01` | `Init_Fast` + `TurnOnDisplay_Fast` | ~1.5 s |
++| FULL (manual refresh) | `F7` | `01` | `EPD_3IN97_Display` | ~2.1 s |
++
++HALF is the board's own config field, not the Sticky's: `EPD_3IN97_Init_Fast`
++writes `0x1A = 0x6A` and activates `0x22 = 0xD7`. `0xD7` leaves the
++load-temperature bit clear, so that `0x1A` byte is what selects the OTP waveform —
++under the Sticky's `0xF7` (bit 5 set) the sensor read overwrites it and the `0x1A`
++write is a no-op. The periodic every-N-pages clean and the first paint after
++boot/wake both take this path.
++
++### Why a page turn is two waveforms
++
++With text anti-aliasing on, one page turn drives the panel twice, and both passes
++are visible:
++
++1. **B/W partial** — `0x22 = FF`, ~407 ms. Paints the whole page, aliased.
++2. **Grayscale** — external LUT via `0x32`, `0x22 = CC`, ~226 ms. Drives only the
++   AA edge pixels.
++
++That split is structural, not a bug. The AA LUT's first group (`lut_grayscale_sticky`
++level `00`, both plane bits clear) is all zeros — no drive. Pure black and pure
++white both land in that group, so the gray pass *cannot* paint the page body; it
++only darkens the two intermediate levels the B/W pass left as solid pixels. This is
++why `combinesGrayscaleBase()` stays false for SSD1677 (only Paper Mono merges base
++and grays into one waveform).
++
++The vendor demo looks smoother because it only ever does step 1. Turning off
++**Settings -> text anti-aliasing** gives exactly that: one `0xFF` partial per page,
++no second pass.
+ 
+ ## AXP2101 (Axp2101.h)
+ 
+@@ -108,8 +143,14 @@ Bring-up on a unit, reading an EPUB end to end:
+ 
+ ## Pending hardware validation
+ 
+-* **Grayscale LUT** — reused from the Sticky; retune if a unit shows banding on
+-  covers.
++* **Grayscale LUT** — reused from the Sticky. `setCustomLut()` force-writes the X4's
++  voltage tail (VGH `0x17`, VSH1 `0x41`, VSH2 `0xA8`, VSL `0x32`, VCOM `0x30`) over
++  this module's OTP calibration on every AA refresh, so mid-grays are the thing to
++  check: read a page of AA text and open a cover. Banding or mid-grays collapsing
++  toward B/W means retuning VCOM (byte 109) in single steps first, then VSH1
++  (byte 106) — in a ws397 copy of the LUT, not the shared Sticky one.
++* **HALF at `0xD7`/`0x6A`** — matches the vendor's fast-update init, but has not been
++  timed on a unit yet.
+ * **Battery curve** — the AXP2101 fuel gauge learns its curve at runtime; SoC may
+   be coarse until it has seen a full charge cycle.
+ * **SPI clock** — 20 MHz is the vendor value and it is NOT worth raising: a page
 diff --git a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp
 index 0e2cc958..298756a6 100644
 --- a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp
@@ -128,6 +195,81 @@ index 0646a9f5..c80e9f83 100644
  
    // 16-gray path: the facade streams LSB/MSB 1-bpp planes (whole or in strips);
    // displayGray combines them with the B/W base into the panel's 8-bit gray canvas.
+diff --git a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.cpp b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.cpp
+index 6d5e6ce2..278bfb63 100644
+--- a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.cpp
++++ b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.cpp
+@@ -130,6 +130,26 @@ static const Ssd1677Config& ssd1677StickyTextConfig() {
+   return cfg;
+ }
+ 
++#if FREEINK_DEVICE_WS397
++// Waveshare ESP32-S3-ePaper-3.97. Bring-up is byte-identical to the Sticky's, so
++// it starts from that config and adds the vendor's fast clean: EPD_3IN97_Init_Fast
++// writes 0x1A = 0x6A and EPD_3IN97_TurnOnDisplay_Fast activates 0x22 = 0xD7, a
++// ~1.5 s full-panel clean against 0xF7's ~2.1 s. 0xD7 leaves the load-temperature
++// bit clear, so the 0x1A byte written just before it is what selects the OTP
++// waveform — under 0xF7 (bit5 set) the sensor read overwrites it and the write is
++// a no-op. FULL keeps 0xF7 for the manual "clean the panel" refresh.
++static const Ssd1677Config& ssd1677Ws397Config() {
++  static const Ssd1677Config cfg = [] {
++    Ssd1677Config c = ssd1677StickyConfig();
++    c.halfSeqOverride = 0xD7;
++    c.halfRefreshTemp = 0x6A;
++    c.grayPowerDownAfter = true;
++    return c;
++  }();
++  return cfg;
++}
++#endif
++
+ #if FREEINK_DEVICE_METALIO_EINK4
+ // GDEM0397T81 settings from metalio-hw-test. B/W refreshes use its OTP waveforms
+ // via the vendor 0x22 sequence values; the vendor's separately supplied partial
+@@ -1211,7 +1231,8 @@ void Ssd1677Driver::displayGray(EpdBus& bus, const uint8_t* fb, bool turnOff, co
+     // sequence (its enable bits are a no-op on already-up rails).
+     if (_cfg.grayPowerUpFirst) powerOn(bus);
+     // Sticky AA follows the caller's power policy on either board.
+-    refresh(bus, RefreshMode::Fast, turnOff || (_cfg.piccoWaveforms && selectedLut != lut_grayscale_sticky));
++    refresh(bus, RefreshMode::Fast,
++            turnOff || _cfg.grayPowerDownAfter || (_cfg.piccoWaveforms && selectedLut != lut_grayscale_sticky));
+   }
+ 
+   setCustomLut(bus, false, nullptr);
+@@ -1345,11 +1366,14 @@ static const Ssd1677Config& ssd1677ActiveConfig() {
+     case BoardConfig::Board::MetalioEInk4: return ssd1677MetalioConfig();
+ #endif
+     case BoardConfig::Board::Sticky: return ssd1677StickyTextConfig();
+-    // Waveshare ESP32-S3-ePaper-3.97: the vendor driver's bring-up is byte-identical
+-    // to Seeed's (booster AE C7 C3 C0 80, border 0x01, 0x22 = F7 full / FF partial /
+-    // D7 fast), so it runs the same config. Grayscale LUT is Sticky's — same panel
++    // Waveshare ESP32-S3-ePaper-3.97: Sticky's config plus the vendor's 0xD7/0x6A
++    // fast clean (see ssd1677Ws397Config). Grayscale LUT is Sticky's — same panel
+     // class, but tune here if a unit shows banding.
++#if FREEINK_DEVICE_WS397
++    case BoardConfig::Board::WsEpaper397: return ssd1677Ws397Config();
++#else
+     case BoardConfig::Board::WsEpaper397: return ssd1677StickyConfig();
++#endif
+ #if FREEINK_DEVICE_PICCO
+     // Onyx Picco / BOOX Tiles: per-panel config picked from the panel's user ID
+     // (see ssd1677PiccoConfig).
+diff --git a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.h b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.h
+index 9d8e5f58..776502b0 100644
+--- a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.h
++++ b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.h
+@@ -80,6 +80,11 @@ struct Ssd1677Config {
+   const unsigned char* textAaLut = nullptr;
+   bool piccoStockGrayscale = false;  // YRD/OPM: 105-byte gray tables and OTP reader waveform.
+   bool piccoWaveforms = false;  // BOOX panel-specific power sequences.
++  // Power the rails down after the overlay gray pass even when the caller keeps
++  // power. 0xCC carries no disable bits, so otherwise the gray LUT's VCOM (which
++  // overrides the panel's OTP value) stays applied as a DC bias until the next
++  // page turn.
++  bool grayPowerDownAfter = false;
+ };
+ 
+ // Standard config (Xteink X4 / GDEQ0426T82). Panel mounting (mirror/180°) is NOT
 diff --git a/freeink-sdk/libs/hardware/BatteryMonitor/include/BatteryMonitor.h b/freeink-sdk/libs/hardware/BatteryMonitor/include/BatteryMonitor.h
 index af1d9a8d..956887cb 100644
 --- a/freeink-sdk/libs/hardware/BatteryMonitor/include/BatteryMonitor.h
@@ -606,7 +748,7 @@ index 9781c2d5..9dfcfac0 100644
    }
    return 0;
 diff --git a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
-index 0692fb67..b3e5aa4d 100644
+index 0692fb67..8ebdf602 100644
 --- a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
 +++ b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
 @@ -18,6 +18,7 @@
@@ -795,6 +937,19 @@ index 0692fb67..b3e5aa4d 100644
  inline bool isSticky() { return ACTIVE.board == Board::Sticky; }
  inline bool isX4Pro() { return ACTIVE.board == Board::XteinkX4Pro; }
  inline bool isX4Classic() { return ACTIVE.board == Board::XteinkX4Classic; }
+@@ -2451,6 +2526,12 @@ inline bool isPicco() { return ACTIVE.board == Board::Picco; }
+ inline bool isSeeedE1001() { return ACTIVE.board == Board::SeeedE1001; }
+ inline bool hasTouch() { return ACTIVE.touch.controller != TouchController::None; }
+ inline bool hasHomeKey() { return ACTIVE.touch.hasHomeKey; }
++// Front Left/Right keys. Their absence means a side rocker (three side keys +
++// BOOT, e.g. the Waveshare 3.97) rather than a row of keys under the screen, so
++// there is no second axis for a key grid and no front-button row to label.
++inline bool hasHorizontalKeys() {
++  return ACTIVE.input.left != PIN_UNASSIGNED || ACTIVE.input.right != PIN_UNASSIGNED;
++}
+ inline bool hasPwmFrontlight() { return ACTIVE.frontlight.gpio != PIN_UNASSIGNED || ACTIVE.frontlight.viaPm1Pwm; }
+ inline bool hasI2cFrontlight() { return ACTIVE.i2cFrontlight.controller != I2cFrontlightController::None; }
+ inline bool hasColorTemperatureFrontlight() {
 diff --git a/freeink-sdk/libs/hardware/BoardConfig/include/I2cBusLock.h b/freeink-sdk/libs/hardware/BoardConfig/include/I2cBusLock.h
 index 005f7944..f278a03b 100644
 --- a/freeink-sdk/libs/hardware/BoardConfig/include/I2cBusLock.h
@@ -2564,7 +2719,7 @@ index 57c4ed98..7339df8c 100644
    // the bus pads (no-op on SPI boards). Call only after all file users have
    // stopped; open HalFiles become invalid. A deep-sleep wake resets the MCU and
 diff --git a/platformio.ini b/platformio.ini
-index f4eeda76..81cf43a7 100644
+index f4eeda76..8ee60958 100644
 --- a/platformio.ini
 +++ b/platformio.ini
 @@ -4,7 +4,7 @@ build_cache_dir = .cache
@@ -2594,7 +2749,57 @@ index f4eeda76..81cf43a7 100644
  build_flags =
    -DFREEINK_CAP_BLE_HID_HOST=1
    -DCONFIG_BT_NIMBLE_ROLE_PERIPHERAL_DISABLED=1
-@@ -625,6 +625,45 @@ build_flags =
+@@ -390,6 +390,49 @@ build_flags =
+   -DENABLE_SERIAL_LOG
+   -DLOG_LEVEL=1 ; Set log level to info for release candidate builds
+ 
++; --- Waveshare ESP32-S3-ePaper-3.97 — ESP32-S3R8, SSD1677 800x480, AXP2101 -----
++; From upstream PR #3386 (see docs/paperdiy/15-waveshare-397.md). Same MCU family
++; and panel class as the sticky env. Buttons-only (UP/OK/DOWN + BOOT), 4-bit
++; SDMMC card, and an AXP2101 PMIC that owns the e-paper rail, the battery gauge
++; and the hardware power key.
++;
++; PSRAM is ON: the N16R8 board definition adds BOARD_HAS_PSRAM and the prebuilt
++; qio_opi core starts the 8 MB octal PSRAM, so the framebuffer, vector fonts and
++; NimBLE live there and the idle CPU floor is 80 MHz (HalPowerManager). This is
++; the same profile as paperdiy and the one validated on hardware; upstream's
++; firmware_tuned variant is not evaluated yet. Flash runs in QIO like paperdiy.
++;
++; OTA checks this fork's releases, never upstream's. No release publishes the
++; ws397 asset yet, so Check for Updates reports no update.
++; First install: esptool write-flash 0x0 firmware.factory.bin; then make flash.
++;   make build ENV=ws397 && make flash ENV=ws397 PORT=<port>
++[env:ws397]
++extends = base
++board = esp32-s3-devkitc1-n16r8
++board_build.mcu = esp32s3
++board_build.flash_mode = qio
++board_build.arduino.memory_type = qio_opi
++build_flags =
++  ${base.build_flags}
++  -DFREEINK_DEVICE_WS397=1
++  -DCROSSPOINT_VERSION=\"${crosspoint.version}\"
++  -DCROSSPOINT_OTA_ASSET_FORMAT=\"crosspoint-ws397-%%s-ota.bin\"
++  -DENABLE_SERIAL_LOG
++  -DLOG_LEVEL=2
++  -DCROSSPOINT_OTA_RELEASES_URL=\"https://api.github.com/repos/dcarnicer/paperdiy-reader/releases/latest\"
++  ; SD is 4-bit SDMMC; SdFat mounts its FsVolume on a block device.
++  -DUSE_BLOCK_DEVICE_INTERFACE=1
++
++; --- Waveshare 3.97 test build — serial key injection for automated UI tests --
++; Development only. Do not publish this environment's firmware as a release.
++;   make build ENV=ws397-test
++[env:ws397-test]
++extends = env:ws397
++build_flags =
++  ${env:ws397.build_flags}
++  -DPAPERDIY_SERIAL_TEST=1
++  -DCROSSPOINT_WAIT_FOR_USB_SERIAL
++
+ ; --- Xteink X4 Pro — ESP32-S3, 16MB flash / 8MB PSRAM, SSD1677 + GT911 --------
+ ; The SDK profile supplies the X4 Pro pinout, display, touch controller, and
+ ; capacitive Home key. USB Serial/JTAG is the normal USB personality so
+@@ -625,6 +668,45 @@ build_flags =
    -DLOG_LEVEL=1 ; Set log level to info for release candidate builds
    -DUSE_BLOCK_DEVICE_INTERFACE=1
  
@@ -2866,6 +3071,32 @@ index 06ecd724..1ffce128 100644
  
    UiListActivity::render(std::move(lock));
  }
+diff --git a/src/activities/reader/ReaderUtils.h b/src/activities/reader/ReaderUtils.h
+index d5d5a023..984e5094 100644
+--- a/src/activities/reader/ReaderUtils.h
++++ b/src/activities/reader/ReaderUtils.h
+@@ -1,5 +1,6 @@
+ #pragma once
+ 
++#include <BoardConfig.h>
+ #include <CrossPointSettings.h>
+ #include <GfxRenderer.h>
+ #include <HalGPIO.h>
+@@ -256,8 +257,12 @@ inline bool handleBackNavigation(const MappedInputManager& mappedInput, Activity
+     return false;
+   }
+ 
+-  const bool backTriggered = mappedInput.wasLongPressed(MappedInputManager::Button::Back, GO_BACK_OR_HOME_MS) ||
+-                             mappedInput.wasReleased(MappedInputManager::Button::Back);
++  const bool isBackSharedWithPower = (BoardConfig::ACTIVE.input.back == BoardConfig::ACTIVE.input.power &&
++                                      BoardConfig::ACTIVE.input.back != BoardConfig::PIN_UNASSIGNED);
++  const bool backTriggered =
++      (!isBackSharedWithPower && mappedInput.wasLongPressed(MappedInputManager::Button::Back, GO_BACK_OR_HOME_MS)) ||
++      (mappedInput.wasReleased(MappedInputManager::Button::Back) &&
++       (!isBackSharedWithPower || mappedInput.getHeldTime() < GO_BACK_OR_HOME_MS));
+   if (!backTriggered) return false;
+ 
+   const bool longPress = mappedInput.getHeldTime() >= GO_BACK_OR_HOME_MS;
 diff --git a/src/activities/settings/AboutActivity.cpp b/src/activities/settings/AboutActivity.cpp
 index b03c40ee..27e1b206 100644
 --- a/src/activities/settings/AboutActivity.cpp
@@ -3397,11 +3628,81 @@ index b57d01ad..1f7a3591 100644
    Language,
    DownloadFonts,
    TextSettings,
+diff --git a/src/activities/util/KeyboardEntryActivity.cpp b/src/activities/util/KeyboardEntryActivity.cpp
+index 0fa7f5e1..9684e7b8 100644
+--- a/src/activities/util/KeyboardEntryActivity.cpp
++++ b/src/activities/util/KeyboardEntryActivity.cpp
+@@ -1,6 +1,7 @@
+ #include "KeyboardEntryActivity.h"
+ 
+ #include <BidiUtils.h>
++#include <BoardConfig.h>
+ #include <HalGPIO.h>
+ #include <I18n.h>
+ 
+@@ -226,6 +227,26 @@ void KeyboardEntryActivity::moveSelectionCol(const int delta) {
+   selCol = (selCol + delta + cols) % cols;
+ }
+ 
++// Walk the whole grid in reading order: step along the row, and roll into the
++// neighbouring row's near edge at either end. Keeps every key reachable from one
++// button pair. Traversal is linear, so a far key costs proportionally many
++// presses — add auto-repeat here if that becomes the complaint.
++void KeyboardEntryActivity::moveSelectionLinear(const int delta) {
++  const fui::KeyboardLayout& layout = currentLayout();
++  if (layout.rowCount == 0 || selRow < 0 || selRow >= layout.rowCount) return;
++  const int cols = layout.rows[selRow].count;
++  if (cols <= 0) return;
++  const int next = selCol + delta;
++  if (next >= 0 && next < cols) {
++    selCol = next;
++    return;
++  }
++  selRow = (selRow + delta + layout.rowCount) % layout.rowCount;
++  const int newCols = layout.rows[selRow].count;
++  selCol = delta > 0 ? 0 : (newCols > 0 ? newCols - 1 : 0);
++  clampSelection();
++}
++
+ bool KeyboardEntryActivity::syncSelectionToValue(const int16_t value) {
+   const fui::KeyboardLayout& layout = currentLayout();
+   for (int r = 0; r < layout.rowCount; r++) {
+@@ -592,7 +613,7 @@ void KeyboardEntryActivity::loop() {
+ 
+   if (mappedInput.wasReleased(MappedInputManager::Button::Up)) {
+     if (upHeld && !upLongHandled && !cursorMode) {
+-      moveSelectionRow(-1);
++      BoardConfig::hasHorizontalKeys() ? moveSelectionRow(-1) : moveSelectionLinear(-1);
+       requestUpdate();
+     }
+     upHeld = false;
+@@ -615,7 +636,7 @@ void KeyboardEntryActivity::loop() {
+ 
+   if (mappedInput.wasReleased(MappedInputManager::Button::Down)) {
+     if (downHeld && !downLongHandled && !cursorMode) {
+-      moveSelectionRow(1);
++      BoardConfig::hasHorizontalKeys() ? moveSelectionRow(1) : moveSelectionLinear(1);
+       requestUpdate();
+     }
+     downHeld = false;
+diff --git a/src/activities/util/KeyboardEntryActivity.h b/src/activities/util/KeyboardEntryActivity.h
+index 61823958..73918792 100644
+--- a/src/activities/util/KeyboardEntryActivity.h
++++ b/src/activities/util/KeyboardEntryActivity.h
+@@ -123,6 +123,8 @@ class KeyboardEntryActivity : public Activity {
+   void clampSelection();
+   void moveSelectionRow(int delta);
+   void moveSelectionCol(int delta);
++  // Grid walk in reading order, for boards with no Left/Right keys.
++  void moveSelectionLinear(int delta);
+   bool syncSelectionToValue(int16_t value);
+   // Handles one key activation (by stable key id). Returns true when the
+   // screen needs a repaint; OK/cancel finish the activity instead.
 diff --git a/src/components/OptionPopup.h b/src/components/OptionPopup.h
-index ce66bf4b..703b0393 100644
+index ce66bf4b..45120dc2 100644
 --- a/src/components/OptionPopup.h
 +++ b/src/components/OptionPopup.h
-@@ -161,12 +161,27 @@ class OptionPopup {
+@@ -161,12 +161,28 @@ class OptionPopup {
      return true;
    }
  
@@ -3419,7 +3720,8 @@ index ce66bf4b..703b0393 100644
 +    if (partial && lastDialogRect_.width > 0) {
 +      renderer.displayWindow(lastDialogRect_.x, lastDialogRect_.y, lastDialogRect_.width, lastDialogRect_.height);
 +      constexpr int hintHeight = BaseMetrics::values.buttonHintsHeight;
-+      if (!input.hasTouch() && hintHeight > 0) {
++      // Same owner as the themes: no strip is drawn on touch or side-rocker boards.
++      if (!BaseTheme::buttonHintsHidden() && hintHeight > 0) {
 +        // drawButtonHints() draws in Portrait regardless of the activity's
 +        // orientation, so refresh the same physical strip.
 +        renderer.displayWindowPortrait(0, renderer.getDisplayWidth() - hintHeight, renderer.getDisplayHeight(),
@@ -3431,7 +3733,7 @@ index ce66bf4b..703b0393 100644
      return true;
    }
  
-@@ -276,6 +291,7 @@ class OptionPopup {
+@@ -276,6 +292,7 @@ class OptionPopup {
      props.visibleOptions = static_cast<uint8_t>(visibleCount);
      const int16_t height = fui::optionDialogHeight(target, props, width);
      const fui::Rect dialogRect = fui::centeredRect(screen, fui::Size{width, height});
@@ -3439,15 +3741,55 @@ index ce66bf4b..703b0393 100644
  
      // Chrome guard first, options after: route() scans newest-first, so the
      // option buttons win inside the dialog and the guard absorbs the rest.
-@@ -331,5 +347,6 @@ class OptionPopup {
+@@ -331,5 +348,6 @@ class OptionPopup {
    // Written by the render task (frame registration), routed by the loop task;
    // uiReady closes the rebuild window exactly like UiListActivity::uiReady.
    mutable freeink::ui::InteractionBuffer<INTERACTION_CAPACITY> interactions;
 +  mutable freeink::ui::Rect lastDialogRect_{};
    mutable std::atomic<bool> uiReady{false};
  };
+diff --git a/src/components/UITheme.cpp b/src/components/UITheme.cpp
+index 53d4d4f9..e95da0ba 100644
+--- a/src/components/UITheme.cpp
++++ b/src/components/UITheme.cpp
+@@ -74,15 +74,16 @@ void UITheme::setTheme(CrossPointSettings::UI_THEME type) {
+ }
+ 
+ const ThemeMetrics& UITheme::getMetrics() const {
+-  // hasTouch() can flip once touch init completes after static construction, so the
+-  // cached copy is refreshed when the flag differs instead of copying the struct per call.
+-  const bool touch = gpio.hasTouch();
+-  if (!metricsValid || touch != metricsForTouch) {
++  // hasTouch() (inside buttonHintsHidden()) can flip once touch init completes after
++  // static construction, so the cached copy is refreshed when the flag differs
++  // instead of copying the struct per call.
++  const bool hintsHidden = BaseTheme::buttonHintsHidden();
++  if (!metricsValid || hintsHidden != metricsForHiddenHints) {
+     adjustedMetrics = *currentMetrics;
+-    if (touch) {
++    if (hintsHidden) {
+       adjustedMetrics.buttonHintsHeight = 0;
+     }
+-    metricsForTouch = touch;
++    metricsForHiddenHints = hintsHidden;
+     metricsValid = true;
+   }
+   return adjustedMetrics;
+diff --git a/src/components/UITheme.h b/src/components/UITheme.h
+index d35042e0..573f10db 100644
+--- a/src/components/UITheme.h
++++ b/src/components/UITheme.h
+@@ -58,7 +58,7 @@ class UITheme {
+   std::unique_ptr<BaseTheme> currentTheme;
+   mutable ThemeMetrics adjustedMetrics;
+   mutable bool metricsValid = false;
+-  mutable bool metricsForTouch = false;
++  mutable bool metricsForHiddenHints = false;
+ };
+ 
+ // Helper macro to access current theme
 diff --git a/src/components/themes/BaseTheme.cpp b/src/components/themes/BaseTheme.cpp
-index df91e7c3..098ca106 100644
+index df91e7c3..abcc302c 100644
 --- a/src/components/themes/BaseTheme.cpp
 +++ b/src/components/themes/BaseTheme.cpp
 @@ -80,7 +80,7 @@ void BaseTheme::drawBatteryLightningBolt(const GfxRenderer& renderer, int boltX,
@@ -3459,7 +3801,26 @@ index df91e7c3..098ca106 100644
  
    const int maxFillWidth = rect.width - 5;
    const int fillHeight = rect.height - 4;
-@@ -336,7 +336,7 @@ void BaseTheme::applyHeaderStatus(const GfxRenderer& renderer, freeink::ui::Head
+@@ -211,9 +211,17 @@ void BaseTheme::drawHintLabel(const GfxRenderer& renderer, const int fontId, con
+   }
+ }
+ 
++// Fork change: two-button boards have no Left/Right keys either, but their hint
++// row labels the short A/B and hold actions, so it stays. In practice this is
++// the PaperDIY; Paper Mono is also DigitalTwoButton but hasTouch() hides it.
++bool BaseTheme::buttonHintsHidden() {
++  return gpio.hasTouch() || (!BoardConfig::hasHorizontalKeys() &&
++                             BoardConfig::ACTIVE.inputStyle != BoardConfig::InputStyle::DigitalTwoButton);
++}
++
+ void BaseTheme::drawButtonHints(GfxRenderer& renderer, const char* btn1, const char* btn2, const char* btn3,
+                                 const char* btn4) const {
+-  if (gpio.hasTouch()) {
++  if (buttonHintsHidden()) {
+     return;
+   }
+ 
+@@ -336,7 +344,7 @@ void BaseTheme::applyHeaderStatus(const GfxRenderer& renderer, freeink::ui::Head
    status.showBattery = true;
    const uint16_t percentage = powerManager.getBatteryPercentage();
    status.battery.percent = static_cast<uint8_t>(percentage > 100 ? 100 : percentage);
@@ -3468,8 +3829,52 @@ index df91e7c3..098ca106 100644
    // Static label buffers: headers draw on the single render task, and the
    // strings only need to outlive the fui::header() call that consumes them.
    static char percentText[8];
+diff --git a/src/components/themes/BaseTheme.h b/src/components/themes/BaseTheme.h
+index d6512e70..1cf920bf 100644
+--- a/src/components/themes/BaseTheme.h
++++ b/src/components/themes/BaseTheme.h
+@@ -245,6 +245,13 @@ class BaseTheme {
+   virtual void fillBatteryIcon(const GfxRenderer& renderer, Rect rect, uint16_t percentage) const;
+   virtual void drawButtonHints(GfxRenderer& renderer, const char* btn1, const char* btn2, const char* btn3,
+                                const char* btn4) const;
++  // The hint row is a picture of four front buttons under the screen. Touch
++  // boards drive the UI by tapping, and boards with only a side rocker never had
++  // that row, so on both the labels name controls the user cannot see. Every
++  // theme's drawButtonHints() returns early on this, and UITheme::getMetrics()
++  // reclaims the reserved strip. Two-button boards (PaperDIY) keep the row: it
++  // labels their short A/B and hold actions.
++  static bool buttonHintsHidden();
+   // Shared by every theme's drawButtonHints(): centres a hint label in its box,
+   // wrapping to two lines rather than overflowing when it's too wide to fit.
+   static void drawHintLabel(const GfxRenderer& renderer, int fontId, const char* label, int x, int boxWidth, int boxTop,
+diff --git a/src/components/themes/lyra/LyraTheme.cpp b/src/components/themes/lyra/LyraTheme.cpp
+index 081aaef4..df3e0936 100644
+--- a/src/components/themes/lyra/LyraTheme.cpp
++++ b/src/components/themes/lyra/LyraTheme.cpp
+@@ -108,7 +108,7 @@ void LyraTheme::drawSubHeader(const GfxRenderer& renderer, Rect rect, const char
+ 
+ void LyraTheme::drawButtonHints(GfxRenderer& renderer, const char* btn1, const char* btn2, const char* btn3,
+                                 const char* btn4) const {
+-  if (gpio.hasTouch()) {
++  if (buttonHintsHidden()) {
+     return;
+   }
+ 
+diff --git a/src/components/themes/roundedraff/RoundedRaffTheme.cpp b/src/components/themes/roundedraff/RoundedRaffTheme.cpp
+index 5fa22bf5..a49a9273 100644
+--- a/src/components/themes/roundedraff/RoundedRaffTheme.cpp
++++ b/src/components/themes/roundedraff/RoundedRaffTheme.cpp
+@@ -198,7 +198,7 @@ void RoundedRaffTheme::drawTextField(const GfxRenderer& renderer, Rect rect, con
+ 
+ void RoundedRaffTheme::drawButtonHints(GfxRenderer& renderer, const char* btn1, const char* btn2, const char* btn3,
+                                        const char* btn4) const {
+-  if (gpio.hasTouch()) {
++  if (buttonHintsHidden()) {
+     return;
+   }
+ 
 diff --git a/src/main.cpp b/src/main.cpp
-index 38769355..4462338e 100644
+index 38769355..0753b2b9 100644
 --- a/src/main.cpp
 +++ b/src/main.cpp
 @@ -48,8 +48,10 @@
@@ -3593,18 +3998,48 @@ index 38769355..4462338e 100644
    bleturner::begin(pageturner::host, SETTINGS.ble);
  
    switch (wakeupReason) {
-@@ -824,8 +881,8 @@ void setup() {
+@@ -824,15 +881,17 @@ void setup() {
      case HalGPIO::WakeupReason::AfterUSBPower:
        // Most devices return to sleep after a USB-powered cold boot.
        LOG_DBG("MAIN", "Wakeup reason: After USB Power");
 -#if FREEINK_DEVICE_X4PRO || FREEINK_DEVICE_X4CLASSIC || FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_EEGO_A4 || \
 -    FREEINK_DEVICE_METALIO_EINK4 || FREEINK_DEVICE_PICCO
 +#if FREEINK_DEVICE_X4PRO || FREEINK_DEVICE_X4CLASSIC || FREEINK_DEVICE_PAPERMONO || FREEINK_DEVICE_PAPERDIY || \
-+    FREEINK_DEVICE_EEGO_A4 || FREEINK_DEVICE_METALIO_EINK4 || FREEINK_DEVICE_PICCO
++    FREEINK_DEVICE_EEGO_A4 || FREEINK_DEVICE_METALIO_EINK4 || FREEINK_DEVICE_PICCO || FREEINK_DEVICE_WS397
        // X4 Pro must stay awake so USB Serial/JTAG remains available after leaving
        // USB Drive and reconnecting the cable. Paper Mono has no armable GPIO wake
        // (its button is behind the PMIC). Metalio also needs native USB available
-@@ -964,8 +1021,15 @@ void setup() {
+       // after a USB-powered boot, as does the Picco. EEGO A4's post-flash reset reads as
+       // POWERON (native-USB), so a flash would otherwise be misclassified as a
+-      // USB-power cold boot and sleep. Sleeping any of these here would strand
+-      // the device in a USB-replug boot loop (or sleep right after a flash).
++      // USB-power cold boot and sleep. The Waveshare 3.97 reads the same way (its
++      // USB detect is a PMIC register, and charge termination reads as "no USB").
++      // Sleeping any of these here would strand the device in a USB-replug boot
++      // loop (or sleep right after a flash).
+       break;
+ #else
+       Storage.prepareForDeepSleep();
+@@ -914,6 +973,8 @@ void setup() {
+   // Output polarity is resolved per render by ActivityManager (night mode
+   // inverts only the reading surfaces), so nothing to restore here.
+ 
++  const bool isSharedBackPower = (BoardConfig::ACTIVE.input.back == BoardConfig::ACTIVE.input.power &&
++                                  BoardConfig::ACTIVE.input.back != BoardConfig::PIN_UNASSIGNED);
+   if (recoveryFirmwareMode) {
+     // Skip normal home/reader routing: jump straight into the SD firmware picker.
+     activityManager.replaceActivity(
+@@ -937,7 +998,8 @@ void setup() {
+     // openEpubPath + lastSleepFromReader from a prior session.
+     activityManager.goHome();
+   } else if (APP_STATE.openEpubPath.empty() || !APP_STATE.lastSleepFromReader ||
+-             mappedInputManager.isPressed(MappedInputManager::Button::Back) || APP_STATE.readerActivityLoadCount > 0) {
++             (!isSharedBackPower && mappedInputManager.isPressed(MappedInputManager::Button::Back)) ||
++             APP_STATE.readerActivityLoadCount > 0) {
+     // Boot to home screen if no book is open, last sleep was not from reader, back button is held, or reader activity
+     // crashed (indicated by readerActivityLoadCount > 0)
+     activityManager.goHome(HomeMenuItem::NONE, needsWakeRefresh);
+@@ -964,8 +1026,15 @@ void setup() {
      gpio.update();
    }
  
@@ -3621,7 +4056,7 @@ index 38769355..4462338e 100644
  }
  
  void loop() {
-@@ -1013,6 +1077,7 @@ void loop() {
+@@ -1013,6 +1082,7 @@ void loop() {
  
    // After the exclusive-storage return: it saves settings to the SD card.
    handleSlideSwitch();
@@ -3629,7 +4064,7 @@ index 38769355..4462338e 100644
    halTiltSensor.update(SETTINGS.tiltPageTurn, SETTINGS.orientation, activityManager.isReaderActivity());
  
    // Under the render lock, so a step never overlaps the themes' gauge reads.
-@@ -1050,18 +1115,101 @@ void loop() {
+@@ -1050,18 +1120,101 @@ void loop() {
          uint8_t* buf = display.getFrameBuffer();
          logSerial.write(buf, bufferSize);
          logSerial.printf("SCREENSHOT_END\n");
@@ -3733,7 +4168,7 @@ index 38769355..4462338e 100644
      powerManager.setPowerSaving(false);  // Restore normal CPU frequency on user activity
    }
  
-@@ -1108,7 +1256,15 @@ void loop() {
+@@ -1108,7 +1261,15 @@ void loop() {
        CrossPointSettings::hasPowerDoubleClick() && SETTINGS.doublePwrBtn != CrossPointSettings::IGNORE;
  
    const unsigned long sleepTimeoutMs = SETTINGS.getSleepTimeoutMs();
@@ -3750,7 +4185,7 @@ index 38769355..4462338e 100644
      LOG_DBG("SLP", "Auto-sleep triggered after %lu ms of inactivity", sleepTimeoutMs);
      enterDeepSleep(true);
      // This should never be hit as `enterDeepSleep` calls esp_deep_sleep_start
-@@ -1136,10 +1292,10 @@ void loop() {
+@@ -1136,10 +1297,10 @@ void loop() {
    // A completed long hold stays consumed even when sleep is temporarily blocked.
    if (mappedInputManager.wasPowerReleaseConsumed()) return;
  
@@ -3765,7 +4200,7 @@ index 38769355..4462338e 100644
    if ((SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP ||
         SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::IGNORE) &&
        loopStartTime >= allowSleepAt && mappedInputManager.wasPowerSingleClick()) {
-@@ -1162,14 +1318,36 @@ void loop() {
+@@ -1162,14 +1323,36 @@ void loop() {
      }
    }
  
@@ -3804,7 +4239,7 @@ index 38769355..4462338e 100644
    }
  
    const unsigned long activityStartTime = millis();
-@@ -1179,6 +1357,31 @@ void loop() {
+@@ -1179,6 +1362,31 @@ void loop() {
    // time, so it is not counted toward auto-sleep.
    lastActivityTime += activityDuration;
  
@@ -3837,10 +4272,10 @@ index 38769355..4462338e 100644
    if (loopDuration > maxLoopDuration) {
      maxLoopDuration = loopDuration;
 diff --git a/src/network/FirmwareBoardTag.cpp b/src/network/FirmwareBoardTag.cpp
-index 7109854a..3f7a8c96 100644
+index 7109854a..2e73e63c 100644
 --- a/src/network/FirmwareBoardTag.cpp
 +++ b/src/network/FirmwareBoardTag.cpp
-@@ -17,6 +17,8 @@
+@@ -17,8 +17,12 @@
  #define CROSSPOINT_BOARD_NAME "x4"
  #elif FREEINK_DEVICE_PAPERMONO
  #define CROSSPOINT_BOARD_NAME "papermono"
@@ -3848,8 +4283,12 @@ index 7109854a..3f7a8c96 100644
 +#define CROSSPOINT_BOARD_NAME "paperdiy"
  #elif FREEINK_DEVICE_STICKY
  #define CROSSPOINT_BOARD_NAME "sticky"
++#elif FREEINK_DEVICE_WS397
++#define CROSSPOINT_BOARD_NAME "ws397"
  #elif FREEINK_DEVICE_M5PAPER
-@@ -33,6 +35,8 @@
+ #define CROSSPOINT_BOARD_NAME "m5paper"
+ #elif FREEINK_DEVICE_EEGO_A4
+@@ -33,6 +37,8 @@
  #define CROSSPOINT_BOARD_NAME "m5"
  #elif FREEINK_DEVICE_MURPHY
  #define CROSSPOINT_BOARD_NAME "murphy"

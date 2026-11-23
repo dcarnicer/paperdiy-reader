@@ -18,6 +18,73 @@ index 5764315c..f803b360 100644
  
  The book suite also needs `zip`. It uses `sips` or ImageMagick's `convert` for
  JPEG fixtures and optionally Pillow for progressive JPEG fixtures; the related
+diff --git a/freeink-sdk/docs/waveshare-epaper-397-support.md b/freeink-sdk/docs/waveshare-epaper-397-support.md
+index 3b7ef9c1..7668f969 100644
+--- a/freeink-sdk/docs/waveshare-epaper-397-support.md
++++ b/freeink-sdk/docs/waveshare-epaper-397-support.md
+@@ -36,8 +36,43 @@ guess:
+ The controller is SSD1677-class and the vendor bring-up is byte-identical to the
+ Seeed Sticky's — booster `AE C7 C3 C0 80`, driver output scan `0x02`, data entry
+ `0x01`, border `0x01`, and update sequences `0x22 = F7` (full) / `FF` (partial) /
+-`D7` (fast). `ssd1677ActiveConfig()` therefore returns `ssd1677StickyConfig()` for
+-this board, including its grayscale LUT.
++`D7` (fast). `ssd1677Ws397Config()` is therefore `ssd1677StickyConfig()` plus the
++vendor's fast clean, and reuses its grayscale LUT.
++
++### Refresh sequences
++
++| CrossPoint mode | `0x22` | `0x3C` | Vendor equivalent | Cost |
++|---|---|---|---|---|
++| FAST (page turn) | `FF` | `80` | `EPD_3IN97_Display_Partial` | ~407 ms |
++| HALF (periodic clean, boot paint) | `D7` after `0x1A = 6A` | `01` | `Init_Fast` + `TurnOnDisplay_Fast` | ~1.5 s |
++| FULL (manual refresh) | `F7` | `01` | `EPD_3IN97_Display` | ~2.1 s |
++
++HALF is the board's own config field, not the Sticky's: `EPD_3IN97_Init_Fast`
++writes `0x1A = 0x6A` and activates `0x22 = 0xD7`. `0xD7` leaves the
++load-temperature bit clear, so that `0x1A` byte is what selects the OTP waveform —
++under the Sticky's `0xF7` (bit 5 set) the sensor read overwrites it and the `0x1A`
++write is a no-op. The periodic every-N-pages clean and the first paint after
++boot/wake both take this path.
++
++### Why a page turn is two waveforms
++
++With text anti-aliasing on, one page turn drives the panel twice, and both passes
++are visible:
++
++1. **B/W partial** — `0x22 = FF`, ~407 ms. Paints the whole page, aliased.
++2. **Grayscale** — external LUT via `0x32`, `0x22 = CC`, ~226 ms. Drives only the
++   AA edge pixels.
++
++That split is structural, not a bug. The AA LUT's first group (`lut_grayscale_sticky`
++level `00`, both plane bits clear) is all zeros — no drive. Pure black and pure
++white both land in that group, so the gray pass *cannot* paint the page body; it
++only darkens the two intermediate levels the B/W pass left as solid pixels. This is
++why `combinesGrayscaleBase()` stays false for SSD1677 (only Paper Mono merges base
++and grays into one waveform).
++
++The vendor demo looks smoother because it only ever does step 1. Turning off
++**Settings -> text anti-aliasing** gives exactly that: one `0xFF` partial per page,
++no second pass.
+ 
+ ## AXP2101 (Axp2101.h)
+ 
+@@ -108,8 +143,14 @@ Bring-up on a unit, reading an EPUB end to end:
+ 
+ ## Pending hardware validation
+ 
+-* **Grayscale LUT** — reused from the Sticky; retune if a unit shows banding on
+-  covers.
++* **Grayscale LUT** — reused from the Sticky. `setCustomLut()` force-writes the X4's
++  voltage tail (VGH `0x17`, VSH1 `0x41`, VSH2 `0xA8`, VSL `0x32`, VCOM `0x30`) over
++  this module's OTP calibration on every AA refresh, so mid-grays are the thing to
++  check: read a page of AA text and open a cover. Banding or mid-grays collapsing
++  toward B/W means retuning VCOM (byte 109) in single steps first, then VSH1
++  (byte 106) — in a ws397 copy of the LUT, not the shared Sticky one.
++* **HALF at `0xD7`/`0x6A`** — matches the vendor's fast-update init, but has not been
++  timed on a unit yet.
+ * **Battery curve** — the AXP2101 fuel gauge learns its curve at runtime; SoC may
+   be coarse until it has seen a full charge cycle.
+ * **SPI clock** — 20 MHz is the vendor value and it is NOT worth raising: a page
 diff --git a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp
 index 0e2cc958..298756a6 100644
 --- a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/LgfxEpdDriver.cpp
@@ -128,6 +195,81 @@ index 0646a9f5..c80e9f83 100644
  
    // 16-gray path: the facade streams LSB/MSB 1-bpp planes (whole or in strips);
    // displayGray combines them with the B/W base into the panel's 8-bit gray canvas.
+diff --git a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.cpp b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.cpp
+index 6d5e6ce2..278bfb63 100644
+--- a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.cpp
++++ b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.cpp
+@@ -130,6 +130,26 @@ static const Ssd1677Config& ssd1677StickyTextConfig() {
+   return cfg;
+ }
+ 
++#if FREEINK_DEVICE_WS397
++// Waveshare ESP32-S3-ePaper-3.97. Bring-up is byte-identical to the Sticky's, so
++// it starts from that config and adds the vendor's fast clean: EPD_3IN97_Init_Fast
++// writes 0x1A = 0x6A and EPD_3IN97_TurnOnDisplay_Fast activates 0x22 = 0xD7, a
++// ~1.5 s full-panel clean against 0xF7's ~2.1 s. 0xD7 leaves the load-temperature
++// bit clear, so the 0x1A byte written just before it is what selects the OTP
++// waveform — under 0xF7 (bit5 set) the sensor read overwrites it and the write is
++// a no-op. FULL keeps 0xF7 for the manual "clean the panel" refresh.
++static const Ssd1677Config& ssd1677Ws397Config() {
++  static const Ssd1677Config cfg = [] {
++    Ssd1677Config c = ssd1677StickyConfig();
++    c.halfSeqOverride = 0xD7;
++    c.halfRefreshTemp = 0x6A;
++    c.grayPowerDownAfter = true;
++    return c;
++  }();
++  return cfg;
++}
++#endif
++
+ #if FREEINK_DEVICE_METALIO_EINK4
+ // GDEM0397T81 settings from metalio-hw-test. B/W refreshes use its OTP waveforms
+ // via the vendor 0x22 sequence values; the vendor's separately supplied partial
+@@ -1211,7 +1231,8 @@ void Ssd1677Driver::displayGray(EpdBus& bus, const uint8_t* fb, bool turnOff, co
+     // sequence (its enable bits are a no-op on already-up rails).
+     if (_cfg.grayPowerUpFirst) powerOn(bus);
+     // Sticky AA follows the caller's power policy on either board.
+-    refresh(bus, RefreshMode::Fast, turnOff || (_cfg.piccoWaveforms && selectedLut != lut_grayscale_sticky));
++    refresh(bus, RefreshMode::Fast,
++            turnOff || _cfg.grayPowerDownAfter || (_cfg.piccoWaveforms && selectedLut != lut_grayscale_sticky));
+   }
+ 
+   setCustomLut(bus, false, nullptr);
+@@ -1345,11 +1366,14 @@ static const Ssd1677Config& ssd1677ActiveConfig() {
+     case BoardConfig::Board::MetalioEInk4: return ssd1677MetalioConfig();
+ #endif
+     case BoardConfig::Board::Sticky: return ssd1677StickyTextConfig();
+-    // Waveshare ESP32-S3-ePaper-3.97: the vendor driver's bring-up is byte-identical
+-    // to Seeed's (booster AE C7 C3 C0 80, border 0x01, 0x22 = F7 full / FF partial /
+-    // D7 fast), so it runs the same config. Grayscale LUT is Sticky's — same panel
++    // Waveshare ESP32-S3-ePaper-3.97: Sticky's config plus the vendor's 0xD7/0x6A
++    // fast clean (see ssd1677Ws397Config). Grayscale LUT is Sticky's — same panel
+     // class, but tune here if a unit shows banding.
++#if FREEINK_DEVICE_WS397
++    case BoardConfig::Board::WsEpaper397: return ssd1677Ws397Config();
++#else
+     case BoardConfig::Board::WsEpaper397: return ssd1677StickyConfig();
++#endif
+ #if FREEINK_DEVICE_PICCO
+     // Onyx Picco / BOOX Tiles: per-panel config picked from the panel's user ID
+     // (see ssd1677PiccoConfig).
+diff --git a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.h b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.h
+index 9d8e5f58..776502b0 100644
+--- a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.h
++++ b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.h
+@@ -80,6 +80,11 @@ struct Ssd1677Config {
+   const unsigned char* textAaLut = nullptr;
+   bool piccoStockGrayscale = false;  // YRD/OPM: 105-byte gray tables and OTP reader waveform.
+   bool piccoWaveforms = false;  // BOOX panel-specific power sequences.
++  // Power the rails down after the overlay gray pass even when the caller keeps
++  // power. 0xCC carries no disable bits, so otherwise the gray LUT's VCOM (which
++  // overrides the panel's OTP value) stays applied as a DC bias until the next
++  // page turn.
++  bool grayPowerDownAfter = false;
+ };
+ 
+ // Standard config (Xteink X4 / GDEQ0426T82). Panel mounting (mirror/180°) is NOT
 diff --git a/freeink-sdk/libs/hardware/BatteryMonitor/include/BatteryMonitor.h b/freeink-sdk/libs/hardware/BatteryMonitor/include/BatteryMonitor.h
 index af1d9a8d..956887cb 100644
 --- a/freeink-sdk/libs/hardware/BatteryMonitor/include/BatteryMonitor.h
@@ -606,7 +748,7 @@ index 9781c2d5..9dfcfac0 100644
    }
    return 0;
 diff --git a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
-index 0692fb67..b3e5aa4d 100644
+index 0692fb67..8ebdf602 100644
 --- a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
 +++ b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
 @@ -18,6 +18,7 @@
@@ -795,6 +937,19 @@ index 0692fb67..b3e5aa4d 100644
  inline bool isSticky() { return ACTIVE.board == Board::Sticky; }
  inline bool isX4Pro() { return ACTIVE.board == Board::XteinkX4Pro; }
  inline bool isX4Classic() { return ACTIVE.board == Board::XteinkX4Classic; }
+@@ -2451,6 +2526,12 @@ inline bool isPicco() { return ACTIVE.board == Board::Picco; }
+ inline bool isSeeedE1001() { return ACTIVE.board == Board::SeeedE1001; }
+ inline bool hasTouch() { return ACTIVE.touch.controller != TouchController::None; }
+ inline bool hasHomeKey() { return ACTIVE.touch.hasHomeKey; }
++// Front Left/Right keys. Their absence means a side rocker (three side keys +
++// BOOT, e.g. the Waveshare 3.97) rather than a row of keys under the screen, so
++// there is no second axis for a key grid and no front-button row to label.
++inline bool hasHorizontalKeys() {
++  return ACTIVE.input.left != PIN_UNASSIGNED || ACTIVE.input.right != PIN_UNASSIGNED;
++}
+ inline bool hasPwmFrontlight() { return ACTIVE.frontlight.gpio != PIN_UNASSIGNED || ACTIVE.frontlight.viaPm1Pwm; }
+ inline bool hasI2cFrontlight() { return ACTIVE.i2cFrontlight.controller != I2cFrontlightController::None; }
+ inline bool hasColorTemperatureFrontlight() {
 diff --git a/freeink-sdk/libs/hardware/BoardConfig/include/I2cBusLock.h b/freeink-sdk/libs/hardware/BoardConfig/include/I2cBusLock.h
 index 005f7944..f278a03b 100644
 --- a/freeink-sdk/libs/hardware/BoardConfig/include/I2cBusLock.h

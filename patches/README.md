@@ -9,6 +9,10 @@ versiones de upstream:
 | `firmware.patch` | Env `paperdiy`, settings, UI, board tag, OTA, `GfxRenderer`, `HalGPIO`, `HalPowerManager`, `main` |
 | `paperdiy-support.patch` | Concatenación de `sdk.patch` + `firmware.patch` |
 
+Ambos llevan además los PRs de upstream para la Waveshare 3.97 (env `ws397`);
+la lista está en
+[PRs de upstream que llevamos](../docs/paperdiy/10-fork-maintenance.md#prs-de-upstream-que-llevamos).
+
 Las bases de cada sync y la receta de generación están en
 [`docs/paperdiy/10-fork-maintenance.md`](../docs/paperdiy/10-fork-maintenance.md);
 no las dupliques aquí.
