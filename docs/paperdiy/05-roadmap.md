@@ -136,6 +136,35 @@ aunque sin táctil/frontlight.
 - [ ] Upstream del soporte PaperDIY a CrossPoint (PR).
 - [ ] Guía de contribución, tests host y banco de pruebas.
 
+## Waveshare 3.97 y multiplaca
+
+Desde `2.0.0-12` el fork soporta también la Waveshare ESP32-S3-ePaper-3.97
+(ver [15-waveshare-397.md](15-waveshare-397.md)).
+
+- [ ] JPEG progresivos: hoy el decodificador (JPEGDEC) solo usa los
+      coeficientes DC, es decir 1/8 de resolución ampliada, y esas portadas
+      salen pixeladas en todas las placas. En placas con PSRAM (PaperDIY,
+      Waveshare), decodificarlos completos una vez y guardarlos en la caché
+      `.pxc`. Proponerlo a upstream.
+- [ ] Grises de imágenes en la Waveshare: usar el modo de 4 grises de fábrica
+      del panel (`0x1A = 0x5A`, `0x22 = 0xD7`, sin LUT externa, como el driver
+      de Waveshare) en lugar de la LUT genérica heredada de la X4. Prueba en la
+      rama `feat/ws397-otp-gray`, pendiente de comparar en la placa. Si mejora,
+      revisar también la LUT del suavizado de texto (heredada de la Sticky) y
+      proponerlo al SDK.
+- [ ] Tecla PWR de la Waveshare: xiaozhi-esp32 la lee en GPIO1 y CrossMux por
+      la interrupción del PMIC (GPIO38). Probar las dos en la placa.
+- [ ] Seguir las fuentes de componentes de la Waveshare en
+      `scripts/upstreams.json`: repo del fabricante, xiaozhi-esp32, CrossMux,
+      XPowersLib y SensorLib.
+- [ ] Memoria en el OPDS de la PaperDIY: el mínimo de heap libre bajó a unos
+      2,7 KB durante una sesión larga. Medirlo y reducirlo, por ejemplo moviendo
+      buffers de red a PSRAM.
+- [ ] Renombrar el repo, el proyecto y la documentación (tras `2.0.0-12`),
+      conservando los nombres de los assets de PaperDIY, `/.crosspoint` y la
+      entrada de M5Burner, y comprobando que el OTA de las PaperDIY en uso sigue
+      la redirección.
+
 ## Matriz impacto/esfuerzo
 
 | Feature | Impacto | Esfuerzo | Fase |
