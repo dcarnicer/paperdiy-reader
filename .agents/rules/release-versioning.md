@@ -30,7 +30,9 @@ accept long strings, and the M5Burner version must equal the release version.
   `scripts/check_release_version.py` in sync with this rule.
 - The upstream commit and SDK pin go in `CHANGELOG.md`; the release notes,
   written by the workflow, link to it.
-- Each release publishes exactly two images
+- Each release publishes exactly two images per board, PaperDIY and the
+  Waveshare 3.97 (`ws397`, with the same two names using `ws397` in place of
+  `paperdiy`; first install with esptool at `0x0`, no M5Burner or Launcher)
   (`.github/workflows/release-paperdiy.yml`, checked by
   `scripts/check_release_assets.py`):
   - `crosspoint-paperdiy-latest.bin`: full image at `0x0` for M5Burner,

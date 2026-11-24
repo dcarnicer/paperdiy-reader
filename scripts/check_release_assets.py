@@ -32,6 +32,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("full", type=Path, help="full image flashed at 0x0")
     parser.add_argument("ota", type=Path, help="app-only OTA image")
+    parser.add_argument(
+        "--board",
+        help="board name in the asset names (paperdiy, ws397); checks that the OTA image looks up "
+        "crosspoint-<board>-<version>-ota.bin, the name the release publishes",
+    )
     args = parser.parse_args()
 
     full = args.full.read_bytes()
@@ -45,6 +50,13 @@ def main() -> int:
     check_app_header(full[APP_OFFSET:], f"{args.full} at 0x{APP_OFFSET:X}")
     if full[APP_OFFSET : APP_OFFSET + len(ota)] != ota:
         raise SystemExit(f"{args.full}: app at 0x{APP_OFFSET:X} differs from {args.ota}")
+
+    if args.board:
+        # CROSSPOINT_OTA_ASSET_FORMAT is compiled in as this literal; the in-app
+        # update only finds the release file if the two names agree.
+        expected = f"crosspoint-{args.board}-%s-ota.bin".encode()
+        if expected not in ota:
+            raise SystemExit(f"{args.ota}: does not look up {expected.decode()} (CROSSPOINT_OTA_ASSET_FORMAT)")
 
     print(f"release assets OK: {args.full.name} ({len(full)} bytes), {args.ota.name} ({len(ota)} bytes)")
     return 0

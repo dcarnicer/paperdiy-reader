@@ -43,7 +43,11 @@ jobs:
         run: pio run -e ws397
 
       - name: Check release images
-        run: python3 scripts/check_release_assets.py .pio/build/paperdiy/firmware.factory.bin .pio/build/paperdiy/firmware.bin
+        run: |
+          for board in paperdiy ws397; do
+            python3 scripts/check_release_assets.py --board "${board}" \
+              ".pio/build/${board}/firmware.factory.bin" ".pio/build/${board}/firmware.bin"
+          done
 
       - name: Upload firmware
         uses: actions/upload-artifact@v7

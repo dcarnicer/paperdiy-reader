@@ -233,7 +233,11 @@ Cambios propios del fork encima de esos PRs:
   `firmware_tuned`, con sufijo `-ws397` y un `ws397-gh_release` aparte.
 - `BaseTheme::buttonHintsHidden()` excluye `DigitalTwoButton`, para que la
   PaperDIY conserve la fila de pistas. `OptionPopup` usa ese mismo criterio.
-- CI: `build-paperdiy.yml` compila también `ws397`.
+- CI: `build-paperdiy.yml` compila también `ws397` y comprueba las imágenes de
+  las dos placas; la release publica dos imágenes por placa.
+- `[env:ws397]` activa la unidad USB (`FREEINK_CAP_USB_MSC`). Upstream compila
+  `ws397` sobre `firmware_tuned`, cuyo core no lleva TinyUSB: al sincronizar,
+  conservar nuestro env o se pierde la unidad USB.
 - OPDS en placas con solo teclas laterales y sin táctil (PaperDIY, ws397):
   bloque propio al principio de `OpdsBookBrowserActivity::handleCustomInput()`
   y etiquetas de página en `drawFooter()`; la rama de upstream que reserva
