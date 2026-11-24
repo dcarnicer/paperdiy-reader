@@ -9,6 +9,10 @@ ED047TC1 E Ink panel, 960×540, 16 grays), built on
 a dictionary, sync, OPDS/Calibre and everything else that makes the device
 usable every day.
 
+From `2.0.0-12` it also runs, experimentally, on the
+**Waveshare ESP32-S3-ePaper-3.97** (see
+[Waveshare ESP32-S3-ePaper-3.97](#waveshare-esp32-s3-epaper-397-experimental)).
+
 > **Status:** the firmware **builds, boots and reads EPUB on a real PaperDIY**.
 > Validation (2026-11-04): boot, screen/UI, Home, wake, A/B buttons, battery,
 > SD and navigation OK after syncing to CrossPoint `308cd522`.
@@ -36,8 +40,8 @@ usable every day.
 > errors or leaks on 2026-11-06. KOReader Sync was validated against a local
 > KOSync server on 2026-11-06. Pending: pairing a BLE remote, sleep current and
 > a physical visual review of ghosting. Full `make smoke` passed on the
-> `177d0694` tree (2026-11-22, run `20261122-193337`; `2.0.0-11` only bumps
-> the version). See
+> `2.0.0-12` tree (sync `92e8714a`, 2026-11-24) on both boards: PaperDIY run
+> `20261124-115531` and Waveshare 3.97 run `20261124-121804`. See
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md).
 >
 > **Downstream fork:** `main` mirrors `upstream/develop`; `paperdiy` is our
@@ -222,6 +226,51 @@ without going through Launcher's screen, set Launcher's
 held at power-on. See
 [`docs/paperdiy/13-m5launcher.en.md`](docs/paperdiy/13-m5launcher.en.md).
 
+## Waveshare ESP32-S3-ePaper-3.97 (experimental)
+
+The [Waveshare ESP32-S3-ePaper-3.97](https://www.waveshare.com/esp32-s3-epaper-3.97.htm)
+is the fork's second board. It runs the same firmware with its own env
+(`ws397`); the support comes from upstream PRs that are not merged yet.
+
+| | Waveshare 3.97 |
+|---|---|
+| SoC | ESP32-S3-WROOM-1-N16R8, 240 MHz |
+| Flash / PSRAM | 16 MB / 8 MB Octal |
+| Display | 3.97" 800×480 black and white, SSD1677 controller over SPI; grays through a LUT |
+| Input | side rocker (Up / OK / Down) and BOOT; the PWR key does not reach the firmware |
+| Power | AXP2101 PMIC (marked TG28): battery and charging |
+| SD | microSD over 4-bit SDMMC |
+| Other | PCF85063 clock, QMI8658 IMU, 2.4 GHz Wi-Fi + BLE 5; ES8311 audio unused |
+
+| Key | Action |
+|---|---|
+| Up / Down | move the selection; turn pages |
+| OK | select |
+| BOOT short | back |
+| BOOT held | sleep |
+| BOOT while asleep | wake (hold it for a moment) |
+
+There is no button-hint row: the board has no front buttons.
+
+**Install:** if you want to keep the firmware the board ships with, back it up
+first (on our unit, reading the whole flash in one go with esptool failed; see
+the doc linked below). Then download `crosspoint-ws397-latest.bin` from the
+release and flash it with the board connected over USB-C:
+
+```bash
+esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX write-flash 0x0 crosspoint-ws397-latest.bin
+```
+
+Flashing at `0x0` erases the previous firmware's settings but not the books on
+the SD. Later versions arrive through `Check for Updates`, which looks for
+`crosspoint-ws397-<version>-ota.bin` in the release; you can also copy that
+file to the SD root and use `SD Card Firmware Update`, or run
+`make flash ENV=ws397` if you build. `File Transfer → USB Drive` mounts the SD
+on the computer. There is no M5Burner or M5Launcher for this board.
+
+Details, flashing, backup and limitations in
+[`docs/paperdiy/15-waveshare-397.md`](docs/paperdiy/15-waveshare-397.md) (Spanish).
+
 ## Structure
 
 ```
@@ -261,6 +310,7 @@ The detailed documentation is in Spanish. The
 - [Draft comment for issue #4005](docs/paperdiy/11-upstream-note.md)
 - [USB testing (Spanish)](docs/paperdiy/12-serial-testing.md)
 - [M5Launcher](docs/paperdiy/13-m5launcher.en.md)
+- [Waveshare ESP32-S3-ePaper-3.97, experimental (Spanish)](docs/paperdiy/15-waveshare-397.md)
 
 ## Known limitations
 

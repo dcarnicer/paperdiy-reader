@@ -8,6 +8,9 @@
 （MIT）构建。目标不是 POC：而是一个具备书库、设置、字体、词典、同步、
 OPDS/Calibre 以及日常使用所需一切功能的电子书阅读器。
 
+从 `2.0.0-12` 起，它也以实验性方式支持 **Waveshare ESP32-S3-ePaper-3.97**
+（见 [Waveshare ESP32-S3-ePaper-3.97](#waveshare-esp32-s3-epaper-397实验性)）。
+
 > **状态：** 固件**已在真实 PaperDIY 上编译、启动并阅读 EPUB**。
 > 验证（2026-11-04）：同步到 CrossPoint `308cd522` 后，启动、屏幕/界面、
 > 主页、唤醒、A/B 按键、电池、SD 和导航均正常。
@@ -30,8 +33,8 @@ OPDS/Calibre 以及日常使用所需一切功能的电子书阅读器。
 > 已于 2026-11-05 验证。自动休眠和封面休眠画面也于 2026-11-05 验证。
 > 长时间阅读：2026-11-06 完成 250+ 次翻页，无错误、无泄漏。KOReader Sync
 > 于 2026-11-06 通过本地 KOSync 服务器验证。待完成：配对 BLE 遥控器、
-> 休眠电流，以及残影的实机目视检查。`177d0694` 树的完整 `make smoke` 已通过
-> （2026-11-22，run `20261122-193337`；`2.0.0-11` 仅更改版本字符串）。见
+> 休眠电流，以及残影的实机目视检查。`2.0.0-12` 树（sync `92e8714a`，2026-11-24）
+> 的完整 `make smoke` 已在两块板子上通过（PaperDIY run `20261124-115531`，Waveshare 3.97 run `20261124-121804`）。见
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md)。
 >
 > **下游分支：** `main` 镜像 `upstream/develop`；`paperdiy` 是我们的工作
@@ -185,6 +188,48 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
   read_flash 0 0x1000000 paperdiy-original.bin
 ```
 
+## Waveshare ESP32-S3-ePaper-3.97（实验性）
+
+[Waveshare ESP32-S3-ePaper-3.97](https://www.waveshare.com/esp32-s3-epaper-3.97.htm)
+是本 fork 的第二块板子。它使用同一套固件和独立的 env（`ws397`）；支持来自尚未合并的上游 PR。
+
+| | Waveshare 3.97 |
+|---|---|
+| SoC | ESP32-S3-WROOM-1-N16R8，240 MHz |
+| Flash / PSRAM | 16 MB / 8 MB Octal |
+| 屏幕 | 3.97 英寸 800×480 黑白，SPI 接口的 SSD1677 控制器，灰度通过 LUT 实现 |
+| 输入 | 侧面摇杆（上 / OK / 下）和 BOOT；PWR 键不连到固件 |
+| 电源 | AXP2101 PMIC（丝印 TG28）：电池与充电 |
+| SD | 4 位 SDMMC 的 microSD |
+| 其他 | PCF85063 时钟、QMI8658 IMU、2.4 GHz Wi-Fi + BLE 5；ES8311 音频未使用 |
+
+| 按键 | 动作 |
+|---|---|
+| 上 / 下 | 移动选择；翻页 |
+| OK | 确认 |
+| BOOT 短按 | 返回 |
+| BOOT 长按 | 休眠 |
+| 休眠时按 BOOT | 唤醒（需按住片刻） |
+
+板子没有前面板按键，所以不显示按键提示行。
+
+**安装：** 如果想保留板子自带的固件，请先备份（在我们的板子上，用 esptool 一次性读取整个
+flash 会失败；见下方链接的文档）。然后从 release 下载 `crosspoint-ws397-latest.bin`，
+用 USB-C 连接板子后烧录：
+
+```bash
+esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX write-flash 0x0 crosspoint-ws397-latest.bin
+```
+
+烧录到 `0x0` 会清除旧固件的设置，但不会删除 SD 卡上的书。之后的版本可以通过
+`Check for Updates`（界面为英文）获取（它会在 release 中查找 `crosspoint-ws397-<版本>-ota.bin`）；
+也可以把这个文件复制到 SD 卡根目录，然后使用 `SD Card Firmware Update`。自己编译时可以用
+`make flash ENV=ws397`。`File Transfer → USB Drive` 可以把 SD 卡挂载到电脑上。
+此板子没有 M5Burner 和 M5Launcher。
+
+详情、烧录、备份和限制见
+[`docs/paperdiy/15-waveshare-397.md`](docs/paperdiy/15-waveshare-397.md)（西班牙语）。
+
 ## 目录结构
 
 ```
@@ -222,6 +267,7 @@ esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX \
 - [维护 fork 与更新上游](docs/paperdiy/10-fork-maintenance.md)
 - [issue #4005 评论草稿](docs/paperdiy/11-upstream-note.md)
 - [USB 测试（西班牙语）](docs/paperdiy/12-serial-testing.md)
+- [Waveshare ESP32-S3-ePaper-3.97，实验性（西班牙语）](docs/paperdiy/15-waveshare-397.md)
 
 ## 已知限制
 

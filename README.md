@@ -9,6 +9,10 @@ panel E Ink ED047TC1 de 4,7", 960×540, 16 grises), construido sobre
 diccionario, sync, OPDS/Calibre y el resto de cosas que hacen usable el aparato
 a diario.
 
+Desde `2.0.0-12` también funciona, de forma experimental, en la
+**Waveshare ESP32-S3-ePaper-3.97** (ver
+[Waveshare ESP32-S3-ePaper-3.97](#waveshare-esp32-s3-epaper-397-experimental)).
+
 > **Estado:** el firmware **compila, arranca y lee EPUB en un PaperDIY real**.
 > Validación (04/11/2026): arranque, pantalla/UI, Home, wake, botones A/B,
 > batería, SD y navegación OK tras sincronizar con CrossPoint `308cd522`.
@@ -36,8 +40,8 @@ a diario.
 > sin errores ni fugas el 06/11/2026. KOReader Sync validado contra un servidor
 > KOSync local el 06/11/2026. Pendiente: emparejar un mando BLE, consumo en
 > sleep y revisión visual física del ghosting. `make smoke` completo superado
-> en el árbol de `177d0694` (22/11/2026, run `20261122-193337`; `2.0.0-11`
-> solo cambia la versión). Ver
+> en el árbol de `2.0.0-12` (sync `92e8714a`, 24/11/2026) en las dos placas:
+> PaperDIY run `20261124-115531` y Waveshare 3.97 run `20261124-121804`. Ver
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md).
 >
 > **Fork downstream:** `main` es un espejo de `upstream/develop`; `paperdiy`
@@ -226,6 +230,52 @@ lector despierte sin pasar por la pantalla de Launcher, configura en Launcher
 con A pulsado. Ver
 [`docs/paperdiy/13-m5launcher.md`](docs/paperdiy/13-m5launcher.md).
 
+## Waveshare ESP32-S3-ePaper-3.97 (experimental)
+
+La [Waveshare ESP32-S3-ePaper-3.97](https://www.waveshare.com/esp32-s3-epaper-3.97.htm)
+es la segunda placa del fork. Usa el mismo firmware con su propio env
+(`ws397`); el soporte viene de PRs de upstream que aún no están fusionados.
+
+| | Waveshare 3.97 |
+|---|---|
+| SoC | ESP32-S3-WROOM-1-N16R8, 240 MHz |
+| Flash / PSRAM | 16 MB / 8 MB Octal |
+| Pantalla | 3,97" 800×480 en blanco y negro, controlador SSD1677 por SPI; grises por LUT |
+| Entrada | botonera lateral (Arriba / OK / Abajo) y BOOT; la tecla PWR no llega al firmware |
+| Energía | PMIC AXP2101 (serigrafiado TG28): batería y carga |
+| SD | microSD por SDMMC de 4 bits |
+| Otros | reloj PCF85063, IMU QMI8658, Wi-Fi 2,4 GHz + BLE 5; audio ES8311 sin uso |
+
+| Tecla | Acción |
+|---|---|
+| Arriba / Abajo | mover la selección; pasar página |
+| OK | seleccionar |
+| BOOT corto | atrás |
+| BOOT mantenido | dormir |
+| BOOT con la placa dormida | despertar (mantenlo un momento) |
+
+No hay fila de pistas de botones: la placa no tiene botones frontales.
+
+**Instalar:** si quieres conservar el firmware que trae la placa, haz antes
+una copia (en nuestra unidad, leer toda la flash de una vez con esptool
+fallaba; ver el doc enlazado abajo). Después descarga
+`crosspoint-ws397-latest.bin` de la release y grábalo con la placa conectada
+por USB-C:
+
+```bash
+esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX write-flash 0x0 crosspoint-ws397-latest.bin
+```
+
+Grabarla en `0x0` borra los ajustes del firmware anterior, pero no los libros
+de la SD. Las siguientes versiones llegan por `Verificar actualizaciones`, que
+busca `crosspoint-ws397-<versión>-ota.bin` en la release; también puedes copiar
+ese fichero a la raíz de la SD y usar `Actualizar firmware por tarj. SD`, o
+`make flash ENV=ws397` si compilas. `Transferir archivos → Unidad USB` monta
+la SD en el ordenador. No hay M5Burner ni M5Launcher para esta placa.
+
+Detalles, grabado, copia de seguridad y limitaciones en
+[`docs/paperdiy/15-waveshare-397.md`](docs/paperdiy/15-waveshare-397.md).
+
 ## Estructura
 
 ```
@@ -265,6 +315,7 @@ disponibles en [English](docs/paperdiy/README.en.md),
 - [Testing por USB](docs/paperdiy/12-serial-testing.md)
 - [M5Launcher](docs/paperdiy/13-m5launcher.md)
 - [Regresión determinista en hardware](docs/paperdiy/14-device-regression.md)
+- [Waveshare ESP32-S3-ePaper-3.97 (experimental)](docs/paperdiy/15-waveshare-397.md)
 
 ## Limitaciones conocidas
 
