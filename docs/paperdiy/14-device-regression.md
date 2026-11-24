@@ -28,6 +28,7 @@ python3 scripts/device_regression.py --skip-prepare   # fixtures ya instalados
 python3 scripts/device_regression.py --no-restore     # conservar estado para depurar
 python3 scripts/device_regression.py --eject          # expulsar en vez de pedir power-cycle
 python3 scripts/device_regression.py --restore-only build/device-regression/<run>
+python3 scripts/device_regression.py --board ws397 --port /dev/cu.usbmodemXXXX --eject  # Waveshare 3.97 (requiere ws397-test)
 ```
 
 El script comprueba al arrancar que el firmware responde a `CMD:KEY`; si no,
@@ -67,6 +68,16 @@ falla con un mensaje que pide flashear `paperdiy-test`.
 > con el estado restaurado. Queda pendiente la revisión visual del menú del
 > lector (limpieza de la página de debajo), el salto visual de la curva de
 > batería (necesita <90 %) y la revisión de autonomía.
+
+`2026-11-24`, árbol de `2.0.0-12` (sync `92e8714a`, SDK `main` `a7eb4cc`,
+M5GFX `0.3.0`, arreglo de OPDS), con el script de `--board`:
+
+- PaperDIY, `paperdiy-test`, run `20261124-115531`: **PASS, 25 pasos**.
+- Waveshare 3.97, `ws397-test` con unidad USB,
+  `--board ws397 --eject`, run `20261124-121804`: **PASS, 25 pasos**. Los
+  intentos previos fallaron en el OCR de la fila seleccionada (tramado) y en
+  la pista de *Look Up*, que esta placa no muestra; los dos se corrigieron en
+  el script, no en el firmware.
 
 `2026-11-22`, PaperDIY `2.0.0-11` (smoke sobre el árbol del sync `177d0694` /
 SDK `995d9bd5` con `paperdiy-test` `2.0.0-10`; la release solo cambia la

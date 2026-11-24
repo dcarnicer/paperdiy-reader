@@ -2,7 +2,8 @@
 """Deterministic PaperDIY device regression over the USB serial console.
 
 Prerequisites:
-  - `paperdiy-test` flashed (key injection is compiled out of production).
+  - `paperdiy-test` (or `ws397-test` with `--board ws397`) flashed; key
+    injection is compiled out of production.
   - The device connected over USB, starting on Home (the script also tries to
     return there).
   - `tesseract` with the English model installed (`brew install tesseract`).
@@ -23,6 +24,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import plistlib
 import re
 import shutil
 import subprocess
@@ -32,12 +34,24 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import paperdiy_serial as pd
-from PIL import Image
+from PIL import Image, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURES = ROOT / "build" / "device-regression" / "fixtures"
 BASE_ARTIFACTS = ROOT / "build" / "device-regression"
 SD_VOLUME_NAME = "DABI"
+# Raw framebuffer size (landscape, before the 90° rotation) per board.
+SCREEN_WIDTH = 960
+SCREEN_HEIGHT = 540
+# --board picks the panel size and the SD volume label the test SD carries.
+BOARDS = {
+    "paperdiy": {"width": 960, "height": 540, "volume": "DABI", "hint_row": True, "env": "paperdiy-test"},
+    "ws397": {"width": 800, "height": 480, "volume": "NO NAME", "hint_row": False, "env": "ws397-test"},
+}
+# Boards without the button-hint row (ws397) cannot show "Select"/"Look Up"
+# labels, so steps that read them accept the page text instead.
+HINT_ROW = True
+TEST_ENV = "paperdiy-test"
 HOME_LABELS = ("Browse Files", "File Browser", "Explorador de archivos")
 HOME_LABELS_LOWER = tuple(label.lower() for label in HOME_LABELS)
 SETTINGS_PATH = ".crosspoint/settings.json"
@@ -157,8 +171,8 @@ class Device:
         args = SimpleNamespace(
             output=str(path),
             raw=None,
-            width=pd.DEFAULT_WIDTH,
-            height=pd.DEFAULT_HEIGHT,
+            width=SCREEN_WIDTH,
+            height=SCREEN_HEIGHT,
             rotate=rotate,
             no_rotate=False,
             invert=False,
@@ -166,6 +180,18 @@ class Device:
         )
         pd.screenshot(args, self.fd, self.reader)
         return path
+
+    @staticmethod
+    def despeckled(path: Path) -> Path:
+        """Copy of `path` with the dithered selection pattern removed.
+
+        A 3x3 median erases the light-gray dither behind a highlighted row,
+        which tesseract misreads at the Waveshare's smaller text size. The
+        geometry is unchanged, so line coordinates stay valid for the raw shot.
+        """
+        out = path.with_name(f"{path.stem}-median.png")
+        Image.open(path).convert("L").filter(ImageFilter.MedianFilter(3)).save(out)
+        return out
 
     def ocr(self, path: Path) -> str:
         result = run(["tesseract", str(path), "stdout", "-l", "eng", "--psm", "6"])
@@ -210,6 +236,10 @@ class Device:
             normalized = normalize(last_text)
             if any(needle in normalized for needle in needles):
                 return last_text
+            # Second read without the selection dither; see despeckled().
+            retry_text = self.ocr(self.despeckled(path))
+            if any(needle in normalize(retry_text) for needle in needles):
+                return retry_text
             time.sleep(1.0)
         raise RegressionError(f"{name}: no encontré {expected!r}. OCR: {normalize(last_text)[:400]!r}")
 
@@ -321,13 +351,28 @@ def select_item(dev: Device, order: list[tuple[str, tuple[str, ...]]], target: s
     raise RegressionError(f"{name}: no llegué a {target!r}. OCR: {last_text[:400]!r}")
 
 
+# Media name the firmware's USB Drive reports for every board's card
+# (freeink-sdk UsbMassStorage). A volume label alone is not enough: "NO NAME"
+# is what macOS shows for any unlabelled FAT stick.
+READER_MEDIA_NAME = "SD Card"
+
+
 def find_sd_device() -> str | None:
-    result = run(["diskutil", "list"])
-    for line in result.stdout.splitlines():
-        if SD_VOLUME_NAME in line:
-            match = re.search(r"\b(disk\d+s\d+)\b", line)
-            if match:
-                return match.group(1)
+    """Partition labelled SD_VOLUME_NAME on a USB disk the reader exports."""
+    listing = run(["diskutil", "list", "external", "physical"]).stdout
+    for disk in re.findall(r"^/dev/(disk\d+) \(external, physical\)", listing, re.M):
+        info = run(["diskutil", "info", "-plist", disk])
+        try:
+            media = plistlib.loads(info.stdout.encode()).get("MediaName", "")
+        except Exception:
+            continue
+        if media != READER_MEDIA_NAME:
+            continue
+        for line in run(["diskutil", "list", disk]).stdout.splitlines():
+            if SD_VOLUME_NAME in line:
+                match = re.search(rf"\b({disk}s\d+)\b", line)
+                if match:
+                    return match.group(1)
     return None
 
 
@@ -392,8 +437,14 @@ def select_text(dev: Device, target_aliases: tuple[str, ...], name: str, max_ste
     for step in range(max_steps):
         path = dev.screenshot(f"{name}-{step:02d}")
         lines = dev.ocr_lines(path)
-        last_text = normalize(" ".join(line["text"] for line in lines))
         target_lines = [line for line in lines if any(matches_alias(line["text"], alias) for alias in aliases)]
+        if not target_lines:
+            # Second read without the selection dither; see Device.despeckled().
+            retry_lines = dev.ocr_lines(dev.despeckled(path))
+            if any(matches_alias(line["text"], alias) for line in retry_lines for alias in aliases):
+                lines = retry_lines
+                target_lines = [line for line in lines if any(matches_alias(line["text"], alias) for alias in aliases)]
+        last_text = normalize(" ".join(line["text"] for line in lines))
         scored = sorted(
             ((highlighted_ratio(path, line), line) for line in lines),
             key=lambda item: item[0],
@@ -612,7 +663,10 @@ def scenario_core(dev: Device) -> dict:
     open_menu("30-menu")
     step("31-lookup-nav", ("Look Up", "Buscar palabra", "SMOKEDEF"),
          lambda: select_item(dev, READER_MENU_ORDER, "lookup", "31-menu"))
-    step("32-lookup-select", ("Select", "SMOKEDEF", "Look Up"), lambda: dev.key("B_LONG"))
+    # Word selection: the hint row names it; without one, the page stays up and
+    # step 33 asserts the definition.
+    lookup_select = ("Select", "SMOKEDEF", "Look Up") + (() if HINT_ROW else ("SMOKE CHAPTER TWO",))
+    step("32-lookup-select", lookup_select, lambda: dev.key("B_LONG"))
 
     def confirm_lookup() -> None:
         for _ in range(4):
@@ -630,6 +684,9 @@ def scenario_core(dev: Device) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Deterministic PaperDIY device regression")
     parser.add_argument("--port")
+    parser.add_argument("--board", choices=tuple(BOARDS), default="paperdiy",
+                        help="placa bajo prueba (tamaño de pantalla y etiqueta de la SD)")
+    parser.add_argument("--volume", help="etiqueta del volumen de la SD (por defecto, la de la placa)")
     parser.add_argument("--scenario", choices=("core",), default="core")
     parser.add_argument("--skip-prepare", action="store_true", help="usar los fixtures ya instalados")
     parser.add_argument("--no-restore", action="store_true", help="no restaurar el estado del usuario")
@@ -639,6 +696,13 @@ def main() -> int:
     parser.add_argument("--eject", action="store_true",
                         help="expulsar al terminar en vez de dejar el equipo para un ciclo de power")
     args = parser.parse_args()
+
+    global SD_VOLUME_NAME, SCREEN_WIDTH, SCREEN_HEIGHT, HINT_ROW, TEST_ENV
+    board = BOARDS[args.board]
+    HINT_ROW = board["hint_row"]
+    TEST_ENV = board["env"]
+    SD_VOLUME_NAME = args.volume or board["volume"]
+    SCREEN_WIDTH, SCREEN_HEIGHT = board["width"], board["height"]
 
     require_tools()
     run_id = time.strftime("%Y%m%d-%H%M%S")
@@ -653,7 +717,7 @@ def main() -> int:
             artifacts = source
             dev = Device(args.port, artifacts)
             if not dev.probe_test_build():
-                raise RegressionError("paperdiy-test no responde a CMD:KEY; flashea ese entorno")
+                raise RegressionError(f"{TEST_ENV} no responde a CMD:KEY; flashea ese entorno")
             if args.restore_hold:
                 device = restore_without_eject(dev, artifacts)
                 report["ok"] = True
@@ -667,7 +731,7 @@ def main() -> int:
             return 0
         dev = Device(args.port, artifacts)
         if not dev.probe_test_build():
-            raise RegressionError("paperdiy-test no responde a CMD:KEY; flashea ese entorno")
+            raise RegressionError(f"{TEST_ENV} no responde a CMD:KEY; flashea ese entorno")
         if not args.skip_prepare:
             prepare(dev, artifacts, run_id)
         if args.scenario == "core":
