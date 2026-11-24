@@ -1,13 +1,29 @@
 # Changelog
 
-## Unreleased
+## 2.0.0-12 — 2026-11-24
 
+Primera release con dos placas: M5Stack PaperDIY y Waveshare
+ESP32-S3-ePaper-3.97 (experimental). Sincronización con CrossPoint `92e8714a`
+y FreeInk SDK `995d9bd5` más su `main` hasta `a7eb4cc`; M5GFX `0.3.0`.
+Mantiene CrossPoint `2.0.0`.
+
+- Waveshare 3.97: primera release con la placa. Cada release publica también
+  `crosspoint-ws397-latest.bin` (imagen completa, se instala con esptool en
+  `0x0`) y `crosspoint-ws397-<versión>-ota.bin` (actualización desde el
+  lector). Activa la unidad USB (`Transferir archivos → Unidad USB`); con ella
+  el heap libre baja de unos 209 KB a 172 KB. READMEs en los cuatro idiomas con
+  una sección para la placa y nota de usuario
+  [`15-waveshare-397.md`](docs/paperdiy/15-waveshare-397.md) ampliada.
+- Smoke en hardware: `device_regression.py --board ws397` (capturas de
+  800×480, SD `NO NAME`) y una segunda lectura OCR sin el tramado de la fila
+  seleccionada, que el texto más pequeño de la Waveshare confundía.
 - PaperDIY: en los catálogos OPDS con varias páginas, A/B vuelven a mover la
   selección; antes B cargaba la página siguiente y no se podía elegir nada.
   B en la última entrada carga la página siguiente y A en la primera, la
   anterior; la fila de pistas lo indica. A en la primera entrada abre la
   búsqueda también en la PaperDIY, que antes no reaccionaba. El mismo cambio
-  aplica a la Waveshare 3.97, sin probar allí. Las demás placas no cambian.
+  aplica a la Waveshare 3.97, probado allí con el mismo catálogo. Las demás
+  placas no cambian.
 - Sincronización con CrossPoint `92e8714a` (10 commits desde `177d0694`):
   ajuste de fuente personalizada para la interfaz, selección de estilos de
   fuentes vectoriales por nombre de fichero, caché de prefijos TTF según el
@@ -31,9 +47,7 @@
   Lleva los PRs de upstream CrossPoint #3386 y FreeInk SDK #218 (Alexey
   Pazyuk), todavía sin fusionar. En el SDK: el refresco HALF usa la secuencia
   rápida del fabricante, los raíles del panel se apagan tras la pasada de
-  grises (solo ws397) y se añade `hasHorizontalKeys()`. Aún no hay release para esta placa:
-  se compila desde el código y *Verificar actualizaciones* responde «No hay
-  actualizaciones disponibles». Ver
+  grises (solo ws397) y se añade `hasHorizontalKeys()`. Ver
   [`15-waveshare-397.md`](docs/paperdiy/15-waveshare-397.md).
 - PaperDIY: en el teclado en pantalla, A/B recorren ahora todas las teclas en
   orden de lectura y saltan de fila al final de cada una; antes solo se

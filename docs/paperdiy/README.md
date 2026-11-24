@@ -34,6 +34,7 @@ se validaron auto-suspensión y sleep screen con portada. La lectura larga
 automatizada aguantó 250+ cambios de página sin errores ni fugas (06/11).
 KOReader Sync se validó contra un servidor KOSync local (06/11). Quedan
 pendientes emparejar un mando BLE, consumo en sleep y la revisión visual física
-del ghosting. El `make smoke` completo pasó en el árbol de `177d0694` (22/11,
-run `20261122-193337`; `2.0.0-11` solo cambia la versión). Empieza por
+del ghosting. El `make smoke` completo pasó en el árbol de `2.0.0-12` (sync `92e8714a`,
+24/11) en las dos placas: PaperDIY run `20261124-115531` y Waveshare 3.97 run
+`20261124-121804`. Empieza por
 `06-porting.md`.
