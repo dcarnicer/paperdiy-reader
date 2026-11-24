@@ -80,7 +80,7 @@ void BaseTheme::drawBatteryLightningBolt(const GfxRenderer& renderer, int boltX,
 }
 
 void BaseTheme::fillBatteryIcon(const GfxRenderer& renderer, Rect rect, uint16_t percentage) const {
-  const bool charging = gpio.isUsbConnected();
+  const bool charging = gpio.isCharging();
 
   const int maxFillWidth = rect.width - 5;
   const int fillHeight = rect.height - 4;
@@ -211,9 +211,17 @@ void BaseTheme::drawHintLabel(const GfxRenderer& renderer, const int fontId, con
   }
 }
 
+// Fork change: two-button boards have no Left/Right keys either, but their hint
+// row labels the short A/B and hold actions, so it stays. In practice this is
+// the PaperDIY; Paper Mono is also DigitalTwoButton but hasTouch() hides it.
+bool BaseTheme::buttonHintsHidden() {
+  return gpio.hasTouch() || (!BoardConfig::hasHorizontalKeys() &&
+                             BoardConfig::ACTIVE.inputStyle != BoardConfig::InputStyle::DigitalTwoButton);
+}
+
 void BaseTheme::drawButtonHints(GfxRenderer& renderer, const char* btn1, const char* btn2, const char* btn3,
                                 const char* btn4) const {
-  if (gpio.hasTouch()) {
+  if (buttonHintsHidden()) {
     return;
   }
 
@@ -336,7 +344,7 @@ void BaseTheme::applyHeaderStatus(const GfxRenderer& renderer, freeink::ui::Head
   status.showBattery = true;
   const uint16_t percentage = powerManager.getBatteryPercentage();
   status.battery.percent = static_cast<uint8_t>(percentage > 100 ? 100 : percentage);
-  status.battery.charging = gpio.isUsbConnected();
+  status.battery.charging = gpio.isCharging();
   // Static label buffers: headers draw on the single render task, and the
   // strings only need to outlive the fui::header() call that consumes them.
   static char percentText[8];

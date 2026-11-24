@@ -25,6 +25,7 @@
 #include "KOReaderSettingsActivity.h"
 #include "KeyboardLayoutsActivity.h"
 #include "LanguageSelectActivity.h"
+#include "LauncherExitActivity.h"
 #include "MappedInputManager.h"
 #include "OpdsServerListActivity.h"
 #include "OtaUpdateActivity.h"
@@ -35,11 +36,13 @@
 #include "StatusBarSettingsActivity.h"
 #include "TextSettingsActivity.h"
 #include "activities/network/WifiSelectionActivity.h"
+#include "activities/util/ConfirmationActivity.h"
 #include "activities/util/IntervalSelectionActivity.h"
 #include "components/UITheme.h"
 #include "components/UIThemeTokens.h"
 #include "components/UiAppHelpers.h"
 #include "fontIds.h"
+#include "platform/LauncherEnv.h"
 #include "util/PluginEvents.h"
 
 namespace fui = freeink::ui;
@@ -108,7 +111,7 @@ bool belongsToControlsGroup(const SettingInfo& setting, ControlsGroup group) {
 }
 
 // Device-only action rows added per section, beyond the shared list.
-constexpr size_t EXTRA_ROWS_PER_SECTION = 6;
+constexpr size_t EXTRA_ROWS_PER_SECTION = 7;
 }  // namespace
 
 void SettingsActivity::rebuildSettings() {
@@ -205,12 +208,19 @@ void SettingsActivity::rebuildSettings() {
   // OTA fetches this board's own release asset (see OtaUpdater); boards whose
   // asset isn't published yet just report no update available. The Picco's
   // stock layout has one app slot (partitions_picco.csv), so it cannot update
-  // itself either way.
+  // itself either way. Under M5Launcher the launcher owns the app slot: the
+  // check only reports a new version, and SD flashing is hidden.
+  const bool underLauncher = launcher_env::isUnderLauncher();
   if (!BoardConfig::isPicco()) {
     addAction(SettingsSection::General, StrId::STR_CHECK_UPDATES, SettingAction::CheckForUpdates);
-    addAction(SettingsSection::General, StrId::STR_SD_FIRMWARE_UPDATE, SettingAction::SdFirmwareUpdate);
+    if (!underLauncher) {
+      addAction(SettingsSection::General, StrId::STR_SD_FIRMWARE_UPDATE, SettingAction::SdFirmwareUpdate);
+    }
   }
   addAction(SettingsSection::General, StrId::STR_ABOUT, SettingAction::About);
+  if (underLauncher) {
+    addAction(SettingsSection::General, StrId::STR_EXIT_TO_LAUNCHER, SettingAction::ExitToLauncher);
+  }
   rebuildRowItems();
 }
 
@@ -471,6 +481,22 @@ void SettingsActivity::toggleSelectedSetting() {
       case SettingAction::SdFirmwareUpdate:
         startActivityForResult(std::make_unique<SdFirmwareUpdateActivity>(renderer, mappedInput), resultHandler);
         break;
+      case SettingAction::ExitToLauncher:
+        // With CFG > GPIO on boot starts Launcher set, only that key held
+        // across a reset starts Launcher, so the user has to hold it.
+        if (launcher_env::bootConfig().hasKey()) {
+          startActivityForResult(std::make_unique<LauncherExitActivity>(renderer, mappedInput), nullptr);
+          break;
+        }
+        startActivityForResult(std::make_unique<ConfirmationActivity>(renderer, mappedInput, tr(STR_EXIT_TO_LAUNCHER),
+                                                                      tr(STR_EXIT_TO_LAUNCHER_CONFIRM)),
+                               [](const ActivityResult& result) {
+                                 if (result.isCancelled) return;
+                                 if (!launcher_env::exitToLauncher()) {
+                                   LOG_ERR("SET", "Could not restart into M5Launcher");
+                                 }
+                               });
+        break;
       case SettingAction::DownloadFonts:
         startActivityForResult(std::make_unique<FontDownloadActivity>(renderer, mappedInput),
                                [this](const ActivityResult&) {
@@ -711,11 +737,15 @@ void SettingsActivity::drawFooter() {
 }
 
 void SettingsActivity::render(RenderLock&& lock) {
+  bool backgroundRedrawn = false;
   if (std::exchange(redrawFontPopupBackground, false) && optionPopup.isActive()) {
     renderer.clearScreen();
     drawChrome();
     renderUi();
+    backgroundRedrawn = true;
   }
-  if (optionPopup.processRender(renderer, mappedInput)) return;
+  // Fork: popup steps refresh only the dialog window; a redrawn background
+  // (UI font load failure) needs the full refresh.
+  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/!backgroundRedrawn)) return;
   UiListActivity::render(std::move(lock));
 }

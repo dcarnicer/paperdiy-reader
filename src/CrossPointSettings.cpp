@@ -113,6 +113,11 @@ void CrossPointSettings::toJson(JsonDocument& doc) const {
   doc["longPressMenuFunction"] = longPressMenuFunction;
   doc["shortPwrBtn"] = shortPwrBtn;
   doc["doublePwrBtn"] = doublePwrBtn;
+  // Battery profile — uses a dynamic setter in SettingsList so the new curve is
+  // applied immediately; the generic persistence loop skips dynamic entries.
+  if (BoardConfig::isPaperDiy()) {
+    doc["batteryProfile"] = batteryProfile;
+  }
 
   // Language -- managed by LanguageSelectActivity, not in SettingsList.
   // Stored as ISO code string ("EN", "DE", ...) for stability across enum reorders.
@@ -123,6 +128,12 @@ void CrossPointSettings::toJson(JsonDocument& doc) const {
   if (keyboardLayouts != 0) {
     doc["keyboardLayouts"] = keyboardLayouts;
   }
+
+#if FREEINK_DEVICE_PAPERDIY
+  // Marks a file written after the PaperDIY refresh defaults were tuned. Old
+  // settings files lack it and are migrated once in fromJson(); see there.
+  doc["paperdiyRefreshDefaults"] = 2;
+#endif
 
   bleturner::writeJson(ble, doc);
 }
@@ -274,6 +285,12 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
                                      : (doc["doubleClickPwrLight"] | (uint8_t)1) ? (uint8_t)PWR_FRONTLIGHT
                                                                                  : (uint8_t)IGNORE;
   doublePwrBtn = clamp(doc["doublePwrBtn"] | legacyDoublePwrBtn, (uint8_t)SHORT_PWRBTN_COUNT, defaultDoublePwrBtn());
+  // Battery profile — a dynamic SettingsList entry, so load and clamp it here.
+  // Older or corrupt values fall back to the kit cell.
+  if (BoardConfig::isPaperDiy()) {
+    batteryProfile =
+        clamp(doc["batteryProfile"] | (uint8_t)BATTERY_KIT, (uint8_t)BATTERY_PROFILE_COUNT, (uint8_t)BATTERY_KIT);
+  }
   if (BoardConfig::hasHomeKey() && doc["homeButtonLongPressAction"].isNull() &&
       !doc["longPressMenuFunction"].isNull()) {
     static constexpr HomeButtonAction LEGACY[] = {HomeButtonAction::Sync,       HomeButtonAction::Ignore,
@@ -314,6 +331,22 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
   if (doc["keyboardLayouts"].is<uint16_t>()) {
     keyboardLayouts = doc["keyboardLayouts"].as<uint16_t>();
   }
+
+#if FREEINK_DEVICE_PAPERDIY
+  // The first PaperDIY builds inherited CrossPoint's 15-page default, which
+  // ghosts visibly on this panel. A later trial moved the 1-page setting to 5
+  // to exercise the ED047TC1 fast LUT. Both are one-time upgrades; a file
+  // written at version 2 keeps whatever the reader chose afterwards.
+  const uint8_t refreshDefaults = doc["paperdiyRefreshDefaults"] | 0;
+  if (refreshDefaults < 2) {
+    if (refreshFrequency == REFRESH_15 || refreshFrequency == REFRESH_1) {
+      refreshFrequency = REFRESH_5;
+      LOG_INF("CPS", "PaperDIY: refresh interval -> 5 pages for the fast-LUT trial");
+    }
+    needsResave = true;
+  }
+  LOG_DBG("CPS", "PaperDIY refresh interval: %u pages", static_cast<unsigned>(refreshFrequency));
+#endif
 
   if (!bleturner::readJson(ble, doc)) {
     needsResave = true;

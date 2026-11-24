@@ -12,8 +12,8 @@ class AboutActivity final : public UiListActivity {
  public:
   explicit AboutActivity(GfxRenderer& renderer, MappedInputManager& mappedInput);
 
-  // The Picco adds a panel row and the EEGO A4 a UID row.
-  static constexpr int ITEM_COUNT = 14 + FREEINK_DEVICE_PICCO + FREEINK_DEVICE_EEGO_A4;
+  // Base rows + Picco panel + EEGO UID + the fork's battery row.
+  static constexpr int ITEM_COUNT = 14 + FREEINK_DEVICE_PICCO + FREEINK_DEVICE_EEGO_A4 + 1;
 
   void onEnter() override;
 
