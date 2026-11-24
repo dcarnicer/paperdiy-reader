@@ -1125,6 +1125,25 @@ index f8f05ed5..37b89c48 100644
    emit(SettingInfo::Value(
        StrId::STR_TIME_TO_SLEEP, &CrossPointSettings::sleepTimeoutMinutes,
        {CrossPointSettings::MIN_SLEEP_TIMEOUT_MINUTES, CrossPointSettings::MAX_SLEEP_TIMEOUT_MINUTES, 1},
+diff --git a/src/activities/CatalogActivity.cpp b/src/activities/CatalogActivity.cpp
+index 9c71c0ab..fe7fca77 100644
+--- a/src/activities/CatalogActivity.cpp
++++ b/src/activities/CatalogActivity.cpp
+@@ -128,6 +128,14 @@ bool CatalogActivity::handleCustomInput() {
+   // pages (navigateButtons() drops the latch when the selection moves).
+   if (mappedInput.wasPressed(MappedInputManager::Button::NavPrevious)) {
+     searchPending = state == State::BROWSING && hasSearch() && nav.selected == 0;
++    // Fork: two-button boards (PaperDIY) only report a short press once it is
++    // released, so press and release arrive in the same pass and the release
++    // branch below would never see it. Open search now.
++    if (searchPending && mappedInput.wasReleased(MappedInputManager::Button::NavPrevious)) {
++      searchPending = false;
++      launchSearch();
++      return true;
++    }
+     return searchPending;
+   }
+   if (searchPending && mappedInput.wasReleased(MappedInputManager::Button::NavPrevious)) {
 diff --git a/src/activities/UiListActivity.cpp b/src/activities/UiListActivity.cpp
 index 73035444..39e15838 100644
 --- a/src/activities/UiListActivity.cpp
@@ -1159,10 +1178,30 @@ index 2f8e3705..75b60db5 100644
   private:
    static void screenTrampoline(UiScreen& screen, void* user);
 diff --git a/src/activities/browser/OpdsBookBrowserActivity.cpp b/src/activities/browser/OpdsBookBrowserActivity.cpp
-index 213cf2be..4aef1dc9 100644
+index 213cf2be..8ebe40b4 100644
 --- a/src/activities/browser/OpdsBookBrowserActivity.cpp
 +++ b/src/activities/browser/OpdsBookBrowserActivity.cpp
-@@ -89,7 +89,8 @@ void OpdsBookBrowserActivity::onEnter() {
+@@ -1,6 +1,7 @@
+ #include "OpdsBookBrowserActivity.h"
+ 
+ #include <Arduino.h>
++#include <BoardConfig.h>
+ #include <FontCacheManager.h>
+ #include <FreeInkUIIcon.h>
+ #include <GfxRenderer.h>
+@@ -46,6 +47,11 @@ constexpr int16_t PAGE_PREV = 1;
+ constexpr int16_t PAGE_NEXT = 2;
+ constexpr int16_t PAGE_LAST = 3;
+ 
++// Fork: boards whose only navigation keys are a side pair and that have no
++// touch (e.g. the PaperDIY's A/B, the Waveshare 3.97 rocker). On them the side
++// keys move the list, and crossing its ends turns the feed page.
++bool sideKeysOnly(const MappedInputManager& input) { return !BoardConfig::hasHorizontalKeys() && !input.hasTouch(); }
++
+ // Accept-Language from the reader's UI language, so servers that localize the
+ // catalog (e.g. Lirtuel) return it translated. Primary subtag plus an English
+ // fallback; derived from the exposed LANGUAGE_CODES table (e.g. "FR" -> "fr").
+@@ -89,7 +95,8 @@ void OpdsBookBrowserActivity::onEnter() {
    // Configure the OPDS client for this server, restore any persisted token, and
    // reset the per-session auth latches. Accept-Language localizes the catalog
    // (both request header and language-map title resolution).
@@ -1172,7 +1211,46 @@ index 213cf2be..4aef1dc9 100644
    {
      const OpdsTokens t = OPDS_TOKENS.get(tokenKey());
      opdsClient.setTokens(t.accessToken, t.refreshToken, t.refreshUrl);
-@@ -565,14 +566,15 @@ void OpdsBookBrowserActivity::downloadBook(const OpdsEntry& book) {
+@@ -120,6 +127,23 @@ void OpdsBookBrowserActivity::activateIndex(const int index) {
+ }
+ 
+ bool OpdsBookBrowserActivity::handleCustomInput() {
++  // Fork: the upstream branch below reserves the side keys for feed pages,
++  // which leaves side-keys-only boards no way to move the selection. There
++  // they keep moving it; Next on the last row and Previous on the first turn
++  // the page. With no previous page, Previous on the top row still opens
++  // search (CatalogActivity).
++  if (state == State::BROWSING && sideKeysOnly(mappedInput)) {
++    if (!pageNextHref.empty() && nav.selected >= listCount() - 1 &&
++        mappedInput.wasPressed(MappedInputManager::Button::NavNext)) {
++      followPageLink(pageNextHref);
++      return true;
++    }
++    if (!pagePrevHref.empty() && nav.selected <= 0 && mappedInput.wasPressed(MappedInputManager::Button::NavPrevious)) {
++      followPageLink(pagePrevHref);
++      return true;
++    }
++    return CatalogActivity::handleCustomInput();
++  }
+   if (state == State::BROWSING &&
+       (!pageNextHref.empty() || !pagePrevHref.empty() || !pageFirstHref.empty() || !pageLastHref.empty())) {
+     // On a paginated feed the side buttons belong to feed pages exclusively.
+@@ -284,7 +308,13 @@ void OpdsBookBrowserActivity::drawFooter() {
+         confirmLabel = entries[nav.selected].purchase ? tr(STR_OPDS_BUY) : tr(STR_DOWNLOAD);
+       }
+       const char* searchLabel = (hasSearch() && nav.selected == 0) ? tr(STR_SEARCH) : tr(STR_DIR_UP);
+-      labels = mappedInput.mapLabels(tr(STR_BACK), confirmLabel, searchLabel, tr(STR_DIR_DOWN));
++      const char* downLabel = tr(STR_DIR_DOWN);
++      // Fork: name the page turn the side keys perform at the list ends.
++      if (sideKeysOnly(mappedInput)) {
++        if (nav.selected <= 0 && !pagePrevHref.empty()) searchLabel = tr(STR_PREV_PAGE);
++        if (nav.selected >= listCount() - 1 && !pageNextHref.empty()) downLabel = tr(STR_NEXT_PAGE);
++      }
++      labels = mappedInput.mapLabels(tr(STR_BACK), confirmLabel, searchLabel, downLabel);
+       break;
+     }
+     case State::DOWNLOADING:
+@@ -565,14 +595,15 @@ void OpdsBookBrowserActivity::downloadBook(const OpdsEntry& book) {
    HttpDownloader::DownloadError result;
    for (int attempt = 0; attempt < 2; ++attempt) {
      {
@@ -1190,7 +1268,7 @@ index 213cf2be..4aef1dc9 100644
        break;
      std::string title;
      {
-@@ -614,7 +616,7 @@ void OpdsBookBrowserActivity::downloadLcpBook(const OpdsEntry& book) {
+@@ -614,7 +645,7 @@ void OpdsBookBrowserActivity::downloadLcpBook(const OpdsEntry& book) {
    {
      int status = 0;
      HttpDownloader::FetchOptions options;
@@ -1199,7 +1277,7 @@ index 213cf2be..4aef1dc9 100644
      options.username = auth.username;
      options.password = auth.password;
      options.bearer = auth.bearer;
-@@ -949,7 +951,7 @@ void OpdsBookBrowserActivity::loadDetailCover(const std::string& docUrl, const s
+@@ -949,7 +980,7 @@ void OpdsBookBrowserActivity::loadDetailCover(const std::string& docUrl, const s
      LOG_INF("OPDS", "Skipping cover: low heap");
      return;
    }
