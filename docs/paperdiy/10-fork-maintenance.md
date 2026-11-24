@@ -3,8 +3,8 @@
 Este repo es un fork downstream de CrossPoint. La regla es simple: **el motor
 se sigue de upstream; el hardware y la UX PaperDIY viven en nuestro fork**.
 
-Última sincronización: CrossPoint `177d0694` / FreeInk SDK `995d9bd5`
-(22/11/2026).
+Última sincronización: CrossPoint `92e8714a` / FreeInk SDK `995d9bd5`
+(24/11/2026).
 
 ## Ramas y remotos
 
@@ -223,6 +223,8 @@ listan aquí para poder quitarlos cuando upstream los fusione.
 |---|---|---|
 | [FreeInk SDK #218](https://github.com/Free-Ink/freeink-sdk/pull/218) | `b328dc5b`, `0d20526e`, `906acd9c`, `a6c2c543` (aquí `a621e5ea`, `53e837b1`, `6f89481e`, `fa49c49e`) | ws397: HALF con la secuencia rápida del fabricante, apagado tras grises, `hasHorizontalKeys()`, config 3.97 solo para ws397 |
 | [CrossPoint #3386](https://github.com/crosspoint-reader/crosspoint-reader/pull/3386) | `366ee088`, `c499e274`, `58d647e2`, `30910d4e` | envs ws397, board tag, teclado sin izquierda/derecha, pistas ocultas sin botones frontales, Atrás/encendido compartidos |
+| FreeInk SDK `main` sin fijar por CrossPoint | `8bdba4f`, `51fe898`, `8bff3d2`, `a7eb4cc` | login OPDS solo al servidor configurado; táctil de la Picco al arrancar. Quitar cuando CrossPoint fije el SDK en `a7eb4cc` o después |
+| [CrossPoint #4576](https://github.com/crosspoint-reader/crosspoint-reader/pull/4576), solo `15b04ea8` (parte de `src/`) | `15b04ea8` | adapta `OpdsBookBrowserActivity` a `downloadAuth(url)` del SDK `a7eb4cc`. Va junto a la fila anterior |
 
 Cambios propios del fork encima de esos PRs:
 

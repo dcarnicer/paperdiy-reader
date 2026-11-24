@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+- Sincronización con CrossPoint `92e8714a` (10 commits desde `177d0694`):
+  ajuste de fuente personalizada para la interfaz, selección de estilos de
+  fuentes vectoriales por nombre de fichero, caché de prefijos TTF según el
+  directorio sfnt, carpetas de diccionario con nombres de más de 31 bytes,
+  cajas sombreadas legibles en EPUB, cabecera compacta de Home, detalle HTTP
+  en errores al descargar plugins, limpieza de la caché DNS en el contexto
+  TCP/IP y luz frontal apagada antes al dormir. El pin del SDK no cambia
+  (`995d9bd5`). Conflicto resuelto en `SettingsActivity`: los popups siguen
+  con refresco parcial, salvo cuando falla cargar una fuente de la interfaz y
+  hay que redibujar el fondo.
+- FreeInk SDK: se adelantan los 4 commits de `main` hasta `a7eb4cc` que
+  CrossPoint aún no ha fijado. El login OPDS solo se envía al servidor
+  configurado (también en la primera petición) y las credenciales no siguen a
+  otro origen. Además, despierta el táctil de la Picco al arrancar. El
+  explorador OPDS se adapta a la API nueva con el commit `15b04ea8` del PR
+  de upstream #4576.
+- PaperDIY: M5GFX `0.2.36` → `0.3.0`. En el bus y el panel EPD que usamos
+  solo cambian comentarios; la versión trae además la nueva detección de
+  placas, que no usamos porque configuramos el panel a mano.
 - Waveshare ESP32-S3-ePaper-3.97 (experimental): envs `ws397` y `ws397-test`.
   Lleva los PRs de upstream CrossPoint #3386 y FreeInk SDK #218 (Alexey
   Pazyuk), todavía sin fusionar. En el SDK: el refresco HALF usa la secuencia
