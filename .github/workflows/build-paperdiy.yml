@@ -33,14 +33,11 @@ jobs:
       - name: Build
         env:
           PLATFORMIO_CORE_DIR: ${{ github.workspace }}/.platformio-core
-        run: pio run -e paperdiy
-
-      - name: Build Waveshare 3.97 (ws397)
-        env:
-          PLATFORMIO_CORE_DIR: ${{ github.workspace }}/.platformio-core
-        # Shares BoardConfig.h, main.cpp and the themes with paperdiy, so an
-        # upstream sync can break it without touching the PaperDIY build.
-        run: pio run -e ws397
+        # Both boards in one invocation: a second `pio run` sees the files the
+        # first generated (i18n, HTML), changes the project checksum and wipes
+        # .pio/build, deleting the first board's images. ws397 shares
+        # BoardConfig.h, main.cpp and the themes, so a sync can break it alone.
+        run: pio run -e paperdiy -e ws397
 
       - name: Check release images
         run: |
