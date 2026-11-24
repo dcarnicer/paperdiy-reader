@@ -3251,7 +3251,7 @@ index 57c4ed98..7339df8c 100644
    // the bus pads (no-op on SPI boards). Call only after all file users have
    // stopped; open HalFiles become invalid. A deep-sleep wake resets the MCU and
 diff --git a/platformio.ini b/platformio.ini
-index 5f2ff187..a95ec65b 100644
+index 5f2ff187..7e0ed07e 100644
 --- a/platformio.ini
 +++ b/platformio.ini
 @@ -4,7 +4,7 @@ build_cache_dir = .cache
@@ -3259,7 +3259,7 @@ index 5f2ff187..a95ec65b 100644
  
  [crosspoint]
 -version = 2.0.0
-+version = 2.0.0-11
++version = 2.0.0-12
  
  [base]
  platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip
@@ -3281,7 +3281,7 @@ index 5f2ff187..a95ec65b 100644
  build_flags =
    -DFREEINK_CAP_BLE_HID_HOST=1
    -DCONFIG_BT_NIMBLE_ROLE_PERIPHERAL_DISABLED=1
-@@ -391,6 +391,49 @@ build_flags =
+@@ -391,6 +391,55 @@ build_flags =
    -DENABLE_SERIAL_LOG
    -DLOG_LEVEL=1 ; Set log level to info for release candidate builds
  
@@ -3294,11 +3294,12 @@ index 5f2ff187..a95ec65b 100644
 +; PSRAM is ON: the N16R8 board definition adds BOARD_HAS_PSRAM and the prebuilt
 +; qio_opi core starts the 8 MB octal PSRAM, so the framebuffer, vector fonts and
 +; NimBLE live there and the idle CPU floor is 80 MHz (HalPowerManager). This is
-+; the same profile as paperdiy and the one validated on hardware; upstream's
-+; firmware_tuned variant is not evaluated yet. Flash runs in QIO like paperdiy.
++; the same profile as paperdiy and the one validated on hardware. Upstream builds
++; ws397 on firmware_tuned; that core omits TinyUSB, so it would drop USB Drive
++; (see [firmware_tuned]). Flash runs in QIO like paperdiy.
 +;
-+; OTA checks this fork's releases, never upstream's. No release publishes the
-+; ws397 asset yet, so Check for Updates reports no update.
++; OTA checks this fork's releases, never upstream's. From 2.0.0-12 every release
++; publishes crosspoint-ws397-latest.bin and crosspoint-ws397-<version>-ota.bin.
 +; First install: esptool write-flash 0x0 firmware.factory.bin; then make flash.
 +;   make build ENV=ws397 && make flash ENV=ws397 PORT=<port>
 +[env:ws397]
@@ -3310,6 +3311,11 @@ index 5f2ff187..a95ec65b 100644
 +build_flags =
 +  ${base.build_flags}
 +  -DFREEINK_DEVICE_WS397=1
++  ; USB Drive (File Transfer) exports the SDMMC card through the SDK's block-
++  ; device MSC, as on paperdiy, the X4 Pro and the Picco.
++  -DFREEINK_CAP_USB_MSC=1
++  -DUSB_PRODUCT=\"CrossPoint_WS397\"
++  -DUSB_MANUFACTURER=\"CrossPoint\"
 +  -DCROSSPOINT_VERSION=\"${crosspoint.version}\"
 +  -DCROSSPOINT_OTA_ASSET_FORMAT=\"crosspoint-ws397-%%s-ota.bin\"
 +  -DENABLE_SERIAL_LOG
@@ -3331,7 +3337,7 @@ index 5f2ff187..a95ec65b 100644
  ; --- Xteink X4 Pro — ESP32-S3, 16MB flash / 8MB PSRAM, SSD1677 + GT911 --------
  ; The SDK profile supplies the X4 Pro pinout, display, touch controller, and
  ; capacitive Home key. USB Serial/JTAG is the normal USB personality so
-@@ -626,6 +669,45 @@ build_flags =
+@@ -626,6 +675,45 @@ build_flags =
    -DLOG_LEVEL=1 ; Set log level to info for release candidate builds
    -DUSE_BLOCK_DEVICE_INTERFACE=1
  
