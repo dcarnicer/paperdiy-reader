@@ -128,6 +128,14 @@ bool CatalogActivity::handleCustomInput() {
   // pages (navigateButtons() drops the latch when the selection moves).
   if (mappedInput.wasPressed(MappedInputManager::Button::NavPrevious)) {
     searchPending = state == State::BROWSING && hasSearch() && nav.selected == 0;
+    // Fork: two-button boards (PaperDIY) only report a short press once it is
+    // released, so press and release arrive in the same pass and the release
+    // branch below would never see it. Open search now.
+    if (searchPending && mappedInput.wasReleased(MappedInputManager::Button::NavPrevious)) {
+      searchPending = false;
+      launchSearch();
+      return true;
+    }
     return searchPending;
   }
   if (searchPending && mappedInput.wasReleased(MappedInputManager::Button::NavPrevious)) {

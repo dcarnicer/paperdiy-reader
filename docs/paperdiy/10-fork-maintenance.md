@@ -234,6 +234,12 @@ Cambios propios del fork encima de esos PRs:
 - `BaseTheme::buttonHintsHidden()` excluye `DigitalTwoButton`, para que la
   PaperDIY conserve la fila de pistas. `OptionPopup` usa ese mismo criterio.
 - CI: `build-paperdiy.yml` compila también `ws397`.
+- OPDS en placas con solo teclas laterales y sin táctil (PaperDIY, ws397):
+  bloque propio al principio de `OpdsBookBrowserActivity::handleCustomInput()`
+  y etiquetas de página en `drawFooter()`; la rama de upstream que reserva
+  las teclas laterales para las páginas del feed queda intacta.
+  `CatalogActivity` abre la búsqueda cuando pulsar y soltar llegan juntos
+  (dos botones).
 
 Al fusionar una rama que añade commits de este tipo, regenera `patches/` en el
 mismo momento: `sync-upstream.sh` reconstruye `paperdiy-next` desde esos

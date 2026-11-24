@@ -131,7 +131,10 @@ antes de abrir el menú; es un compromiso de UX pendiente de decidir.
 - **OPDS**: añade catálogos (Project Gutenberg, Standard Ebooks, etc.) en
   `Ajustes → Conectividad → Servidores OPDS` y ábrelos desde
   `Transferir archivos → Navegador OPDS` (o desde Inicio si el sistema de
-  plugins está desactivado y ya hay un servidor guardado).
+  plugins está desactivado y ya hay un servidor guardado). En catálogos con
+  varias páginas, B en la última entrada carga la página siguiente y A en la
+  primera, la anterior; A en la primera entrada de la primera página abre la
+  búsqueda.
 - **KOReader Sync**: configura credenciales y sincroniza progreso contra el
   servidor oficial o uno propio (KOSync).
 - **OTA**: busca actualizaciones desde Settings; también puedes flashear por

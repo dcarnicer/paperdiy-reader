@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- PaperDIY: en los catálogos OPDS con varias páginas, A/B vuelven a mover la
+  selección; antes B cargaba la página siguiente y no se podía elegir nada.
+  B en la última entrada carga la página siguiente y A en la primera, la
+  anterior; la fila de pistas lo indica. A en la primera entrada abre la
+  búsqueda también en la PaperDIY, que antes no reaccionaba. El mismo cambio
+  aplica a la Waveshare 3.97, sin probar allí. Las demás placas no cambian.
 - Sincronización con CrossPoint `92e8714a` (10 commits desde `177d0694`):
   ajuste de fuente personalizada para la interfaz, selección de estilos de
   fuentes vectoriales por nombre de fichero, caché de prefijos TTF según el

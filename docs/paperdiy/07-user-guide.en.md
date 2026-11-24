@@ -131,7 +131,9 @@ opening the menu; it is a UX trade-off still to be decided.
 - **OPDS**: add catalogs (Project Gutenberg, Standard Ebooks, etc.) in
   `Settings → Connectivity → OPDS Servers` and open them from
   `File Transfer → OPDS Browser` (or from Home when the plugin system is off
-  and a server is already saved).
+  and a server is already saved). In catalogs with several pages, B on the
+  last entry loads the next page and A on the first entry loads the previous
+  one; A on the first entry of the first page opens search.
 - **KOReader Sync**: configure credentials and sync progress against the
   official server or a self-hosted one (KOSync).
 - **OTA**: check for updates from Settings; you can also flash over USB.
