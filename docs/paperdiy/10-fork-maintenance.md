@@ -198,8 +198,8 @@ git add freeink-sdk && git commit -m "chore: vendor pristine SDK for patch basel
 
 | Patch | Base | Contenido |
 |---|---|---|
-| `patches/sdk.patch` | FreeInk SDK `995d9bd5` | perfil, BoardPaperDiy, PM1/I2C lock, InputManager, PowerManager, driver LGFX, batería; SDK #218 (ws397) |
-| `patches/firmware.patch` | CrossPoint `177d0694` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main, batería; CrossPoint #3386 y envs ws397 |
+| `patches/sdk.patch` | FreeInk SDK `995d9bd5` | perfil, BoardPaperDiy, PM1/I2C lock, InputManager, PowerManager, driver LGFX, batería; SDK #218 (ws397); SDK `main` hasta `a7eb4cc` |
+| `patches/firmware.patch` | CrossPoint `92e8714a` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main, batería; CrossPoint #3386 y envs ws397 |
 | `patches/paperdiy-support.patch` | ambos | concatenación de los dos anteriores |
 
 Orden de aplicación: `sdk.patch` y luego `firmware.patch`.

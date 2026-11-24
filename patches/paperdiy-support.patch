@@ -1,5 +1,5 @@
 diff --git a/freeink-sdk/docs/testing.md b/freeink-sdk/docs/testing.md
-index 5764315c..f803b360 100644
+index 5764315c..a0346a92 100644
 --- a/freeink-sdk/docs/testing.md
 +++ b/freeink-sdk/docs/testing.md
 @@ -35,12 +35,14 @@ sh libs/book/ContentProtection/test/host/run.sh
@@ -18,6 +18,18 @@ index 5764315c..f803b360 100644
  
  The book suite also needs `zip`. It uses `sips` or ImageMagick's `convert` for
  JPEG fixtures and optionally Pillow for progressive JPEG fixtures; the related
+@@ -223,7 +225,8 @@ sh libs/network/Opds/test/host/run.sh
+ ```
+ 
+ Requires host Expat headers and library. Runs the production OPDS client and
+-parsers with a scripted transport under ASan/UBSan. Covers public Atom browsing
+-with protected acquisitions, Basic challenge headers and OPDS documents, rejected
+-credentials, OAuth login/refresh, and cross-origin challenge rejection. Device
++parsers with a scripted transport under ASan/UBSan. Covers guest-view catalogs
++that need the login sent first, protected acquisitions, Basic challenge headers
++and OPDS documents, rejected credentials, OAuth login/refresh (including after
++a rejected first Basic), and cross-origin challenge rejection. Device
+ tests must still verify the consumer's download retry, cancellation, and heap.
 diff --git a/freeink-sdk/docs/waveshare-epaper-397-support.md b/freeink-sdk/docs/waveshare-epaper-397-support.md
 index 3b7ef9c1..7668f969 100644
 --- a/freeink-sdk/docs/waveshare-epaper-397-support.md
@@ -1441,7 +1453,7 @@ index 0a85b93a..0283ef6f 100644
  #endif
  
 diff --git a/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp b/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
-index 9db87411..b3818d7b 100644
+index 9db87411..40fdbeda 100644
 --- a/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
 +++ b/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
 @@ -1,5 +1,9 @@
@@ -1513,6 +1525,38 @@ index 9db87411..b3818d7b 100644
    if (powerButtonClick) return 0;
  #endif
    if (isPressed(BTN_POWER)) {
+@@ -2351,6 +2371,31 @@ void InputManager::beginTma525c() {
+   }
+   touchDataEnabled = (mode == PICCO_MODE_APP);
+   if (touchDataEnabled) {
++    // Explicitly leave HID sleep mode even when the controller already runs its app.
++    // Reuse the report buffer: touch/command reports may precede the power reply.
++    static constexpr uint8_t wakeCommand[] = {0x05, 0x00, 0x00, 0x08};
++    Wire.beginTransmission(t.i2cAddress);
++    Wire.write(wakeCommand, sizeof(wakeCommand));
++    const auto wakeStatus = Wire.endTransmission();
++    bool wakeAcknowledged = false;
++    const unsigned long wakeStartedAt = millis();
++    while (wakeStatus == 0 && millis() - wakeStartedAt < 500) {
++      const unsigned long elapsed = millis() - wakeStartedAt;
++      if (elapsed >= 500 || !piccoWaitInt(t.irq, 500 - elapsed)) break;
++      const uint16_t len = piccoReadReport(t.i2cAddress, buf, sizeof(buf));
++      if (len >= 5 && buf[2] == 0xF0 && (buf[3] & 0x03) == 0 && (buf[4] & 0x0F) == 0x08) {
++        wakeAcknowledged = true;
++        break;
++      }
++      delay(1);  // A stuck-low IRQ must not spin while waiting for the reply.
++    }
++    if (wakeStatus != 0)
++      LOG_ERR("INPUT", "Picco touch power-on write failed: %u", wakeStatus);
++    else if (!wakeAcknowledged)
++      LOG_ERR("INPUT", "Picco touch power-on acknowledgment missing; continuing touch probe");
++    else
++      LOG_INF("INPUT", "Picco touch power-on acknowledged");
++
+     // PIP GET_SYSINFO (as documented by Linux cyttsp5): sensing data starts at
+     // byte 33; byte 50 is max_num_of_tch_per_refresh_cycle. Query the panel's
+     // configuration rather than assuming the controller family's finger limit.
 diff --git a/freeink-sdk/libs/hardware/InputManager/test/host/paperdiy_stubs/BoardPaperDiy.h b/freeink-sdk/libs/hardware/InputManager/test/host/paperdiy_stubs/BoardPaperDiy.h
 new file mode 100644
 index 00000000..07d58a39
@@ -1538,6 +1582,51 @@ index 00000000..07d58a39
 +}
 +
 +}  // namespace BoardPaperDiy
+diff --git a/freeink-sdk/libs/hardware/InputManager/test/host/picco_stubs/Wire.h b/freeink-sdk/libs/hardware/InputManager/test/host/picco_stubs/Wire.h
+index 513482be..b6a80963 100644
+--- a/freeink-sdk/libs/hardware/InputManager/test/host/picco_stubs/Wire.h
++++ b/freeink-sdk/libs/hardware/InputManager/test/host/picco_stubs/Wire.h
+@@ -15,6 +15,12 @@ struct WireStub {
+   bool replySysinfo = true;
+   uint8_t sysinfoLength = 51;
+   uint8_t sysinfoCommand = 2;
++  bool touchAwake = false;
++  bool wakeWriteFails = false;
++  bool forceIrqLow = false;
++  unsigned wakeCommands = 0;
++  std::vector<uint8_t> wakeReply = {5, 0, 0xF0, 0, 8};
++  std::vector<std::vector<uint8_t>> beforeWakeReply;
+   bool begin(int, int, uint32_t) { return true; }
+   void setTimeOut(int) {}
+   void beginTransmission(uint8_t a) {
+@@ -23,15 +29,25 @@ struct WireStub {
+   }
+   void write(uint8_t v) { tx.push_back(v); }
+   void write(const uint8_t* v, size_t n) { tx.insert(tx.end(), v, v + n); }
+-  void sync() { gpioLevels[11] = reports.empty() ? 1 : 0; }
++  void sync() { gpioLevels[11] = reports.empty() && !forceIrqLow ? 1 : 0; }
+   void push(std::vector<uint8_t> r) {
++    if (r.size() >= 3 && r[2] == 1 && !touchAwake) return;
+     reports.push_back(r);
+     sync();
+   }
+   int endTransmission(bool = true) {
+     if (address != 0x24) return 2;
+     writes.push_back(tx);
+-    if (tx == std::vector<uint8_t>{0x01, 0x00})
++    if (tx == std::vector<uint8_t>{5, 0, 0, 8}) {
++      ++wakeCommands;
++      if (wakeWriteFails) return 2;
++      touchAwake = true;
++      for (const auto& report : beforeWakeReply) push(report);
++      if (!wakeReply.empty()) push(wakeReply);
++    } else if (tx == std::vector<uint8_t>{5, 0, 1, 8}) {
++      touchAwake = false;
++      push({5, 0, 0xF0, 1, 8});
++    } else if (tx == std::vector<uint8_t>{0x01, 0x00})
+       push({0x20, 0x00, mode, 0x00});  // HID descriptor reply
+     else if (tx.size() == 13 && tx[7] == 0x3B) {
+       mode = 0xF7;
 diff --git a/freeink-sdk/libs/hardware/InputManager/test/host/run_paperdiy.sh b/freeink-sdk/libs/hardware/InputManager/test/host/run_paperdiy.sh
 new file mode 100755
 index 00000000..3cafa345
@@ -1667,6 +1756,94 @@ index 00000000..382e98fd
 +
 +  std::puts("PaperDIY PMIC click duration and two-button Power chords passed");
 +}
+diff --git a/freeink-sdk/libs/hardware/InputManager/test/host/test_picco_touch.cpp b/freeink-sdk/libs/hardware/InputManager/test/host/test_picco_touch.cpp
+index f581ee25..cfa325f7 100644
+--- a/freeink-sdk/libs/hardware/InputManager/test/host/test_picco_touch.cpp
++++ b/freeink-sdk/libs/hardware/InputManager/test/host/test_picco_touch.cpp
+@@ -1,5 +1,6 @@
+ // Picco TMA525C (Parade PIP): mode check, bootloader launch, touch decode, lift-off.
+ #include <InputManager.h>
++#include <Logging.h>
+ #include <Wire.h>
+ 
+ #include <cassert>
+@@ -70,6 +71,7 @@ int main() {
+   assert(!powerInterruptEnabled);
+   gpioLevels[2] = 1;
+   assert(in.hasTouch() && in.supportsMultiTouch());
++  assert(Wire.touchAwake && Wire.wakeCommands == 1);
+   bool launched = false;
+   for (const auto& w : Wire.writes)
+     if (w.size() == 13 && w[7] == 0x3B) {
+@@ -188,5 +190,67 @@ int main() {
+     send(single, contacts({}));
+     assert(single.wasTouchTap(cx, cy));
+   }
+-  std::puts("Picco TMA525C touch passed");
++  // Ordinary touch reports and unrelated replies must not hide the power ACK.
++  Wire = WireStub{};
++  Wire.beforeWakeReply = {touchReport(100, 200, 0), {5, 0, 0xF0, 1, 8}, {5, 0, 0xF0, 0, 9}};
++  Wire.sync();
++  InputManager interleaved;
++  const auto errorsBeforeWake = loggedErrors;
++  interleaved.begin();
++  assert(Wire.touchAwake && Wire.wakeCommands == 1);
++  assert(loggedErrors == errorsBeforeWake && interleaved.supportsMultiTouch());
++  assert(!interleaved.wasTouchPressed());  // Startup reports never become UI input.
++  send(interleaved, touchReport(100, 200, 0));
++  assert(interleaved.wasTouchPressed());
++
++  // A missing/bad ACK is bounded and logged, but an already-awake panel stays usable.
++  for (unsigned fault = 0; fault < 8; ++fault) {
++    Wire = WireStub{};
++    Wire.touchAwake = true;
++    if (fault == 0) Wire.wakeWriteFails = true;
++    if (fault == 1 || fault == 7) Wire.wakeReply.clear();
++    if (fault == 2) Wire.wakeReply = {4, 0, 0xF0, 0};
++    if (fault == 3) Wire.wakeReply = {5, 0, 0x1F, 0, 8};
++    if (fault == 4) Wire.wakeReply = {5, 0, 0xF0, 1, 8};
++    if (fault == 5) Wire.wakeReply = {5, 0, 0xF0, 0, 9};
++    if (fault == 6) {
++      Wire.wakeReply.assign(129, 0);  // An oversized pending report cannot spin forever.
++      Wire.wakeReply[0] = 129;
++    }
++    Wire.forceIrqLow = fault == 7;
++    Wire.sync();
++    InputManager fallback;
++    const auto start = fakeNow;
++    const auto errors = loggedErrors;
++    fallback.begin();
++    assert(fakeNow - start < 1200 && loggedErrors > errors);
++    assert(Wire.wakeCommands == 1 && fallback.hasTouch());
++    // Drop the intentionally malformed oversized report before normal input.
++    Wire.reports.clear();
++    Wire.sync();
++    send(fallback, touchReport(100, 200, 0));
++    assert(fallback.wasTouchPressed());
++  }
++
++  // Every initialization, including wake after sleep, explicitly powers touch on.
++  Wire = WireStub{};
++  Wire.sync();
++  InputManager resumed;
++  resumed.begin();
++  assert(Wire.touchAwake && Wire.wakeCommands == 1);
++  assert(resumed.prepareForDeepSleep() && !resumed.hasTouch() && !Wire.touchAwake);
++  resumed.begin();
++  assert(resumed.hasTouch() && Wire.touchAwake && Wire.wakeCommands == 2);
++  send(resumed, touchReport(100, 200, 0));
++  assert(resumed.wasTouchPressed());
++
++  // Do not send an application-mode power command to an unrecognized controller mode.
++  Wire = WireStub{};
++  Wire.mode = 0x12;
++  Wire.sync();
++  InputManager unknown;
++  unknown.begin();
++  assert(!unknown.hasTouch() && Wire.wakeCommands == 0);
++
++  std::puts("Picco TMA525C touch and power-on initialization passed");
+ }
 diff --git a/freeink-sdk/libs/hardware/PowerManager/src/PowerManager.cpp b/freeink-sdk/libs/hardware/PowerManager/src/PowerManager.cpp
 index 890a1650..d53fa219 100644
 --- a/freeink-sdk/libs/hardware/PowerManager/src/PowerManager.cpp
@@ -1889,11 +2066,339 @@ index 5a471143..746084fe 100644
  
    fakeSd::openFails = true;
    assert(!manager.readFileToStream("/test", unopened));
+diff --git a/freeink-sdk/libs/network/Opds/include/OpdsClient.h b/freeink-sdk/libs/network/Opds/include/OpdsClient.h
+index edb462d5..b3e1ce45 100644
+--- a/freeink-sdk/libs/network/Opds/include/OpdsClient.h
++++ b/freeink-sdk/libs/network/Opds/include/OpdsClient.h
+@@ -80,9 +80,10 @@ class OpdsClient {
+   // True when fetchFeed() or authenticateDownload() changed or cleared token
+   // state during a 401 handshake; persist it before the next operation.
+   bool tokensDirty() const { return authDirty; }
+-  // Auth block for an app-side request (e.g. the file download) that must carry
+-  // the same credentials the client negotiated.
+-  HttpAuth downloadAuth() const;
++  // Auth block for an app-side request to `url` (e.g. the file download) that
++  // must carry the same credentials the client negotiated. Basic is only given
++  // for the configured server's origin.
++  HttpAuth downloadAuth(const std::string& url) const;
+   // After a same-origin download 401, renew/login once. The caller must check
+   // the URL belongs to its configured server and bound retries to one.
+   bool authenticateDownload(const std::string& url);
+@@ -97,15 +98,16 @@ class OpdsClient {
+   std::string bearerToken;
+   std::string refreshTokenValue;
+   std::string tokenRefreshUrl;
+-  // Latched only after a 401 whose auth document offers Basic (or a bare Basic
+-  // challenge): sending Basic preemptively breaks OAuth-only servers.
++  // Latched by a Basic challenge, or by fetchFeed() for the configured server
++  // when no token exists. Any 401 clears it before the handshake, so OAuth-only
++  // servers still reach their auth document.
+   bool basicAuthLatched = false;
+   bool credentialsMissingFlag = false;
+   bool authDirty = false;
+   ClientStatusFn statusFn = nullptr;
+   void* statusCtx = nullptr;
+ 
+-  HttpAuth currentAuth() const;
++  HttpAuth currentAuth(const std::string& url) const;
+   bool handleUnauthorized(const std::string& url, int attempt);
+   void notify(ClientPhase phase) const {
+     if (statusFn) statusFn(statusCtx, phase);
+diff --git a/freeink-sdk/libs/network/Opds/src/OpdsClient.cpp b/freeink-sdk/libs/network/Opds/src/OpdsClient.cpp
+index d99e50e6..0370b7a7 100644
+--- a/freeink-sdk/libs/network/Opds/src/OpdsClient.cpp
++++ b/freeink-sdk/libs/network/Opds/src/OpdsClient.cpp
+@@ -3,6 +3,7 @@
+ #include <string_view>
+ #include <utility>
+ 
++#include "FetchOrigin.h"
+ #include "OpdsAuthDoc.h"
+ #include "OpdsImplicitAuth.h"
+ #include "OpdsLog.h"
+@@ -78,8 +79,10 @@ void OpdsClient::resetAuthState() {
+   credentialsMissingFlag = false;
+ }
+ 
+-HttpAuth OpdsClient::currentAuth() const {
++HttpAuth OpdsClient::currentAuth(const std::string& url) const {
+   HttpAuth a;
++  // Login, token and custom headers belong to the configured server only.
++  if (freeink::fetchOrigin(url) != freeink::fetchOrigin(serverUrl)) return a;
+   if (basicAuthLatched) {
+     a.username = username;
+     a.password = password;
+@@ -89,7 +92,7 @@ HttpAuth OpdsClient::currentAuth() const {
+   return a;
+ }
+ 
+-HttpAuth OpdsClient::downloadAuth() const { return currentAuth(); }
++HttpAuth OpdsClient::downloadAuth(const std::string& url) const { return currentAuth(url); }
+ 
+ bool OpdsClient::authenticateDownload(const std::string& url) {
+   authDirty = false;
+@@ -98,6 +101,9 @@ bool OpdsClient::authenticateDownload(const std::string& url) {
+ 
+ bool OpdsClient::handleUnauthorized(const std::string& url, const int attempt) {
+   credentialsMissingFlag = false;
++  // Only the configured server may ask for the login: a 401 from another
++  // origin must not start a handshake that sends it the credentials.
++  if (freeink::fetchOrigin(url) != freeink::fetchOrigin(serverUrl)) return false;
+   authDirty = true;  // token state may change or be cleared this attempt
+   notify(ClientPhase::SigningIn);
+   bool advanced = false;
+@@ -122,8 +128,14 @@ OpdsClient::FetchStatus OpdsClient::fetchFeed(const std::string& url, OpdsFeedPa
+   // Resolve localized (language-map) titles to the UI language.
+   parser.setPreferredLanguage(primarySubtag(acceptLang).c_str());
+   authDirty = false;
++  // A catalog with a guest view answers 200 without credentials, so no 401
++  // would ever ask for the login. Offer the configured login to the server's
++  // own origin first; a 401 still runs the handshake, which drops Basic.
++  if (!basicAuthLatched && bearerToken.empty() && !username.empty() && !password.empty() &&
++      freeink::fetchOrigin(url) == freeink::fetchOrigin(serverUrl))
++    basicAuthLatched = true;
+   for (int authAttempt = 0;; ++authAttempt) {
+-    const HttpResult res = http.get(url, currentAuth(), FEED_ACCEPT, orNull(acceptLang), false,
++    const HttpResult res = http.get(url, currentAuth(url), FEED_ACCEPT, orNull(acceptLang), false,
+                                     [&parser](const uint8_t* data, const size_t len) {
+                                       parser.write(data, len);
+                                       return !parser.error();  // abort the transfer on a parse error
+@@ -147,7 +159,7 @@ OpdsClient::FetchStatus OpdsClient::fetchFeed(const std::string& url, OpdsFeedPa
+ bool OpdsClient::fetchPublication(const std::string& docUrl, OpdsPublication& out) {
+   std::string doc;
+   doc.reserve(4096);
+-  http.get(docUrl, currentAuth(), PUB_ACCEPT, orNull(acceptLang), false,
++  http.get(docUrl, currentAuth(docUrl), PUB_ACCEPT, orNull(acceptLang), false,
+            [&doc](const uint8_t* data, const size_t len) {
+              const size_t room = doc.size() < MAX_PUB_DOC_BYTES ? MAX_PUB_DOC_BYTES - doc.size() : 0;
+              doc.append(reinterpret_cast<const char*>(data), len < room ? len : room);
+@@ -160,7 +172,7 @@ bool OpdsClient::fetchPublication(const std::string& docUrl, OpdsPublication& ou
+ bool OpdsClient::resolveIndirect(const std::string& docUrl, std::string& outDownloadUrl, bool& outIsEpub) {
+   std::string doc;
+   doc.reserve(4096);
+-  const bool fetched = http.get(docUrl, currentAuth(), nullptr, nullptr, false,
++  const bool fetched = http.get(docUrl, currentAuth(docUrl), nullptr, nullptr, false,
+                                 [&doc](const uint8_t* data, const size_t len) {
+                                   const size_t room = doc.size() < MAX_PUB_DOC_BYTES ? MAX_PUB_DOC_BYTES - doc.size() : 0;
+                                   doc.append(reinterpret_cast<const char*>(data), len < room ? len : room);
+@@ -180,7 +192,7 @@ bool OpdsClient::resolveIndirect(const std::string& docUrl, std::string& outDown
+ bool OpdsClient::fetchSearchTemplate(const std::string& descUrl, std::string& outTemplate) {
+   LOG_DBG("OPDS", "Fetching OpenSearch description: %s", descUrl.c_str());
+   OpenSearchDescParser parser;
+-  const bool fetched = http.get(descUrl, currentAuth(), nullptr, nullptr, false,
++  const bool fetched = http.get(descUrl, currentAuth(descUrl), nullptr, nullptr, false,
+                                 [&parser](const uint8_t* data, const size_t len) {
+                                   parser.write(data, len);
+                                   return !parser.error();
+diff --git a/freeink-sdk/libs/network/Opds/test/host/run.sh b/freeink-sdk/libs/network/Opds/test/host/run.sh
+index 731a7025..419dee1f 100644
+--- a/freeink-sdk/libs/network/Opds/test/host/run.sh
++++ b/freeink-sdk/libs/network/Opds/test/host/run.sh
+@@ -4,7 +4,7 @@ cd "$(dirname "$0")"
+ BUILD_DIR="${TMPDIR:-/tmp}/freeink-opds-host-tests"
+ mkdir -p "$BUILD_DIR"
+ c++ -std=c++17 -Wall -Wextra ${CXXFLAGS:-} -fsanitize=address,undefined \
+-  -Istubs -I../../include -I../../../JsonSax/include \
++  -Istubs -I../../include -I../../../JsonSax/include -I../../../SecureNet/include \
+   ../../src/*.cpp ../../../JsonSax/src/StreamingJsonParser.cpp \
+   test_client.cpp -lexpat -o "$BUILD_DIR/test_client"
+ "$BUILD_DIR/test_client"
+diff --git a/freeink-sdk/libs/network/Opds/test/host/test_client.cpp b/freeink-sdk/libs/network/Opds/test/host/test_client.cpp
+index 55fb60a2..0d202546 100644
+--- a/freeink-sdk/libs/network/Opds/test/host/test_client.cpp
++++ b/freeink-sdk/libs/network/Opds/test/host/test_client.cpp
+@@ -51,19 +51,86 @@ struct Transport : OpdsTransport {
+ void configure(OpdsClient& client) { client.setServer(ROOT, "reader", "secret", {{"X-Proxy", "value"}}); }
+ 
+ int main() {
+-  // Public Atom catalog, followed by an acquisition-only Basic challenge.
++  // A guest-view catalog answers 200 without credentials (#4566): send the
++  // configured login on the first feed request.
+   {
+     Transport http;
+     OpdsClient client(http);
+     configure(client);
+     http.replies.push_back({200, FEED, ""});
+     OpdsFeedParser parser;
++    assert(client.fetchFeed(ROOT + "/opds", parser) == OpdsClient::FetchStatus::Ok);
++    assert(http.requests.back().username == "reader" && http.requests.back().password == "secret");
++    assert(client.downloadAuth(ROOT + "/book.epub").username == "reader");
++    assert(!client.tokensDirty());
++    // Once latched, Basic still stays with the server's origin.
++    assert(client.downloadAuth("http://cdn.test/cover.jpg").username.empty());
++    http.replies.push_back({200, FEED, ""});
++    OpdsFeedParser other;
++    assert(client.fetchFeed("https://other.test/opds", other) == OpdsClient::FetchStatus::Ok);
++    assert(http.requests.back().username.empty() && http.requests.back().password.empty());
++  }
++  // The login is never offered to another origin or over a stored token.
++  {
++    Transport http;
++    OpdsClient client(http);
++    configure(client);
++    http.replies.push_back({200, FEED, ""});
++    OpdsFeedParser parser;
++    assert(client.fetchFeed("https://other.test/opds", parser) == OpdsClient::FetchStatus::Ok);
++    assert(http.requests.back().username.empty());
++  }
++  {
++    Transport http;
++    OpdsClient client(http);
++    configure(client);
++    client.setTokens("token", "", "");
++    http.replies.push_back({200, FEED, ""});
++    OpdsFeedParser parser;
+     assert(client.fetchFeed(ROOT, parser) == OpdsClient::FetchStatus::Ok);
+-    assert(client.downloadAuth().username.empty());
++    assert(http.requests.back().username.empty() && http.requests.back().bearer == "token");
++    // The token and custom headers stay with the server's origin too.
++    const auto foreign = client.downloadAuth("https://other.test/book.epub");
++    assert(foreign.bearer.empty() && foreign.headers.empty());
++    assert(client.downloadAuth(ROOT + "/book.epub").headers.size() == 1);
++  }
++  // A 401 from another origin never starts a login handshake.
++  {
++    Transport http;
++    OpdsClient client(http);
++    configure(client);
++    client.setTokens("token", "refresh", ROOT + "/refresh");
++    http.replies = {{401, OAUTH_DOC, ""}};
++    OpdsFeedParser parser;
++    assert(client.fetchFeed("https://other.test/opds", parser) == OpdsClient::FetchStatus::AuthFailed);
++    assert(http.requests.size() == 1 && http.forms.empty());
++    assert(!client.tokensDirty() && client.accessToken() == "token");
++    assert(!client.authenticateDownload("https://other.test/book.epub"));
++    assert(http.requests.size() == 1 && http.forms.empty());
++  }
++  {
++    Transport http;
++    OpdsClient client(http);
++    configure(client);
++    http.replies = {{401, "", ""}, {401, OAUTH_DOC, ""}, {200, FEED, ""}};
++    http.posts = {{200, R"({"access_token":"access"})", ""}};
++    OpdsFeedParser parser;
++    assert(client.fetchFeed(ROOT, parser) == OpdsClient::FetchStatus::Ok);
++    assert(http.requests[0].username == "reader");
++    assert(http.requests[1].username.empty());
++    assert(http.requests[2].bearer == "access" && http.requests[2].username.empty());
++    assert(!client.useBasicAuth());
++  }
++  // Acquisition-only Basic challenge on a download.
++  {
++    Transport http;
++    OpdsClient client(http);
++    configure(client);
+     http.replies.push_back({401, "<html>Login required</html>", "Basic realm=books"});
+     assert(client.authenticateDownload(ROOT + "/book.epub"));
+-    const auto auth = client.downloadAuth();
++    const auto auth = client.downloadAuth(ROOT + "/book.epub");
+     assert(auth.username == "reader" && auth.password == "secret" && auth.bearer.empty());
++    assert(client.downloadAuth("https://other.test/book.epub").username.empty());
+     assert(auth.headers.size() == 1);
+     assert(http.requests.back().username.empty());
+   }
+@@ -108,6 +175,7 @@ int main() {
+   {
+     Transport http;
+     OpdsClient client(http);
++    client.setServer(ROOT, "", "", {});
+     http.replies = {{401, "", "Basic realm=books"}};
+     assert(!client.authenticateDownload(ROOT));
+     assert(client.credentialsMissing());
+@@ -129,8 +197,8 @@ int main() {
+     http.replies = {{401, OAUTH_DOC, "Basic realm=books"}};
+     http.posts = {{200, R"({"access_token":"access","refresh_token":"refresh"})", ""}};
+     assert(client.authenticateDownload(ROOT));
+-    assert(client.downloadAuth().bearer == "access");
+-    assert(client.downloadAuth().username.empty());
++    assert(client.downloadAuth(ROOT).bearer == "access");
++    assert(client.downloadAuth(ROOT).username.empty());
+     assert(client.tokensDirty());
+     assert(http.forms.front().find("grant_type=password") == 0);
+     http.posts = {{200, R"({"access_token":"renewed"})", ""}};
+diff --git a/freeink-sdk/libs/network/SecureNet/include/FetchOrigin.h b/freeink-sdk/libs/network/SecureNet/include/FetchOrigin.h
+new file mode 100644
+index 00000000..022017f6
+--- /dev/null
++++ b/freeink-sdk/libs/network/SecureNet/include/FetchOrigin.h
+@@ -0,0 +1,32 @@
++#pragma once
++
++// FreeInk SDK — the origin credentials are scoped to. Dependency-free so
++// network clients that never open a connection themselves can share it.
++
++#include <cctype>
++#include <string>
++
++namespace freeink {
++
++// scheme://host:port, lowercased, with the scheme's default port made explicit
++// and any userinfo dropped: the unit credentials are scoped to.
++inline std::string fetchOrigin(const std::string& url) {
++  const size_t schemeEnd = url.find("://");
++  if (schemeEnd == std::string::npos) return {};
++  std::string scheme = url.substr(0, schemeEnd);
++  const size_t hostStart = schemeEnd + 3;
++  const size_t hostEnd = url.find_first_of("/?#", hostStart);
++  std::string authority = url.substr(hostStart, hostEnd == std::string::npos ? std::string::npos : hostEnd - hostStart);
++  const size_t at = authority.rfind('@');
++  if (at != std::string::npos) authority.erase(0, at + 1);
++  for (auto* part : {&scheme, &authority}) {
++    for (char& c : *part) c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
++  }
++  const size_t bracket = authority.rfind(']');  // IPv6 literal: its colons are not a port
++  if (authority.find(':', bracket == std::string::npos ? 0 : bracket) == std::string::npos) {
++    authority += scheme == "https" ? ":443" : ":80";
++  }
++  return scheme + "://" + authority;
++}
++
++}  // namespace freeink
+diff --git a/freeink-sdk/libs/network/SecureNet/include/ResumableFetch.h b/freeink-sdk/libs/network/SecureNet/include/ResumableFetch.h
+index 76bc6b85..5af06f11 100644
+--- a/freeink-sdk/libs/network/SecureNet/include/ResumableFetch.h
++++ b/freeink-sdk/libs/network/SecureNet/include/ResumableFetch.h
+@@ -17,6 +17,7 @@
+ #include <string>
+ #include <string_view>
+ 
++#include "FetchOrigin.h"
+ #include "SecureHttpClient.h"
+ 
+ namespace freeink {
+@@ -50,27 +51,6 @@ struct FetchResult {
+   bool aborted = false;   // shouldAbort fired
+ };
+ 
+-// scheme://host:port, lowercased, with the scheme's default port made explicit
+-// and any userinfo dropped: the unit credentials are scoped to.
+-inline std::string fetchOrigin(const std::string& url) {
+-  const size_t schemeEnd = url.find("://");
+-  if (schemeEnd == std::string::npos) return {};
+-  std::string scheme = url.substr(0, schemeEnd);
+-  const size_t hostStart = schemeEnd + 3;
+-  const size_t hostEnd = url.find_first_of("/?#", hostStart);
+-  std::string authority = url.substr(hostStart, hostEnd == std::string::npos ? std::string::npos : hostEnd - hostStart);
+-  const size_t at = authority.rfind('@');
+-  if (at != std::string::npos) authority.erase(0, at + 1);
+-  for (auto* part : {&scheme, &authority}) {
+-    for (char& c : *part) c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+-  }
+-  const size_t bracket = authority.rfind(']');  // IPv6 literal: its colons are not a port
+-  if (authority.find(':', bracket == std::string::npos ? 0 : bracket) == std::string::npos) {
+-    authority += scheme == "https" ? ":443" : ":80";
+-  }
+-  return scheme + "://" + authority;
+-}
+-
+ // A resumable response must identify both its byte interval and resource size.
+ inline bool parseFetchContentRange(std::string_view value, size_t& first, size_t& last, size_t& total) {
+   while (!value.empty() && (value.back() == ' ' || value.back() == '\t')) value.remove_suffix(1);
 diff --git a/lib/GfxRenderer/GfxRenderer.cpp b/lib/GfxRenderer/GfxRenderer.cpp
-index f0135e7d..a1da9a34 100644
+index 3630be55..e54c04bb 100644
 --- a/lib/GfxRenderer/GfxRenderer.cpp
 +++ b/lib/GfxRenderer/GfxRenderer.cpp
-@@ -1863,6 +1863,22 @@ void GfxRenderer::displayBuffer(HalDisplay::RefreshMode refreshMode) const {
+@@ -1875,6 +1875,22 @@ void GfxRenderer::displayBuffer(HalDisplay::RefreshMode refreshMode) const {
    display.displayBuffer(refreshMode, fadingFix);
  }
  
@@ -1935,7 +2440,7 @@ index f09383b3..b786628e 100644
    void clearScreen(uint8_t color = 0xFF) const;
    void getOrientedViewableTRBL(int* outTop, int* outRight, int* outBottom, int* outLeft) const;
 diff --git a/lib/I18n/translations/catalan.yaml b/lib/I18n/translations/catalan.yaml
-index 1c119e37..9b7fe3e3 100644
+index 1c119e37..2e702b54 100644
 --- a/lib/I18n/translations/catalan.yaml
 +++ b/lib/I18n/translations/catalan.yaml
 @@ -121,6 +121,7 @@ STR_HAPTIC_MEDIUM: "Mitjana"
@@ -1955,7 +2460,16 @@ index 1c119e37..9b7fe3e3 100644
  STR_REMOVE_READ_FROM_RECENTS: "Esborra els llibres llegits de la llista de recents"
  STR_MOVE_FINISHED_TO_READ: "Mou els llibres acabats a la carpeta Read"
  STR_REFRESH_FREQ: "Freqüència d'actualització"
-@@ -545,7 +548,7 @@ STR_FIRMWARE_FILE_OPEN_FAILED: "No es pot obrir el fitxer"
+@@ -316,6 +319,8 @@ STR_SD_CARD: "Targeta SD"
+ STR_BACK: "« Enrere"
+ STR_EXIT: "« Surt"
+ STR_HOME: "« Inici"
++STR_UI_FONT: "Font de la interfície"
++STR_UI_FONT_LOAD_FAILED: "No s'ha pogut carregar la font de la interfície"
+ STR_SELECT: "Tria"
+ STR_SELECTED: "Seleccionat"
+ STR_TOGGLE: "Canvia"
+@@ -545,7 +550,7 @@ STR_FIRMWARE_FILE_OPEN_FAILED: "No es pot obrir el fitxer"
  STR_FIRMWARE_WRITE_FAILED: "Ha fallat l'escriptura del firmware"
  STR_FIRMWARE_UPDATE_DO_NOT_POWER_OFF: "No apaguis el dispositiu!"
  STR_RECOVERY_MODE: "Mode de recuperació"
@@ -1964,7 +2478,7 @@ index 1c119e37..9b7fe3e3 100644
  STR_ADD_HIDDEN_NETWORK: "Afegeix una xarxa oculta..."
  STR_ENTER_WIFI_SSID: "Introdueix el nom de la xarxa (SSID)"
  STR_DBL_CLICK_PWR_LIGHT: "Doble pulsació d'encesa: llum"
-@@ -586,6 +589,7 @@ STR_SPACING_PLUS_60_PERCENT: "+60%"
+@@ -586,6 +591,7 @@ STR_SPACING_PLUS_60_PERCENT: "+60%"
  STR_SPACING_PLUS_75_PERCENT: "+75%"
  STR_KOSYNC_SERVER: "KoSync"
  STR_SYNC_CLIPPINGS: "Sincronitza els retalls"
@@ -1973,7 +2487,7 @@ index 1c119e37..9b7fe3e3 100644
  STR_CLIPPING_SYNC_FAILED: "No s'han pogut sincronitzar els retalls"
  STR_CLIP: "Retalla"
 diff --git a/lib/I18n/translations/english.yaml b/lib/I18n/translations/english.yaml
-index ab93036e..c469f6ab 100644
+index a9178088..85cd3178 100644
 --- a/lib/I18n/translations/english.yaml
 +++ b/lib/I18n/translations/english.yaml
 @@ -182,6 +182,14 @@ STR_MOVE_FINISHED_TO_READ: "Move Finished Books to Read Folder"
@@ -1991,7 +2505,7 @@ index ab93036e..c469f6ab 100644
  STR_LANGUAGE: "Language"
  STR_KEYBOARD_LAYOUTS: "Keyboard Layouts"
  STR_ABOUT: "About"
-@@ -604,7 +612,7 @@ STR_FIRMWARE_FILE_OPEN_FAILED: "Cannot open file"
+@@ -606,7 +614,7 @@ STR_FIRMWARE_FILE_OPEN_FAILED: "Cannot open file"
  STR_FIRMWARE_WRITE_FAILED: "Firmware write failed"
  STR_FIRMWARE_UPDATE_DO_NOT_POWER_OFF: "Do not power off!"
  STR_RECOVERY_MODE: "Recovery Mode"
@@ -2000,7 +2514,7 @@ index ab93036e..c469f6ab 100644
  
  STR_HOME_SHORTCUT: "Home"
  STR_HOME_BUTTON: "Home Button Gestures"
-@@ -679,3 +687,6 @@ STR_TAPS_AND_GESTURES: "Taps and gestures"
+@@ -681,3 +689,6 @@ STR_TAPS_AND_GESTURES: "Taps and gestures"
  STR_PAGE_TURN_LONG_PRESS: "Page turn long press"
  
  STR_POWER_DOUBLE_CLICK: "Double click"
@@ -2044,7 +2558,7 @@ index 0fcc22e0..a174ceef 100644
  STR_LONG_PRESS_BEHAVIOR_OFF: "Dezactivat"
  STR_LONG_PRESS_BEHAVIOR_SKIP: "Sărire capitol"
 diff --git a/lib/I18n/translations/spanish.yaml b/lib/I18n/translations/spanish.yaml
-index 6d2c28f4..638a0964 100644
+index 6d2c28f4..1811bcea 100644
 --- a/lib/I18n/translations/spanish.yaml
 +++ b/lib/I18n/translations/spanish.yaml
 @@ -121,6 +121,7 @@ STR_HAPTIC_MEDIUM: "Media"
@@ -2093,7 +2607,16 @@ index 6d2c28f4..638a0964 100644
  STR_READER_MENU: "Menú de lectura"
  STR_DISABLED: "Desactivado"
  STR_NOTO_SANS: "Noto Sans"
-@@ -413,6 +426,7 @@ STR_COVER_TRANSPARENT: "Portada + transparente"
+@@ -321,6 +334,8 @@ STR_SD_CARD: "Tarjeta SD"
+ STR_BACK: "« Atrás"
+ STR_EXIT: "« Salir"
+ STR_HOME: "« Inicio"
++STR_UI_FONT: "Tipografía de la interfaz"
++STR_UI_FONT_LOAD_FAILED: "No se pudo cargar la tipografía de la interfaz"
+ STR_SELECT: "Selecc."
+ STR_SELECTED: "Seleccionado"
+ STR_TOGGLE: "Cambiar"
+@@ -413,6 +428,7 @@ STR_COVER_TRANSPARENT: "Portada + transparente"
  STR_MENU_RECENT_BOOKS: "Libros recientes"
  STR_REMOVE_FROM_RECENTS: "Quitar de recientes"
  STR_CALIBRE_DESC: "Transferir contenido a este dispositivo"
@@ -2101,7 +2624,7 @@ index 6d2c28f4..638a0964 100644
  STR_FORGET_AND_REMOVE: "¿Desea olvidar la red y la contraseña guardada?"
  STR_FORGET_BUTTON: "Olvidar"
  STR_CALIBRE_STARTING: "Iniciando Calibre..."
-@@ -545,7 +559,7 @@ STR_FIRMWARE_FILE_OPEN_FAILED: "No se puede abrir el archivo"
+@@ -545,7 +561,7 @@ STR_FIRMWARE_FILE_OPEN_FAILED: "No se puede abrir el archivo"
  STR_FIRMWARE_WRITE_FAILED: "Falló la escritura del firmware"
  STR_FIRMWARE_UPDATE_DO_NOT_POWER_OFF: "¡No apague el dispositivo!"
  STR_RECOVERY_MODE: "Modo de recuperación"
@@ -2110,7 +2633,7 @@ index 6d2c28f4..638a0964 100644
  STR_ADD_HIDDEN_NETWORK: "Añadir red oculta..."
  STR_ENTER_WIFI_SSID: "Introduce el nombre de la red (SSID)"
  STR_DBL_CLICK_PWR_LIGHT: "Doble pulsación de encendido: luz"
-@@ -586,6 +600,7 @@ STR_SPACING_PLUS_60_PERCENT: "+60%"
+@@ -586,6 +602,7 @@ STR_SPACING_PLUS_60_PERCENT: "+60%"
  STR_SPACING_PLUS_75_PERCENT: "+75%"
  STR_KOSYNC_SERVER: "KoSync"
  STR_SYNC_CLIPPINGS: "Sincronizar recortes"
@@ -2118,7 +2641,7 @@ index 6d2c28f4..638a0964 100644
  STR_SYNCING_CLIPPINGS: "Sincronizando los recortes..."
  STR_CLIPPING_SYNC_FAILED: "No se pudieron sincronizar los recortes"
  STR_CLIP: "Recortar"
-@@ -660,3 +675,12 @@ STR_KOREADER_CUSTOM_HEADER_1_NAME: "Nombre de la cabecera personalizada 1 de KOR
+@@ -660,3 +677,12 @@ STR_KOREADER_CUSTOM_HEADER_1_NAME: "Nombre de la cabecera personalizada 1 de KOR
  STR_KOREADER_CUSTOM_HEADER_1_VALUE: "Valor de la cabecera personalizada 1 de KOReader"
  STR_KOREADER_CUSTOM_HEADER_2_NAME: "Nombre de la cabecera personalizada 2 de KOReader"
  STR_KOREADER_CUSTOM_HEADER_2_VALUE: "Valor de la cabecera personalizada 2 de KOReader"
@@ -2132,7 +2655,7 @@ index 6d2c28f4..638a0964 100644
 +STR_BATTERY_KIT: "Kit original (140 mAh)"
 +STR_BATTERY_EXTENDED: "Extendida (1500 mAh)"
 diff --git a/lib/I18n/translations/valencian.yaml b/lib/I18n/translations/valencian.yaml
-index 771b448e..aab2b766 100644
+index 771b448e..d24cae6e 100644
 --- a/lib/I18n/translations/valencian.yaml
 +++ b/lib/I18n/translations/valencian.yaml
 @@ -122,6 +122,7 @@ STR_HAPTIC_MEDIUM: "Mitjana"
@@ -2152,7 +2675,16 @@ index 771b448e..aab2b766 100644
  STR_REMOVE_READ_FROM_RECENTS: "Esborra els llibres llegits de la llista de recents"
  STR_MOVE_FINISHED_TO_READ: "Mou els llibres acabats a la carpeta Read"
  STR_REFRESH_FREQ: "Freqüència d'actualització"
-@@ -545,7 +548,7 @@ STR_FIRMWARE_FILE_OPEN_FAILED: "No es pot obrir l'arxiu"
+@@ -322,6 +325,8 @@ STR_SD_CARD: "Targeta SD"
+ STR_BACK: "« Arrere"
+ STR_EXIT: "« Ix"
+ STR_HOME: "« Inici"
++STR_UI_FONT: "Font de la interfície"
++STR_UI_FONT_LOAD_FAILED: "No s'ha pogut carregar la font de la interfície"
+ STR_SELECT: "Tria"
+ STR_SELECTED: "Seleccionat"
+ STR_TOGGLE: "Canvia"
+@@ -545,7 +550,7 @@ STR_FIRMWARE_FILE_OPEN_FAILED: "No es pot obrir l'arxiu"
  STR_FIRMWARE_WRITE_FAILED: "Ha fallat l'escriptura del firmware"
  STR_FIRMWARE_UPDATE_DO_NOT_POWER_OFF: "No apagues el dispositiu!"
  STR_RECOVERY_MODE: "Mode de recuperació"
@@ -2161,7 +2693,7 @@ index 771b448e..aab2b766 100644
  STR_ADD_HIDDEN_NETWORK: "Afig una xarxa oculta..."
  STR_ENTER_WIFI_SSID: "Introduïx el nom de la xarxa (SSID)"
  STR_DBL_CLICK_PWR_LIGHT: "Doble pulsació d'encesa: llum"
-@@ -586,6 +589,7 @@ STR_SPACING_PLUS_60_PERCENT: "+60%"
+@@ -586,6 +591,7 @@ STR_SPACING_PLUS_60_PERCENT: "+60%"
  STR_SPACING_PLUS_75_PERCENT: "+75%"
  STR_KOSYNC_SERVER: "KoSync"
  STR_SYNC_CLIPPINGS: "Sincronitza els retalls"
@@ -2216,7 +2748,7 @@ index 4f2badb2..250c2812 100644
    // while the panel refreshes on its own. The framebuffer must stay untouched
    // until waitRefreshComplete(), and the caller must rebuild the differential
 diff --git a/lib/hal/HalGPIO.cpp b/lib/hal/HalGPIO.cpp
-index 25de3d9f..faaac6d0 100644
+index af09cdf9..23322409 100644
 --- a/lib/hal/HalGPIO.cpp
 +++ b/lib/hal/HalGPIO.cpp
 @@ -1,5 +1,6 @@
@@ -2240,7 +2772,7 @@ index 25de3d9f..faaac6d0 100644
  NvsDeviceValue readNvsDeviceValue(const char* key, NvsDeviceValue defaultValue) {
    Preferences prefs;
    if (!prefs.begin(HW_NAMESPACE, true)) {
-@@ -255,6 +263,10 @@ bool HalGPIO::isUsbConnected() const {
+@@ -258,6 +266,10 @@ bool HalGPIO::isUsbConnected() const {
    // A charger IC that reports its input rail (BQ25896, SGM41562, M5 PMIC)
    // answers directly; otherwise infer from charging state, where charge
    // termination at 100% reads as "not connected".
@@ -2251,7 +2783,7 @@ index 25de3d9f..faaac6d0 100644
    static const BatteryMonitor battery;
    bool known = false;
    const bool present = battery.isExternalPowerPresent(&known);
-@@ -262,6 +274,15 @@ bool HalGPIO::isUsbConnected() const {
+@@ -265,6 +277,15 @@ bool HalGPIO::isUsbConnected() const {
    return battery.isCharging();
  }
  
@@ -2267,7 +2799,7 @@ index 25de3d9f..faaac6d0 100644
  bool HalGPIO::coldBootImpliesPowerButton() const {
    // Xteink-style power topology: the power button energizes the rail until
    // firmware latches it, so a no-USB POWERON can only be a still-held button
-@@ -272,7 +293,8 @@ bool HalGPIO::coldBootImpliesPowerButton() const {
+@@ -275,7 +296,8 @@ bool HalGPIO::coldBootImpliesPowerButton() const {
    // EEGO A4 misread them the same way once the charger terminates at 100%
    // (STAT inactive reads as "no USB").
    // The Metalio sleeps powered off and only its button turns it back on.
@@ -2278,10 +2810,10 @@ index 25de3d9f..faaac6d0 100644
  
  HalGPIO::WakeupReason HalGPIO::getWakeupReason() const {
 diff --git a/lib/hal/HalGPIO.h b/lib/hal/HalGPIO.h
-index 22932658..64bb2dd7 100644
+index cfc2d915..4baf5f6f 100644
 --- a/lib/hal/HalGPIO.h
 +++ b/lib/hal/HalGPIO.h
-@@ -136,6 +136,9 @@ class HalGPIO {
+@@ -137,6 +137,9 @@ class HalGPIO {
    // Check if USB is connected
    bool isUsbConnected() const;
  
@@ -2719,7 +3251,7 @@ index 57c4ed98..7339df8c 100644
    // the bus pads (no-op on SPI boards). Call only after all file users have
    // stopped; open HalFiles become invalid. A deep-sleep wake resets the MCU and
 diff --git a/platformio.ini b/platformio.ini
-index f4eeda76..8ee60958 100644
+index 5f2ff187..a95ec65b 100644
 --- a/platformio.ini
 +++ b/platformio.ini
 @@ -4,7 +4,7 @@ build_cache_dir = .cache
@@ -2731,7 +3263,7 @@ index f4eeda76..8ee60958 100644
  
  [base]
  platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip
-@@ -175,7 +175,7 @@ lib_deps =
+@@ -176,7 +176,7 @@ lib_deps =
    ; .ttf/.otf rendering). Vendors only stb_truetype + FreeType (no expat), so it
    ; does not hit the FreeInkBook duplicate-XML_* symbol problem.
    FreeInkFont=symlink://freeink-sdk/libs/font/FreeInkFont
@@ -2740,7 +3272,7 @@ index f4eeda76..8ee60958 100644
    ; Pinned for the reviewed cache patches in scripts/sdfat_patches/.
    greiman/SdFat @ 2.3.1
    ricmoo/QRCode @ 0.0.1
-@@ -282,7 +282,7 @@ custom_sdkconfig =
+@@ -283,7 +283,7 @@ custom_sdkconfig =
    CONFIG_BT_NIMBLE_TRANSPORT_ACL_FROM_LL_COUNT=8
  lib_deps =
    BleKeyboardHost=symlink://freeink-sdk/libs/network/BleKeyboardHost
@@ -2749,7 +3281,7 @@ index f4eeda76..8ee60958 100644
  build_flags =
    -DFREEINK_CAP_BLE_HID_HOST=1
    -DCONFIG_BT_NIMBLE_ROLE_PERIPHERAL_DISABLED=1
-@@ -390,6 +390,49 @@ build_flags =
+@@ -391,6 +391,49 @@ build_flags =
    -DENABLE_SERIAL_LOG
    -DLOG_LEVEL=1 ; Set log level to info for release candidate builds
  
@@ -2799,7 +3331,7 @@ index f4eeda76..8ee60958 100644
  ; --- Xteink X4 Pro — ESP32-S3, 16MB flash / 8MB PSRAM, SSD1677 + GT911 --------
  ; The SDK profile supplies the X4 Pro pinout, display, touch controller, and
  ; capacitive Home key. USB Serial/JTAG is the normal USB personality so
-@@ -625,6 +668,45 @@ build_flags =
+@@ -626,6 +669,45 @@ build_flags =
    -DLOG_LEVEL=1 ; Set log level to info for release candidate builds
    -DUSE_BLOCK_DEVICE_INTERFACE=1
  
@@ -2831,7 +3363,7 @@ index f4eeda76..8ee60958 100644
 +lib_deps =
 +  ${base.lib_deps}
 +  BoardPaperDiy=symlink://freeink-sdk/libs/hardware/BoardPaperDiy
-+  m5stack/M5GFX @ 0.2.36
++  m5stack/M5GFX @ 0.3.0
 +
 +; --- PaperDIY test build — serial key injection for automated UI tests --------
 +; Development only. Do not publish this environment's firmware as a release.
@@ -2846,10 +3378,10 @@ index f4eeda76..8ee60958 100644
  ; UC8279C SPI panel, GSLX680 touch, PCF8563 RTC, dedicated HSPI MicroSD (SPI,
  ; not SDMMC). 16MB DIO flash + 8MB OPI PSRAM. One binary serves the frontlit
 diff --git a/src/CrossPointSettings.cpp b/src/CrossPointSettings.cpp
-index f78469b2..dc2af0fa 100644
+index 2b0a9dca..ce09c1f3 100644
 --- a/src/CrossPointSettings.cpp
 +++ b/src/CrossPointSettings.cpp
-@@ -110,6 +110,11 @@ void CrossPointSettings::toJson(JsonDocument& doc) const {
+@@ -113,6 +113,11 @@ void CrossPointSettings::toJson(JsonDocument& doc) const {
    doc["longPressMenuFunction"] = longPressMenuFunction;
    doc["shortPwrBtn"] = shortPwrBtn;
    doc["doublePwrBtn"] = doublePwrBtn;
@@ -2861,7 +3393,7 @@ index f78469b2..dc2af0fa 100644
  
    // Language -- managed by LanguageSelectActivity, not in SettingsList.
    // Stored as ISO code string ("EN", "DE", ...) for stability across enum reorders.
-@@ -121,6 +126,12 @@ void CrossPointSettings::toJson(JsonDocument& doc) const {
+@@ -124,6 +129,12 @@ void CrossPointSettings::toJson(JsonDocument& doc) const {
      doc["keyboardLayouts"] = keyboardLayouts;
    }
  
@@ -2874,7 +3406,7 @@ index f78469b2..dc2af0fa 100644
    bleturner::writeJson(ble, doc);
  }
  
-@@ -271,6 +282,12 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
+@@ -274,6 +285,12 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
                                       : (doc["doubleClickPwrLight"] | (uint8_t)1) ? (uint8_t)PWR_FRONTLIGHT
                                                                                   : (uint8_t)IGNORE;
    doublePwrBtn = clamp(doc["doublePwrBtn"] | legacyDoublePwrBtn, (uint8_t)SHORT_PWRBTN_COUNT, defaultDoublePwrBtn());
@@ -2887,7 +3419,7 @@ index f78469b2..dc2af0fa 100644
    if (BoardConfig::hasHomeKey() && doc["homeButtonLongPressAction"].isNull() &&
        !doc["longPressMenuFunction"].isNull()) {
      static constexpr HomeButtonAction LEGACY[] = {HomeButtonAction::Sync,       HomeButtonAction::Ignore,
-@@ -309,6 +326,22 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
+@@ -315,6 +332,22 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
      keyboardLayouts = doc["keyboardLayouts"].as<uint16_t>();
    }
  
@@ -2911,10 +3443,10 @@ index f78469b2..dc2af0fa 100644
      needsResave = true;
    }
 diff --git a/src/CrossPointSettings.h b/src/CrossPointSettings.h
-index 763fa749..7a5db6f7 100644
+index 5cb1576e..02543858 100644
 --- a/src/CrossPointSettings.h
 +++ b/src/CrossPointSettings.h
-@@ -196,6 +196,9 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
+@@ -198,6 +198,9 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
    // Hide battery percentage
    enum HIDE_BATTERY_PERCENTAGE { HIDE_NEVER = 0, HIDE_READER = 1, HIDE_ALWAYS = 2, HIDE_BATTERY_PERCENTAGE_COUNT };
  
@@ -2924,7 +3456,7 @@ index 763fa749..7a5db6f7 100644
    // Page turn button long press behavior
    enum LONG_PRESS_BUTTON_BEHAVIOR {
      OFF = 0,
-@@ -331,8 +334,15 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
+@@ -333,8 +336,15 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
    uint8_t paragraphAlignment = JUSTIFIED;
    // Auto-sleep timeout setting (default 10 minutes). Legacy sleepTimeout enum values are migration-only.
    uint8_t sleepTimeoutMinutes = 10;
@@ -2941,7 +3473,7 @@ index 763fa749..7a5db6f7 100644
    uint8_t hyphenationEnabled = 0;
  
    // Reader screen margin settings
-@@ -350,6 +360,9 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
+@@ -352,6 +362,9 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
    uint8_t opdsFilenameFormat = 0;
    // Hide battery percentage
    uint8_t hideBatteryPercentage = HIDE_NEVER;
@@ -3022,6 +3554,56 @@ index 2f8e3705..75b60db5 100644
  
   private:
    static void screenTrampoline(UiScreen& screen, void* user);
+diff --git a/src/activities/browser/OpdsBookBrowserActivity.cpp b/src/activities/browser/OpdsBookBrowserActivity.cpp
+index 213cf2be..4aef1dc9 100644
+--- a/src/activities/browser/OpdsBookBrowserActivity.cpp
++++ b/src/activities/browser/OpdsBookBrowserActivity.cpp
+@@ -89,7 +89,8 @@ void OpdsBookBrowserActivity::onEnter() {
+   // Configure the OPDS client for this server, restore any persisted token, and
+   // reset the per-session auth latches. Accept-Language localizes the catalog
+   // (both request header and language-map title resolution).
+-  opdsClient.setServer(server.url, server.username, server.password, server.activeCustomHeaders());
++  opdsClient.setServer(UrlUtils::ensureProtocol(server.url), server.username, server.password,
++                       server.activeCustomHeaders());
+   {
+     const OpdsTokens t = OPDS_TOKENS.get(tokenKey());
+     opdsClient.setTokens(t.accessToken, t.refreshToken, t.refreshUrl);
+@@ -565,14 +566,15 @@ void OpdsBookBrowserActivity::downloadBook(const OpdsEntry& book) {
+   HttpDownloader::DownloadError result;
+   for (int attempt = 0; attempt < 2; ++attempt) {
+     {
+-      const freeink::opds::HttpAuth dlAuth = opdsClient.downloadAuth();
++      const freeink::opds::HttpAuth dlAuth = opdsClient.downloadAuth(downloadUrl);
+       std::vector<HttpDownloader::Header> headers = dlAuth.headers;
+       if (!dlAuth.bearer.empty()) headers.push_back({"Authorization", "Bearer " + dlAuth.bearer});
+       result = downloadFile(downloadUrl, filename, dlAuth.username, dlAuth.password, headers);
+     }
+     if (attempt != 0 || result != HttpDownloader::UNAUTHORIZED || HttpDownloader::lastStatus() != 401 ||
+         HttpDownloader::lastAnswerRedirected() ||
+-        freeink::fetchOrigin(downloadUrl) != freeink::fetchOrigin(server.url) || cancelDownload)
++        freeink::fetchOrigin(downloadUrl) != freeink::fetchOrigin(UrlUtils::ensureProtocol(server.url)) ||
++        cancelDownload)
+       break;
+     std::string title;
+     {
+@@ -614,7 +616,7 @@ void OpdsBookBrowserActivity::downloadLcpBook(const OpdsEntry& book) {
+   {
+     int status = 0;
+     HttpDownloader::FetchOptions options;
+-    const freeink::opds::HttpAuth auth = opdsClient.downloadAuth();
++    const freeink::opds::HttpAuth auth = opdsClient.downloadAuth(licenseUrl);
+     options.username = auth.username;
+     options.password = auth.password;
+     options.bearer = auth.bearer;
+@@ -949,7 +951,7 @@ void OpdsBookBrowserActivity::loadDetailCover(const std::string& docUrl, const s
+     LOG_INF("OPDS", "Skipping cover: low heap");
+     return;
+   }
+-  const freeink::opds::HttpAuth auth = opdsClient.downloadAuth();
++  const freeink::opds::HttpAuth auth = opdsClient.downloadAuth(url);
+   std::vector<HttpDownloader::Header> headers = auth.headers;
+   if (!auth.bearer.empty()) headers.push_back({"Authorization", "Bearer " + auth.bearer});
+   const auto result = HttpDownloader::downloadToFile(url, tmp, nullptr, nullptr, auth.username, auth.password, headers);
 diff --git a/src/activities/home/FileBrowserActivity.cpp b/src/activities/home/FileBrowserActivity.cpp
 index ad4c0a3f..21f3b5e5 100644
 --- a/src/activities/home/FileBrowserActivity.cpp
@@ -3529,7 +4111,7 @@ index c3159303..8169e335 100644
          state = State::PICKING;
          launchPicker();
 diff --git a/src/activities/settings/SettingsActivity.cpp b/src/activities/settings/SettingsActivity.cpp
-index 622e0039..7251779c 100644
+index adec03fa..40cdb7cb 100644
 --- a/src/activities/settings/SettingsActivity.cpp
 +++ b/src/activities/settings/SettingsActivity.cpp
 @@ -25,6 +25,7 @@
@@ -3563,7 +4145,7 @@ index 622e0039..7251779c 100644
  }  // namespace
  
  void SettingsActivity::rebuildSettings() {
-@@ -203,12 +206,19 @@ void SettingsActivity::rebuildSettings() {
+@@ -205,12 +208,19 @@ void SettingsActivity::rebuildSettings() {
    // OTA fetches this board's own release asset (see OtaUpdater); boards whose
    // asset isn't published yet just report no update available. The Picco's
    // stock layout has one app slot (partitions_picco.csv), so it cannot update
@@ -3585,7 +4167,7 @@ index 622e0039..7251779c 100644
    rebuildRowItems();
  }
  
-@@ -469,6 +479,22 @@ void SettingsActivity::toggleSelectedSetting() {
+@@ -471,6 +481,22 @@ void SettingsActivity::toggleSelectedSetting() {
        case SettingAction::SdFirmwareUpdate:
          startActivityForResult(std::make_unique<SdFirmwareUpdateActivity>(renderer, mappedInput), resultHandler);
          break;
@@ -3608,19 +4190,28 @@ index 622e0039..7251779c 100644
        case SettingAction::DownloadFonts:
          startActivityForResult(std::make_unique<FontDownloadActivity>(renderer, mappedInput),
                                 [this](const ActivityResult&) {
-@@ -666,6 +692,6 @@ void SettingsActivity::drawFooter() {
+@@ -711,11 +737,15 @@ void SettingsActivity::drawFooter() {
  }
  
  void SettingsActivity::render(RenderLock&& lock) {
++  bool backgroundRedrawn = false;
+   if (std::exchange(redrawFontPopupBackground, false) && optionPopup.isActive()) {
+     renderer.clearScreen();
+     drawChrome();
+     renderUi();
++    backgroundRedrawn = true;
+   }
 -  if (optionPopup.processRender(renderer, mappedInput)) return;
-+  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/true)) return;
++  // Fork: popup steps refresh only the dialog window; a redrawn background
++  // (UI font load failure) needs the full refresh.
++  if (optionPopup.processRender(renderer, mappedInput, /*partial=*/!backgroundRedrawn)) return;
    UiListActivity::render(std::move(lock));
  }
 diff --git a/src/activities/settings/SettingsActivity.h b/src/activities/settings/SettingsActivity.h
-index b57d01ad..1f7a3591 100644
+index 8f498cd0..ef8db513 100644
 --- a/src/activities/settings/SettingsActivity.h
 +++ b/src/activities/settings/SettingsActivity.h
-@@ -26,6 +26,7 @@ enum class SettingAction {
+@@ -27,6 +27,7 @@ enum class SettingAction {
    RefreshLibrary,
    CheckForUpdates,
    SdFirmwareUpdate,
@@ -3699,10 +4290,10 @@ index 61823958..73918792 100644
    // Handles one key activation (by stable key id). Returns true when the
    // screen needs a repaint; OK/cancel finish the activity instead.
 diff --git a/src/components/OptionPopup.h b/src/components/OptionPopup.h
-index ce66bf4b..45120dc2 100644
+index c0a63548..9f2b75d9 100644
 --- a/src/components/OptionPopup.h
 +++ b/src/components/OptionPopup.h
-@@ -161,12 +161,28 @@ class OptionPopup {
+@@ -158,12 +158,28 @@ class OptionPopup {
      return true;
    }
  
@@ -3733,15 +4324,15 @@ index ce66bf4b..45120dc2 100644
      return true;
    }
  
-@@ -276,6 +292,7 @@ class OptionPopup {
-     props.visibleOptions = static_cast<uint8_t>(visibleCount);
+@@ -270,6 +286,7 @@ class OptionPopup {
+     props.optionCount = static_cast<uint8_t>(visibleCount);
      const int16_t height = fui::optionDialogHeight(target, props, width);
      const fui::Rect dialogRect = fui::centeredRect(screen, fui::Size{width, height});
 +    lastDialogRect_ = dialogRect;
  
      // Chrome guard first, options after: route() scans newest-first, so the
      // option buttons win inside the dialog and the guard absorbs the rest.
-@@ -331,5 +348,6 @@ class OptionPopup {
+@@ -345,5 +362,6 @@ class OptionPopup {
    // Written by the render task (frame registration), routed by the loop task;
    // uiReady closes the rebuild window exactly like UiListActivity::uiReady.
    mutable freeink::ui::InteractionBuffer<INTERACTION_CAPACITY> interactions;
@@ -3789,7 +4380,7 @@ index d35042e0..573f10db 100644
  
  // Helper macro to access current theme
 diff --git a/src/components/themes/BaseTheme.cpp b/src/components/themes/BaseTheme.cpp
-index df91e7c3..abcc302c 100644
+index 0a970665..9a90213f 100644
 --- a/src/components/themes/BaseTheme.cpp
 +++ b/src/components/themes/BaseTheme.cpp
 @@ -80,7 +80,7 @@ void BaseTheme::drawBatteryLightningBolt(const GfxRenderer& renderer, int boltX,
@@ -3874,7 +4465,7 @@ index 5fa22bf5..a49a9273 100644
    }
  
 diff --git a/src/main.cpp b/src/main.cpp
-index 38769355..0753b2b9 100644
+index 30cd81bf..6041bf3d 100644
 --- a/src/main.cpp
 +++ b/src/main.cpp
 @@ -48,8 +48,10 @@
@@ -3915,7 +4506,7 @@ index 38769355..0753b2b9 100644
  
  // Fonts
  EpdFont notosans14RegularFont(&notosans_14_regular);
-@@ -573,6 +593,8 @@ void enterDeepSleep(bool fromTimeout = false) {
+@@ -577,6 +597,8 @@ void enterDeepSleep(bool fromTimeout = false) {
    // Sleep may end in a power-off (battery death, latch); persist the clock
    // floor now so a later cold boot resumes from it.
    trustedtime::note();
