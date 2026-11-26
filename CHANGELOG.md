@@ -57,8 +57,8 @@ las fuentes incrustadas en el EPUB y el render PSRAM nuevo.
   OK.
 - Smoke en hardware: PASS 25 pasos en PaperDIY (`20261126-203815`) y
   Waveshare 3.97 (`20261126-193226`, con unidad USB). El build de producción
-  `ws397` arranca en Home; el de PaperDIY se comprueba en el aparato antes del
-  tag.
+  `ws397` arranca en Home y el de PaperDIY, flasheado tras el ciclo de power,
+  también.
 - PaperDIY: tras flashear, el aparato quedó en modo descarga en cada reset
   (el PM1 sujetaba GPIO0); se recupera con una pulsación corta de power. No lo
   causa el firmware, que nunca pide ese modo al PM1.
