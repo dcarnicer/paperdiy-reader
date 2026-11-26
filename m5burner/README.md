@@ -1,0 +1,119 @@
+# M5Burner package
+
+This directory holds the M5Burner metadata template and the publishing
+checklist. Generated packages go to `dist/m5burner/` (ignored by git).
+
+## Build the package
+
+```bash
+make build ENV=paperdiy
+python3 scripts/make_m5burner_package.py   # version from platformio.ini
+```
+
+The script produces:
+
+```
+dist/m5burner/
+├── crosspoint-paperdiy-latest.bin    # for the desktop Publish dialog
+├── paperdiy-reader-<version>.zip      # for the repo/PR route
+└── paperdiy-reader-<version>/
+    ├── m5burner.json
+    ├── LICENSE
+    ├── README.md
+    ├── cover.png
+    └── firmware/
+        └── PaperDIYReader_0x0.bin
+```
+
+`crosspoint-paperdiy-latest.bin` and `firmware/PaperDIYReader_0x0.bin` are the combined
+`firmware.factory.bin` (bootloader + partition table + app). Use the `.bin` in
+the M5Burner desktop **Publish** dialog; use the `.zip` only for the
+`M5Stack-Firmware` repository/PR route. Do not use the `paperdiy-test` build:
+it exposes serial key injection.
+
+## Test before publishing
+
+1. Build and package from a clean `paperdiy` build.
+2. On a clean PaperDIY, erase flash and burn the package with M5Burner.
+3. Check boot, Home, A/B, SD, EPUB page turn, About SD/battery and Wi-Fi.
+4. Verify the package starts with an empty NVS: no Wi-Fi credentials or
+   KOReader credentials from the development device.
+
+## App description (EN)
+
+Text for the app's **description** field in M5Burner. Keep it in step with the
+firmware and the repository; the per-version notes are in
+`m5burner/CHANGELOG.md`.
+
+```text
+CrossPoint for PaperDIY (community port) is an EPUB reader for the M5Stack PaperDIY (K159), built on CrossPoint Reader and the FreeInk SDK.
+
+Features: library and file browser, SD and downloadable fonts, StarDict dictionary, clippings, OPDS, Calibre wireless, KOReader Sync and CrossPoint Sync (bookmarks, reading sessions, Sync On Sleep), web UI, USB drive mode, two-button controls and kit/extended battery profiles.
+
+Under M5Launcher: "Check for Updates" tells you when a new version is out; install it from M5Launcher > OTA and delete the old copy.
+
+Source, MagSafe case STL, releases and issues: https://github.com/dcarnicer/paperdiy-reader
+
+Only for the M5Stack PaperDIY (not PaperS3 or PaperColor). This is not an official M5Stack firmware.
+
+License: GPLv3 (the firmware includes wolfSSL); the source code is MIT. License texts and third-party notices are attached to each GitHub release.
+
+Known limitations: BLE page-turner pairing is not validated with a real remote; sleep current is not measured; battery life was measured only with an extended 1500 mAh cell (45.4 h / 5,448 pages in a drain test), and the original 140 mAh cell gives short battery life; slight ghosting after long reading at the default 5-page refresh; KOReader Sync was tested only against a local KOSync server; Sync On Sleep is not yet tested against a real server.
+```
+
+## Publish
+
+Use your own M5Stack account. There are two supported routes:
+
+1. **M5Burner desktop app**: `USER CUSTOM` → `Publish`, fill name, version,
+   description, device type, GitHub URL, the `.bin` firmware and cover. Use
+   `m5burner/CHANGELOG.md` for the cumulative description since the last
+   published version. Keep its License section: the dialog only takes the
+   `.bin`, so the description has to state GPLv3 and link the source and the
+   release `LICENSE`.
+2. **M5Stack-Firmware PR**: fork `m5stack/M5Stack-Firmware`, add this
+   repository to `firmware-repo.list`, and include `m5burner.json` plus the
+   `firmware/` folder in this repository. M5Stack reviews the first submission.
+
+After publishing, update the status line at the top of `m5burner/CHANGELOG.md`.
+Do not mark a version as published until the M5Burner catalog shows it.
+
+For this package the expected device type is `M5Stack PaperDIY`. Confirm the
+exact string shown by the current M5Burner device list before publishing; if it
+differs, update `firmware_category.device` in `m5burner.json`.
+
+## Legal checklist
+
+- [ ] Release tag exists for the exact firmware binary.
+- [ ] `LICENSE` was generated from the installed dependencies and is included.
+- [ ] Source archive includes the vendored `freeink-sdk` and `patches/`.
+- [ ] No `paperdiy-test` or debug binary is uploaded.
+- [ ] No M5Stack logo or “official firmware” claim is used.
+- [ ] The LPPL hyphenation question in `licenses/README.md` is accepted or
+      resolved before a public release.
+- [ ] M5Stack terms and review requirements are accepted.
+
+## Notes
+
+- `m5burner.json` here is a template; the packaging script replaces
+  `version` and normalizes `repository`. Keep its `version` equal to the latest
+  release anyway: it is the reference stored in git and must not lag behind
+  `platformio.ini`. That value is what the next package will carry; it does not
+  mean the catalog has been updated.
+- M5Burner uses the same version as the GitHub release, without the `v`:
+  `2.0.0-1`, `2.0.0-2`… (CrossPoint version + port revision, kept short
+  because M5Burner limits the field; see
+  `.agents/rules/release-versioning.md`). The reader's update
+  notice compares this field and picks the highest one, so type it exactly
+  and never leave an old-scheme version such as `2.1.0` in the entry. Do not
+  upload RCs.
+- The cover is `m5burner/cover.png` (1280×720) and is used by default by
+  `scripts/make_m5burner_package.py`. Pass `--cover` to use another image.
+  It is rendered from `m5burner/cover.html` with headless Chrome (command in
+  the file's header); edit the HTML, not the PNG. Keep the license text in
+  line with the firmware (GPLv3).
+- Keep `README.md` and `LICENSE` inside the uploaded package.
+- The same full image serves M5Launcher: LauncherHub mirrors M5Burner and
+  Launcher copies only the app at `0x10000`. Prefer uploading the GitHub
+  release asset `crosspoint-paperdiy-latest.bin`, so M5Burner gets the exact
+  binary of the tagged release. See `docs/paperdiy/13-m5launcher.md`.

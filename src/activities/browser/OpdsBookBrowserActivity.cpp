@@ -1,6 +1,7 @@
 #include "OpdsBookBrowserActivity.h"
 
 #include <Arduino.h>
+#include <BoardConfig.h>
 #include <FontCacheManager.h>
 #include <FreeInkUIIcon.h>
 #include <GfxRenderer.h>
@@ -45,6 +46,11 @@ constexpr int16_t PAGE_FIRST = 0;
 constexpr int16_t PAGE_PREV = 1;
 constexpr int16_t PAGE_NEXT = 2;
 constexpr int16_t PAGE_LAST = 3;
+
+// Fork: boards whose only navigation keys are a side pair and that have no
+// touch (e.g. the PaperDIY's A/B, the Waveshare 3.97 rocker). On them the side
+// keys move the list, and crossing its ends turns the feed page.
+bool sideKeysOnly(const MappedInputManager& input) { return !BoardConfig::hasHorizontalKeys() && !input.hasTouch(); }
 
 // Accept-Language from the reader's UI language, so servers that localize the
 // catalog (e.g. Lirtuel) return it translated. Primary subtag plus an English
@@ -121,6 +127,23 @@ void OpdsBookBrowserActivity::activateIndex(const int index) {
 }
 
 bool OpdsBookBrowserActivity::handleCustomInput() {
+  // Fork: the upstream branch below reserves the side keys for feed pages,
+  // which leaves side-keys-only boards no way to move the selection. There
+  // they keep moving it; Next on the last row and Previous on the first turn
+  // the page. With no previous page, Previous on the top row still opens
+  // search (CatalogActivity).
+  if (state == State::BROWSING && sideKeysOnly(mappedInput)) {
+    if (!pageNextHref.empty() && nav.selected >= listCount() - 1 &&
+        mappedInput.wasPressed(MappedInputManager::Button::NavNext)) {
+      followPageLink(pageNextHref);
+      return true;
+    }
+    if (!pagePrevHref.empty() && nav.selected <= 0 && mappedInput.wasPressed(MappedInputManager::Button::NavPrevious)) {
+      followPageLink(pagePrevHref);
+      return true;
+    }
+    return CatalogActivity::handleCustomInput();
+  }
   if (state == State::BROWSING &&
       (!pageNextHref.empty() || !pagePrevHref.empty() || !pageFirstHref.empty() || !pageLastHref.empty())) {
     // On a paginated feed the side buttons belong to feed pages exclusively.
@@ -285,7 +308,13 @@ void OpdsBookBrowserActivity::drawFooter() {
         confirmLabel = entries[nav.selected].purchase ? tr(STR_OPDS_BUY) : tr(STR_DOWNLOAD);
       }
       const char* searchLabel = (hasSearch() && nav.selected == 0) ? tr(STR_SEARCH) : tr(STR_DIR_UP);
-      labels = mappedInput.mapLabels(tr(STR_BACK), confirmLabel, searchLabel, tr(STR_DIR_DOWN));
+      const char* downLabel = tr(STR_DIR_DOWN);
+      // Fork: name the page turn the side keys perform at the list ends.
+      if (sideKeysOnly(mappedInput)) {
+        if (nav.selected <= 0 && !pagePrevHref.empty()) searchLabel = tr(STR_PREV_PAGE);
+        if (nav.selected >= listCount() - 1 && !pageNextHref.empty()) downLabel = tr(STR_NEXT_PAGE);
+      }
+      labels = mappedInput.mapLabels(tr(STR_BACK), confirmLabel, searchLabel, downLabel);
       break;
     }
     case State::DOWNLOADING:

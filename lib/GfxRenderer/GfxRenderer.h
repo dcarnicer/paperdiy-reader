@@ -256,6 +256,13 @@ class GfxRenderer {
   // EXPERIMENTAL: Windowed update - display only a rectangular region
   // Repaint a B/W rectangle over retained gray pixels; false means the caller must use its normal paint.
   bool displayRetainedGrayscaleOverlay(int x, int y, int width, int height, bool restore = false) const;
+  // Windowed update: display only a rectangular region in logical screen
+  // coordinates. The rectangle is rotated to panel memory and x is aligned to
+  // the panel's 8-pixel bus granularity before reaching the driver.
+  void displayWindow(int x, int y, int width, int height) const;
+  // Same, but the rectangle is in Portrait logical coordinates. Button hints
+  // are always drawn in Portrait even when the activity runs in landscape.
+  void displayWindowPortrait(int x, int y, int width, int height) const;
   void invertScreen() const;
   void clearScreen(uint8_t color = 0xFF) const;
   void getOrientedViewableTRBL(int* outTop, int* outRight, int* outBottom, int* outLeft) const;

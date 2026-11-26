@@ -4,6 +4,7 @@
 #include <GfxRenderer.h>
 #include <HalClock.h>
 #include <HalFrontlight.h>
+#include <HalPowerManager.h>
 #include <HalStorage.h>
 #include <HalSystem.h>
 #include <HalTiltSensor.h>
@@ -27,6 +28,7 @@ enum MenuItem {
   ITEM_SD_SIZE,
   ITEM_SD_USED,
   ITEM_SD_FREE,
+  ITEM_BATTERY,
   ITEM_DISPLAY,
 #if FREEINK_DEVICE_PICCO
   ITEM_PANEL,
@@ -55,6 +57,7 @@ const char* const menuNames[AboutActivity::ITEM_COUNT] = {
     "SD Size",
     "SD Used",
     "SD Free",
+    "Battery",
     "Display Controller",
 #if FREEINK_DEVICE_PICCO
     "Display Panel",
@@ -171,6 +174,21 @@ void AboutActivity::onEnter() {
   const char* panel = display.panelName();
   rowValues_[ITEM_PANEL] = panel ? panel : "Unknown";
 #endif
+
+  // The PM1 has no coulomb counter, so show the raw rails next to the percentage.
+  // This is also the quickest way to tell a full pack from a charger that has
+  // already terminated. Fields are -1 when the board has no PM1 backend.
+  const auto batteryStatus = powerManager.getBatteryStatus();
+  if (batteryStatus.millivoltsKnown) {
+    const char* state =
+        batteryStatus.chargingKnown
+            ? (batteryStatus.charging ? "charging" : "idle")
+            : (batteryStatus.externalPowerKnown ? (batteryStatus.externalPower ? "USB" : "battery") : "?");
+    snprintf(buf, sizeof(buf), "%.2fV %u%% %s", batteryStatus.millivolts / 1000.0f, batteryStatus.percentage, state);
+    rowValues_[ITEM_BATTERY] = buf;
+  } else {
+    rowValues_[ITEM_BATTERY] = "n/a";
+  }
   snprintf(buf, sizeof(buf), "%ux%u", static_cast<unsigned>(BoardConfig::ACTIVE.displayWidth),
            static_cast<unsigned>(BoardConfig::ACTIVE.displayHeight));
   rowValues_[ITEM_RESOLUTION] = buf;

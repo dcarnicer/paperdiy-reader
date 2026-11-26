@@ -1,0 +1,207 @@
+# 07 — User guide (PaperDIY)
+
+**Languages:** [Español](07-user-guide.md) · **English** · [简体中文](07-user-guide.zh-CN.md) · [日本語](07-user-guide.ja.md)
+
+This guide assumes you have already flashed the firmware. If not, see the
+[README](../../README.en.md) and `06-porting.md`.
+
+## First boot
+
+1. Copy `.epub` books to the SD card (FAT32 or exFAT). Folders are allowed.
+2. Insert the SD card.
+3. Turn it on with a short press of the power button.
+4. The first screen is the library/home. Use A/B to move; long B confirms; long
+   A goes back.
+
+The first time a book is opened, a cache is generated in `/.crosspoint/` (it
+takes a few seconds). Later opens are much faster.
+
+## Controls
+
+| Gesture | Action |
+|---|---|
+| A short | up / previous page |
+| B short | down / next page |
+| A long | back / exit |
+| B long | confirm / select |
+| A+B | power (menu/sleep) |
+| Power click | power on; while running, the configured action (default sleep/power off) |
+| Power double-click | power off (hardware, if the PM1 keeps it enabled) |
+| Power ~10 s | download mode (red LED; screen may freeze) |
+
+The power click no longer performs the factory reset: the PM1 delivers it to
+the firmware. If you prefer the original behavior, build with
+`-DPAPERDIY_PM1_APP_POWER_BUTTON=0` and use A+B to sleep.
+
+In the reader, A/B turn pages. In lists, they move the selection; long B opens
+the item; long A goes back.
+
+Controls are grouped under `Settings > Controls` into **Power button**,
+**Front buttons**, **Side buttons** and **Taps and gestures**. In
+`Settings > Controls > Side buttons > Orient Side Buttons` you can make A/B
+reverse direction in landscape; in upside-down portrait they always reverse. It
+is off by default, including when upgrading from an older version.
+
+Short clicks are registered **on release**, not on press: that is what makes
+it possible to tell a click from a long press with only two buttons. If it were
+changed to "page on press", a long press could trigger a page/movement before
+opening the menu; it is a UX trade-off still to be decided.
+
+## Library
+
+- The home screen shows recent books/covers; the file browser lets you enter
+  folders.
+- Long B on a book opens the menu (open, details, delete, etc.).
+- Metadata and covers are cached in `/.crosspoint/`; if something looks wrong,
+  delete that folder and it will be regenerated.
+- Under Settings > Library, `Hide New Files in Recent` limits the Recent tab to
+  books you have opened.
+
+## Reading
+
+- Long B opens the reader menu: TOC, bookmarks, highlights, dictionary, go to
+  %, text settings, orientation, etc.
+- Long A goes back to the previous menu.
+- The reading position is saved automatically.
+- Highlights/clippings are saved to the SD card (see the reader menu).
+
+## Comics
+
+- The firmware does not open `.cbz`/`.cbr` directly; convert them to EPUB with
+  one XHTML page per image first.
+- **Best quality (recommended): Kindle Comic Converter (KCC)**. Use the
+  `Other` profile with width 540 and height 960, manga mode, margin + page
+  number cropping, double-page splitting, grayscale, and 16-level PNG. In the
+  desktop app, enable expert mode to select `Other` and the custom size. With
+  KCC 12.1.3 on the CLI:
+
+  ```sh
+  kcc-c2e tome.pdf -p OTHER --customwidth 540 --customheight 960 \
+    -f EPUB --nokepub -c 2 -r 0 -m -q -u --forcepng \
+    -t "Volume 1" -a "Author" -o tome.epub
+  ```
+
+  KCC crops the margins, resizes to the panel's real 540 px width, and avoids
+  a second rescale in the reader. On TOMO2 the content became ~20% larger and
+  the file went from 23 MB to 13 MB.
+- **Fallback without KCC**: `scripts/comic_to_epub.py`, which creates one
+  XHTML page per image. It accepts CBZ/ZIP or PDF:
+
+  ```sh
+  python3 scripts/comic_to_epub.py tome.cbz tome.epub
+  python3 scripts/comic_to_epub.py tome.pdf tome.epub --title "Volume 1" --author "Author"
+  ```
+
+  PDF input needs `pdftoppm` (`brew install poppler` on macOS).
+- Calibre can also convert CBZ to EPUB, but it does not crop or fit the panel;
+  use it only if KCC is unavailable.
+- Copy the EPUBs to `/Comics/` on the SD card. On first open the reader indexes
+  the book: it can take tens of seconds, and buttons are ignored until it
+  finishes.
+- The EPUB must have one XHTML page per image. PDF-reflow EPUBs with a single
+  HTML file (or optimized by the Calibre plugin) can collapse to `1/1` and stop
+  paginating.
+- The menu may show `Ch.: 1/1 page` because every page is its own document;
+  check `Page N` and `Book: %` for real progress.
+
+## Fonts
+
+- Copy `.ttf`, `.otf` or `.ttc` files to `/fonts/` or `/.fonts/` on the SD card.
+- You can group a family in a subfolder.
+- In reading settings, select the font; regular/bold/italic styles are matched
+  by family.
+- For IPA (dictionary) you need a font that covers those glyphs.
+- If the EPUB embeds supported fonts (`@font-face`), **Publisher Fonts** in
+  Text Settings → Style controls whether they are used: `Off`, `Ignore Body
+  Font` (default: only non-body fonts) or `All Text`. **Embedded Style** must
+  be on, and the setting only appears on PSRAM boards (PaperDIY and Waveshare
+  3.97).
+
+## Dictionaries
+
+- Copy each StarDict dictionary to `/dictionaries/<name>/` (or
+  `/.dictionaries/`), with an uncompressed `.idx` and `.dict`/`.dict.dz`.
+- In **Settings → Reader → Dictionary**, select the dictionary.
+- The first lookup builds the index (creates `.qidx`/`.sidx`); after that it is
+  fast.
+- For Spanish, look for a Wiktionary/RAE/WikDict StarDict and try it.
+
+## Wi-Fi, Calibre, OPDS and web UI
+
+- **Settings → Connectivity**: scan/join a Wi-Fi network (2.4 GHz).
+- **Web UI**: the address appears on screen; from a browser you can upload
+  books, view files, change settings and update.
+- **Calibre**: use "Connect to wireless device" in Calibre; the reader shows
+  the flow.
+- **OPDS**: add catalogs (Project Gutenberg, Standard Ebooks, etc.) in
+  `Settings → Connectivity → OPDS Servers` and open them from
+  `File Transfer → OPDS Browser` (or from Home when the plugin system is off
+  and a server is already saved). In catalogs with several pages, B on the
+  last entry loads the next page and A on the first entry loads the previous
+  one; A on the first entry of the first page opens search.
+- **KOReader Sync**: configure credentials and sync progress against the
+  official server or a self-hosted one (KOSync).
+- **OTA**: check for updates from Settings; you can also flash over USB.
+
+## Power and sleep
+
+- The reader sleeps by itself after an inactivity timeout.
+- To sleep manually: hold A+B or press power (depending on the configured
+  action).
+- On battery, when sleeping it asks the PM1 to **power off**: the device turns
+  off and a click turns it back on (the page remains on the panel).
+- With USB connected, the PM1 may also cut power; in that case only the power
+  button turns it back on. The **deep sleep** fallback with A/B wake only
+  happens if USB keeps the board alive.
+- If you will not use the device for a long time, power it off with a double
+  click.
+- The kit battery is 140 mAh: battery life depends on sleeping. Reading with
+  Wi-Fi on drains it much faster.
+- If you install a larger cell, choose **Settings > System > Battery profile >
+  Extended (1500 mAh)**. The profile only changes the percentage curve; charging
+  is unchanged.
+- While plugged in, the percentage is frozen at the last discharge estimate;
+  it shows 100% when charging completes and takes about two minutes to
+  recalculate after unplugging. The PM1 has no coulomb counter, so the charging
+  voltage cannot estimate the real state of charge.
+
+## SD: recommended layout
+
+```
+/
+├── Books/                 # your EPUB files (folders allowed)
+├── Comics/                # comics converted to EPUB
+├── fonts/                 # TTF/OTF
+├── dictionaries/          # one StarDict folder per dictionary
+└── .crosspoint/           # reader cache (do not touch unless resetting)
+```
+
+`Settings > About` shows the SD card's total, used and free space. The first
+look can take a few seconds because it walks the FAT.
+
+## Common problems
+
+| Symptom | What to try |
+|---|---|
+| Blank screen | PM1 GPIO2/GPIO46? DCDC? Full flash? |
+| Inverted image | change `rotation` in `paperdiyLgfxConfig` (0 ↔ 2) |
+| Ghosting when turning pages | try `Refresh Frequency` at 5, then 1 in Settings > Display; the new fast LUT is under validation. For an immediate manual refresh: assign `Refresh Screen` under Settings > Controls > Power button > Short click and use the power button; at 1, `Refresh Frequency` applies a clean half-refresh on every page after the first |
+| SD does not mount | FAT32/exFAT, contact, try another card; if there is no card at boot, insert it and the device restarts |
+| Page does not turn | battery? A/B? is it in sleep mode? |
+| Does not wake | is the button OK? `ext1` GPIO3/4? |
+| Strange battery reading | check `About > Battery` (VBAT/status) or the `[PWR] Battery:` log; recalibrate if the cell is changed |
+| Wi-Fi does not connect | 2.4 GHz, password, isolated AP; try a hotspot |
+| Book does not open | valid EPUB, size, RAM; delete the book cache |
+| Strange UI after update | delete `/.crosspoint/` and reboot |
+
+## Recovery
+
+If something fails:
+
+1. Hold power for ~10 s until the red LED comes on → download mode.
+2. Flash the release's `crosspoint-paperdiy-latest.bin` (or a local build's
+   `firmware.factory.bin`) at `0x0`.
+3. If it does not enter download mode, try another cable/USB port; the native
+   ESP32-S3 does not need an adapter.
+
+Always keep a backup of the original firmware before experimenting.
