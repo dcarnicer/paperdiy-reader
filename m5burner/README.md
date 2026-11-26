@@ -48,7 +48,7 @@ firmware and the repository; the per-version notes are in
 ```text
 CrossPoint for PaperDIY (community port) is an EPUB reader for the M5Stack PaperDIY (K159), built on CrossPoint Reader and the FreeInk SDK.
 
-Features: library and file browser, SD and downloadable fonts, StarDict dictionary, clippings, OPDS, Calibre wireless, KOReader Sync and CrossPoint Sync (bookmarks, reading sessions, Sync On Sleep), web UI, USB drive mode, two-button controls and kit/extended battery profiles.
+Features: library and file browser, SD and downloadable fonts, embedded EPUB fonts, StarDict dictionary, clippings, OPDS, Calibre wireless, KOReader Sync and CrossPoint Sync (bookmarks, reading sessions, Sync On Sleep), web UI, USB drive mode, two-button controls and kit/extended battery profiles.
 
 Under M5Launcher: "Check for Updates" tells you when a new version is out; install it from M5Launcher > OTA and delete the old copy.
 

@@ -55,6 +55,13 @@ las fuentes incrustadas en el EPUB y el render PSRAM nuevo.
   RAM. `paperdiy-test` y `ws397-test` compilan. Tests de host: 1157/1157;
   tests de host del SDK (SD, USB, OPDS, InputManager y su variante PaperDIY):
   OK.
+- Smoke en hardware: PASS 25 pasos en PaperDIY (`20261126-203815`) y
+  Waveshare 3.97 (`20261126-193226`, con unidad USB). El build de producción
+  `ws397` arranca en Home; el de PaperDIY se comprueba en el aparato antes del
+  tag.
+- PaperDIY: tras flashear, el aparato quedó en modo descarga en cada reset
+  (el PM1 sujetaba GPIO0); se recupera con una pulsación corta de power. No lo
+  causa el firmware, que nunca pide ese modo al PM1.
 - Pendiente de hardware: fuentes `@font-face`, ghosting del camino PSRAM, SD
   sin tarjeta e inserción en caliente, unidad USB y catálogo OPDS grande.
 

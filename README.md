@@ -40,8 +40,8 @@ Desde `2.0.0-12` también funciona, de forma experimental, en la
 > sin errores ni fugas el 06/11/2026. KOReader Sync validado contra un servidor
 > KOSync local el 06/11/2026. Pendiente: emparejar un mando BLE, consumo en
 > sleep y revisión visual física del ghosting. `make smoke` completo superado
-> en el árbol de `2.0.0-12` (sync `92e8714a`, 24/11/2026) en las dos placas:
-> PaperDIY run `20261124-115531` y Waveshare 3.97 run `20261124-121804`. Ver
+> en el árbol de `2.1.0-1` (sync `a2b0d48b`, 26/11/2026) en las dos placas:
+> PaperDIY run `20261126-203815` y Waveshare 3.97 run `20261126-193226`. Ver
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md).
 >
 > **Fork downstream:** `main` es un espejo de `upstream/develop`; `paperdiy`

@@ -1,51 +1,62 @@
 # Changelog de M5Burner
 
 Última publicación registrada en este repositorio: **2.0.0-10** (subida
-confirmada por el usuario el 22/11/2026). La entrada **2.0.0-11** documenta sus
-cambios y el texto preparado para el diálogo Publish; actualiza esta línea
-cuando el catálogo la muestre.
+confirmada por el usuario el 22/11/2026). No consta que **2.0.0-11** ni
+**2.0.0-12** se subieran; la descripción corta de **2.1.0-1** acumula los
+cambios desde 2.0.0-10. Si alguna de ellas ya está en el catálogo, recorta la
+descripción y actualiza esta línea.
 La subida es manual: confirma el catálogo y actualiza esta línea solo después
 de publicar.
 
 ## Short description for M5Burner (EN)
 
-## CrossPoint for PaperDIY 2.0.0-11
+## CrossPoint for PaperDIY 2.1.0-1
 
-Synced with CrossPoint `177d0694` and FreeInk SDK `995d9bd5`. Update from
-2.0.0-10.
+Based on CrossPoint 2.1.0 (`a2b0d48b`) and FreeInk SDK `de19f154`. Update from
+2.0.0-10; it includes the changes of 2.0.0-11 and 2.0.0-12.
 
 ### New
 
-- **Sync On Sleep** (optional, off by default): when you put the reader to
-  sleep from an EPUB, it joins a saved Wi-Fi network in range (battery at
-  least 20%) and syncs that book: position, bookmarks, reading sessions and,
-  if enabled, clippings.
-- Manual **Sync Progress** also syncs bookmarks and uploads reading sessions
-  on servers that support it (CrossPoint Sync).
-- Indic script support without HarfBuzz (Devanagari, Bengali, Tamil, Sinhala
-  and more).
-- Reading progress on the Lyra theme.
-- Web UI: browse installed plugins.
+- **Embedded EPUB fonts** (`@font-face`): reader menu → Text settings → Style
+  → **Publisher Fonts** (`Off`, `Ignore Body Font` by default, `All Text`).
+  Needs Embedded Style on and an EPUB with compatible embedded fonts.
+- **Sync On Sleep** (optional, off by default), and bookmark and
+  reading-session sync with CrossPoint Sync servers.
+- Custom UI font setting; vector font styles picked by file name.
+- Indic script support, reading progress on the Lyra theme and plugin
+  navigation in the web UI.
 
 ### Improvements and fixes
 
-- Clock and battery placement normalized across the built-in themes.
-- The file browser popup shows the selected file name.
-- Renaming a file in the web UI keeps its extension.
-- The sleep image is cleared when the device replaces it.
-- Clipping handles are no longer hidden at the top edge of the screen.
-- Safer SD file reads: oversized files are rejected instead of truncated.
-- Spanish, Catalan and Valencian translations for Sync On Sleep.
+- Faster page rendering with PSRAM (one render pass less on text pages), and
+  the open EPUB is reused instead of reopened.
+- OPDS: in multi-page catalogs A/B move the selection again (B on the last
+  entry loads the next page, A on the first the previous one) and A on the
+  first entry opens search. The OPDS login is only sent to the configured
+  server. TLS record and download-range fix.
+- On-screen keyboard: A/B walk through every key in reading order.
+- SD: startup errors are classified, and saves and USB transfers are
+  protected against interruptions.
+- Library: long titles wrap; 4-bit BMPs are no longer washed out; readable
+  shaded boxes in EPUBs; compact Home header.
+- The status bar refreshes on its own on antialiased pages.
+- Smaller firmware: Adobe glyph list removed, unused FreeType features off.
+- Translations updated in twelve languages, including Spanish, Catalan and
+  Valencian.
+
+### After updating
+
+- Each book rebuilds its cache the first time you open it. This happens once
+  per book.
 
 ### PaperDIY
 
-- Port reapplied on the new upstream. The sleep Wi-Fi battery check uses the
-  PaperDIY battery reading, and the reader menu still clears the page
-  underneath.
-- Full hardware smoke test passed (25 steps).
+- M5GFX 0.3.0. Full hardware smoke test passed (25 steps).
 
 ### Known limitations
 
+- Embedded fonts and the new PSRAM render path are new: ghosting and the cost
+  of EPUBs with many embedded fonts are not reviewed on the device yet.
 - Sync On Sleep has not been tried against a real server yet.
 - Still pending: real BLE remote pairing, full Calibre transfer, full OTA
   install, sleep/wake, idle current, autonomy and the visual ghosting review.
@@ -54,9 +65,43 @@ Synced with CrossPoint `177d0694` and FreeInk SDK `995d9bd5`. Update from
 
 GPLv3: the combined firmware includes wolfSSL. The source code is MIT. Source
 code, license texts and third-party notices (`LICENSE`):
-https://github.com/dcarnicer/paperdiy-reader/releases/tag/v2.0.0-11
+https://github.com/dcarnicer/paperdiy-reader/releases/tag/v2.1.0-1
 
 ## Full changelog (EN)
+
+### 2.1.0-1 — 2026-11-26
+
+Synced with CrossPoint `a2b0d48b` (version 2.1.0; numbering restarts at
+2.1.0-1) and FreeInk SDK `de19f154`.
+
+- Upstream: embedded EPUB fonts (`@font-face`, Publisher Fonts setting),
+  faster PSRAM page rendering, reuse of the open EPUB, wrapped library titles,
+  4-bit BMP fix, header icon alignment, smaller flash (Adobe glyph list and
+  unused FreeType features removed), TLS record and download-range fix
+  (#4576), classified SD startup errors, protected SD saves and USB
+  transfers, independent status-bar refresh on antialiased pages, OnePage
+  board target and translations in twelve languages.
+- PaperDIY port reapplied. The fork now uses upstream's Spanish, Catalan and
+  Valencian strings where upstream translates them and keeps only the
+  battery-profile strings.
+- Section and embedded-font caches move to a new version: each book rebuilds
+  its cache once.
+- Smoke test PASS (25 steps) on the PaperDIY (`20261126-203815`) and the
+  Waveshare 3.97 (`20261126-193226`).
+
+### 2.0.0-12 — 2026-11-24
+
+Synced with CrossPoint `92e8714a`, FreeInk SDK `995d9bd5` plus its `main` up
+to `a7eb4cc`, and M5GFX 0.3.0. First release that also targets the Waveshare
+ESP32-S3-ePaper-3.97 (separate images, not on M5Burner).
+
+- PaperDIY: A/B move the selection again in multi-page OPDS catalogs and A on
+  the first entry opens search; the on-screen keyboard walks every key with
+  A/B; the OPDS login is only sent to the configured server.
+- Upstream: custom UI font, vector font styles by file name, TTF prefix
+  cache, long dictionary folder names, readable shaded boxes, compact Home
+  header, plugin download errors and earlier frontlight off on sleep.
+- Release assets now include `LICENSE`; `NOTICE` tracks the synced pins.
 
 ### 2.0.0-11 — 2026-11-22
 
@@ -223,6 +268,42 @@ Synced with CrossPoint `8276d518` (3 commits) and FreeInk SDK `6a208c0c`.
   The visual battery-curve jump still needs a battery below ~90%.
 
 ## Changelog completo (ES)
+
+### 2.1.0-1 — 2026-11-26
+
+Sincronización con CrossPoint `a2b0d48b` (versión 2.1.0; la numeración se
+reinicia en 2.1.0-1) y FreeInk SDK `de19f154`.
+
+- Upstream: fuentes incrustadas en el EPUB (`@font-face`, ajuste Publisher
+  Fonts), render más rápido con PSRAM, reutilización del EPUB abierto, títulos
+  largos en varias líneas en la biblioteca, BMP de 4 bits corregidos, iconos
+  de cabecera alineados, menos flash (sin la lista de glifos Adobe ni features
+  de FreeType sin uso), fix de registros TLS y rangos de descarga (#4576),
+  errores de arranque de la SD clasificados, guardados y transferencias USB
+  protegidos, barra de estado independiente en páginas con antialiasing, placa
+  OnePage y traducciones en doce idiomas.
+- Port PaperDIY reaplicado. El fork usa ahora las cadenas ES/CA/VA de upstream
+  donde upstream las traduce y solo conserva las del perfil de batería.
+- Las cachés de secciones y de fuentes incrustadas cambian de versión: cada
+  libro reconstruye su caché una vez.
+- Smoke PASS (25 pasos) en PaperDIY (`20261126-203815`) y Waveshare 3.97
+  (`20261126-193226`).
+
+### 2.0.0-12 — 2026-11-24
+
+Sincronización con CrossPoint `92e8714a`, FreeInk SDK `995d9bd5` más su `main`
+hasta `a7eb4cc` y M5GFX 0.3.0. Primera release que también se publica para la
+Waveshare ESP32-S3-ePaper-3.97 (imágenes aparte, no en M5Burner).
+
+- PaperDIY: A/B vuelven a mover la selección en los catálogos OPDS de varias
+  páginas y A en la primera entrada abre la búsqueda; el teclado en pantalla
+  recorre todas las teclas con A/B; el login OPDS solo va al servidor
+  configurado.
+- Upstream: fuente personalizada para la interfaz, estilos de fuentes
+  vectoriales por nombre de fichero, caché de prefijos TTF, carpetas de
+  diccionario con nombres largos, cajas sombreadas legibles, cabecera compacta
+  de Home, errores al descargar plugins y luz frontal apagada antes al dormir.
+- Las releases adjuntan `LICENSE`; `NOTICE` registra los pines del sync.
 
 ### 2.0.0-11 — 2026-11-22
 
