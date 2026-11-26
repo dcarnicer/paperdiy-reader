@@ -112,6 +112,11 @@ antes de abrir el menú; es un compromiso de UX pendiente de decidir.
 - En ajustes de lectura selecciona la fuente; los estilos regular/bold/italic
   se emparejan por familia.
 - Para IPA (diccionario) necesitas una fuente que cubra esos glifos.
+- Si el EPUB incrusta fuentes compatibles (`@font-face`), **Publisher Fonts**
+  en Ajustes de texto → Estilo decide si se usan: `Off`, `Ignore Body Font`
+  (por defecto: solo las fuentes que no son el cuerpo) o `All Text`. Requiere
+  **Estilo integrado** activado y solo aparece en las placas con PSRAM
+  (PaperDIY y Waveshare 3.97).
 
 ## Diccionarios
 

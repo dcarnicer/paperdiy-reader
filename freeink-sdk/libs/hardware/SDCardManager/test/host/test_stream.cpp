@@ -74,6 +74,8 @@ int main() {
   assert(manager.isCardPresent());
   digitalReadLevel = HIGH;
   assert(!manager.isCardPresent());
+  assert(!manager.begin());
+  assert(manager.startupError() == SDCardManager::StartupError::CardNotDetected);
   BoardConfig::ACTIVE.sd.detect = -1;
   assert(manager.isCardPresent());
 
@@ -86,7 +88,11 @@ int main() {
   digitalReadLevel = LOW;
   assert(manager.remount());
   assert(manager.ready());
+  digitalReadLevel = HIGH;
+  assert(!manager.remount());
+  assert(manager.startupError() == SDCardManager::StartupError::CardNotDetected);
   BoardConfig::ACTIVE.sd.detect = -1;
+  assert(manager.begin());
 
   fakeSd::openFails = true;
   assert(!manager.readFileToStream("/test", unopened));

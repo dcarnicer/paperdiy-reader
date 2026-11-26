@@ -3,8 +3,8 @@
 Este repo es un fork downstream de CrossPoint. La regla es simple: **el motor
 se sigue de upstream; el hardware y la UX PaperDIY viven en nuestro fork**.
 
-Última sincronización: CrossPoint `92e8714a` / FreeInk SDK `995d9bd5`
-(24/11/2026).
+Última sincronización: CrossPoint `a2b0d48b` / FreeInk SDK `de19f154`
+(26/11/2026).
 
 ## Ramas y remotos
 
@@ -196,13 +196,15 @@ git add freeink-sdk && git commit -m "chore: vendor pristine SDK for patch basel
 
 ## Patches
 
-| Patch | Base | Contenido |
+| Patch | Base (destino) | Contenido |
 |---|---|---|
-| `patches/sdk.patch` | FreeInk SDK `995d9bd5` | perfil, BoardPaperDiy, PM1/I2C lock, InputManager, PowerManager, driver LGFX, batería; SDK #218 (ws397); SDK `main` hasta `a7eb4cc` |
-| `patches/firmware.patch` | CrossPoint `92e8714a` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main, batería; CrossPoint #3386 y envs ws397 |
+| `patches/sdk.patch` | FreeInk SDK `de19f154` | perfil, BoardPaperDiy, PM1/I2C lock, InputManager, PowerManager, driver LGFX, batería; SDK #218 (ws397) |
+| `patches/firmware.patch` | CrossPoint `a2b0d48b` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main, batería; CrossPoint #3386 y envs ws397 |
 | `patches/paperdiy-support.patch` | ambos | concatenación de los dos anteriores |
 
-Orden de aplicación: `sdk.patch` y luego `firmware.patch`.
+Orden de aplicación: `sdk.patch` y luego `firmware.patch`. Hasta regenerarlos
+tras el merge, los parches del árbol siguen usando las bases del release
+anterior.
 
 ### No reformatear el SDK vendorizado
 
@@ -223,8 +225,6 @@ listan aquí para poder quitarlos cuando upstream los fusione.
 |---|---|---|
 | [FreeInk SDK #218](https://github.com/Free-Ink/freeink-sdk/pull/218) | `b328dc5b`, `0d20526e`, `906acd9c`, `a6c2c543` (aquí `a621e5ea`, `53e837b1`, `6f89481e`, `fa49c49e`) | ws397: HALF con la secuencia rápida del fabricante, apagado tras grises, `hasHorizontalKeys()`, config 3.97 solo para ws397 |
 | [CrossPoint #3386](https://github.com/crosspoint-reader/crosspoint-reader/pull/3386) | `366ee088`, `c499e274`, `58d647e2`, `30910d4e` | envs ws397, board tag, teclado sin izquierda/derecha, pistas ocultas sin botones frontales, Atrás/encendido compartidos |
-| FreeInk SDK `main` sin fijar por CrossPoint | `8bdba4f`, `51fe898`, `8bff3d2`, `a7eb4cc` | login OPDS solo al servidor configurado; táctil de la Picco al arrancar. Quitar cuando CrossPoint fije el SDK en `a7eb4cc` o después |
-| [CrossPoint #4576](https://github.com/crosspoint-reader/crosspoint-reader/pull/4576), solo `15b04ea8` (parte de `src/`) | `15b04ea8` | adapta `OpdsBookBrowserActivity` a `downloadAuth(url)` del SDK `a7eb4cc`. Va junto a la fila anterior |
 
 Cambios propios del fork encima de esos PRs:
 
@@ -253,6 +253,31 @@ Cuando upstream fusione uno de estos PRs: en el sync, quédate con la versión
 de upstream de sus hunks, conserva solo los cambios propios de arriba y borra
 la fila de la tabla. Si el `[env:ws397]` de upstream entra en `platformio.ini`,
 deja uno solo.
+
+## Release `2.1.0-1` (26/11/2026)
+
+Sincronización con CrossPoint `a2b0d48b` / FreeInk SDK `de19f154`. Upstream
+sube `[crosspoint] version` a `2.1.0` (`cfc76112`; tag `2.1.0rc` en
+`d2270389`), así que la numeración del fork se reinicia en `2.1.0-1`.
+
+El sync se preparó en dos tandas: hasta `d2270389` (conflictos resueltos en
+`SDCardManager`, que conserva `StartupError` de upstream y
+`isCardPresent`/`unmount`/`remount` del fork; el stub `SdFat.h`; y
+`OpdsBookBrowserActivity`, donde upstream ya incluye nuestro #4576) y después
+los cuatro commits hasta `a2b0d48b`. En esa segunda tanda solo chocaron las
+traducciones ES/CA/VA: upstream (#4624) ya traduce cadenas que el fork
+traducía por su cuenta (Sync On Sleep, pulsación larga, vocabulario, OPDS,
+fuente de la interfaz, índice de la biblioteca). Se adoptan las de upstream y
+el fork solo conserva las del perfil de batería; se eliminaron las claves
+duplicadas `STR_UI_FONT` y `STR_UI_FONT_LOAD_FAILED`. Se quitan de la tabla
+de PRs el `main` del SDK (CrossPoint ya fija `de19f154`) y CrossPoint #4576
+(fusionado).
+
+- Builds, tests y smoke: ver el CHANGELOG.
+- El camino `@font-face` es nuevo y viene de upstream. Pendiente de medir en
+  hardware el coste de un EPUB con fuentes incrustadas (PSRAM y reintentos si
+  una fuente está corrupta), las fuentes distintas por página y el ghosting
+  del camino PSRAM.
 
 ## Release `2.0.0-11` (22/11/2026)
 

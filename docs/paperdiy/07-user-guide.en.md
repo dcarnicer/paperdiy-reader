@@ -111,6 +111,11 @@ opening the menu; it is a UX trade-off still to be decided.
 - In reading settings, select the font; regular/bold/italic styles are matched
   by family.
 - For IPA (dictionary) you need a font that covers those glyphs.
+- If the EPUB embeds supported fonts (`@font-face`), **Publisher Fonts** in
+  Text Settings → Style controls whether they are used: `Off`, `Ignore Body
+  Font` (default: only non-body fonts) or `All Text`. **Embedded Style** must
+  be on, and the setting only appears on PSRAM boards (PaperDIY and Waveshare
+  3.97).
 
 ## Dictionaries
 

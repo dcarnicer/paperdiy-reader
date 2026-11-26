@@ -4,16 +4,16 @@ PaperDIY Reader
 This project is a hardware port and downstream fork of CrossPoint Reader.
 
 Upstream:
-  CrossPoint Reader 2.0.0 (develop branch)
+  CrossPoint Reader 2.1.0 (develop branch)
   https://github.com/crosspoint-reader/crosspoint-reader
-  Commit: 92e8714a332c2c1903ea93290cf0b9b4f6f6697c (2026-11-23)
+  Commit: a2b0d48b001b4ce3e9102f0800a816661014b3e3 (2026-11-26)
   License: MIT
   Copyright (c) 2025 CrossPoint Reader organization
 
 Hardware abstraction:
   FreeInk SDK
   https://github.com/Free-Ink/freeink-sdk
-  Commit: 995d9bd523b9c45b18710bca17a3158ce724a7f4
+  Commit: de19f154ef0963879592f3baf6da68606122797c
   License: MIT
   Copyright (c) 2026 FreeInk
 

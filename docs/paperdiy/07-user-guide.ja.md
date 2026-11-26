@@ -111,6 +111,11 @@
 - 読書設定でフォントを選択します。レギュラー/ボールド/イタリックは
   ファミリー単位で対応付けられます。
 - 辞書の IPA には、そのグリフを含むフォントが必要です。
+- EPUB に対応するフォントが埋め込まれている場合（`@font-face`）、
+  **Text Settings → Style** の **Publisher Fonts** で使用するかを選べます:
+  `Off`、`Ignore Body Font`（既定: 本文以外のフォントのみ）、`All Text`。
+  **Embedded Style** がオンの場合のみ有効で、PSRAM 搭載ボード（PaperDIY と
+  Waveshare 3.97）でのみ表示されます。
 
 ## 辞書
 

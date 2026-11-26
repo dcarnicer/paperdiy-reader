@@ -98,6 +98,10 @@
 - 可以将同一字体家族放在子文件夹中。
 - 在阅读设置中选择字体；常规/粗体/斜体按字体家族匹配。
 - 词典 IPA 需要包含这些字形的字体。
+- 如果 EPUB 内嵌受支持的字体（`@font-face`），可在 **Text Settings →
+  Style** 中用 **Publisher Fonts** 选择是否使用：`Off`、`Ignore Body Font`
+  （默认：仅非正文字体）或 `All Text`。需要开启 **Embedded Style**，且仅
+  在带 PSRAM 的板型（PaperDIY 和 Waveshare 3.97）上提供。
 
 ## 词典
 

@@ -61,6 +61,22 @@ falla con un mensaje que pide flashear `paperdiy-test`.
 
 ## Resultado actual
 
+> **Estado:** `2.1.0-1`: Waveshare 3.97 PASS (25 pasos) y build de
+> producción `ws397` arranca en Home; PaperDIY pendiente.
+
+`2026-11-26`, árbol de `2.1.0-1` (sync `a2b0d48b`, SDK `de19f154`):
+
+- Waveshare 3.97, `ws397-test` con unidad USB, `--board ws397 --eject`, run
+  `20261126-193226`: **PASS, 25 pasos**. Después se flasheó el build de
+  producción `ws397` `2.1.0-1`, que arranca en Home.
+- PaperDIY: tras `make flash` del build `paperdiy-test`, cada reset arrancaba
+  en modo descarga (`boot:0x21`, `waiting for download`) porque el PM1
+  mantenía GPIO0 en bajo (camino de descarga por pulsación larga; el firmware
+  nunca envía `SYS_CMD` de descarga). El primer intento (`20261126-191633`)
+  falló en la sonda `CMD:KEY` antes de tocar la SD. Hace falta una pulsación
+  corta de power en el aparato; pendiente.
+
+
 > **Estado:** smoke completo ejecutado el 22/11/2026 sobre el árbol del sync
 > `177d0694` / SDK `995d9bd5` (`paperdiy-test` `2.0.0-10`; la release
 > `2.0.0-11` solo cambia la versión y añade traducciones): PASS, 25 pasos.

@@ -1,5 +1,63 @@
 # Changelog
 
+## 2.1.0-1 — 2026-11-26
+
+Sincronización con CrossPoint `a2b0d48b` y FreeInk SDK `de19f154`. Upstream
+sube la versión a **CrossPoint 2.1.0** (tag `2.1.0rc` en `d2270389`), así que
+la numeración del fork se reinicia en `2.1.0-1`. Primera release del fork con
+las fuentes incrustadas en el EPUB y el render PSRAM nuevo.
+
+- Lector: fuentes `@font-face` incrustadas en el EPUB, con el ajuste
+  **Publisher Fonts** en el menú del lector → **Ajustes de texto → Estilo**:
+  `Off`, `Ignore Body Font` (por defecto: solo los estilos que no son el
+  cuerpo) y `All Text`. Solo en las placas con PSRAM (PaperDIY y ws397) y con
+  **Estilo integrado** activado; el EPUB debe traer fuentes incrustadas
+  compatibles. Los bytes de cada familia se leen a PSRAM y se cachean por
+  tamaño; un EPUB con muchas familias puede ocupar varios cientos de KB de
+  PSRAM.
+- Render: en placas con PSRAM y páginas sin imágenes, el paso de grises usa
+  dos planos a la vez y elimina una pasada de render (#4601); el lector
+  reutiliza el EPUB abierto en vez de reabrir el ZIP (#4619). Falta medir la
+  mejora y revisar el ghosting en hardware.
+- Caché: sube la versión de las secciones y de las fuentes incrustadas
+  (77/20). Tras actualizar, la primera apertura de cada libro reconstruye sus
+  secciones; es esperado y ocurre una sola vez por libro.
+- Biblioteca: los títulos largos se ajustan en varias líneas; los BMP nativos
+  de 4 bits ya no salen lavados; los iconos de la cabecera se alinean con el
+  texto.
+- Flash: se elimina la lista de glifos Adobe y se recortan las features de
+  FreeType que no usamos.
+- OPDS/TLS: llega el fix completo de reserva de registro TLS y rango de
+  descarga (#4576); el fork ya llevaba la parte de `src/`, ahora upstream
+  incluye también los parches de wolfSSL. El reserve de entradas OPDS cuenta
+  la PSRAM.
+- SD: errores de arranque clasificados y protección de guardados y
+  transferencias USB frente a interrupciones. La detección de tarjeta y
+  `unmount`/`remount` del fork se conservan.
+- Barra de estado: se refresca de forma independiente en páginas con
+  antialiasing; redondeo de AA corregido.
+- Traducciones: upstream actualiza doce idiomas (#4624), incluidos ES/CA/VA.
+  El fork adopta las traducciones de upstream para las cadenas que antes
+  traducía por su cuenta (Sync On Sleep, pulsación larga, vocabulario, OPDS,
+  fuente de la interfaz, índice de la biblioteca) y solo conserva las del
+  perfil de batería.
+- Sincronización: CrossPoint `92e8714a` → `a2b0d48b` (13 commits) y SDK
+  `995d9bd5` → `de19f154` (27 commits, 4 ya adelantados). Se quitan de la
+  tabla los PRs ya fusionados (CrossPoint #4576 y los commits del `main` del
+  SDK hasta `a7eb4cc`); siguen SDK #218 y CrossPoint #3386 (ws397).
+- Port: conflictos resueltos en `SDCardManager` (se conservan `StartupError`
+  de upstream y `isCardPresent`/`unmount`/`remount` del fork), el stub
+  `SdFat.h`, `OpdsBookBrowserActivity` (se elimina el hunk duplicado de
+  #4576) y las traducciones ES/CA/VA. `patches/` regenerados contra
+  `de19f154` / `a2b0d48b` y verificados con `git apply --check`.
+- Build `paperdiy`: `firmware.bin` 5.658.768 B, 86,3 % de flash y 34,4 % de
+  RAM. Build `ws397`: `firmware.bin` 5.638.320 B, 86,0 % de flash y 34,5 % de
+  RAM. `paperdiy-test` y `ws397-test` compilan. Tests de host: 1157/1157;
+  tests de host del SDK (SD, USB, OPDS, InputManager y su variante PaperDIY):
+  OK.
+- Pendiente de hardware: fuentes `@font-face`, ghosting del camino PSRAM, SD
+  sin tarjeta e inserción en caliente, unidad USB y catálogo OPDS grande.
+
 ## 2.0.0-12 — 2026-11-24
 
 Primera release con dos placas: M5Stack PaperDIY y Waveshare
