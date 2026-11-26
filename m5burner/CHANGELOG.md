@@ -1,10 +1,10 @@
 # Changelog de M5Burner
 
-Última publicación registrada en este repositorio: **2.0.0-10** (subida
-confirmada por el usuario el 22/11/2026). No consta que **2.0.0-11** ni
-**2.0.0-12** se subieran; la descripción corta de **2.1.0-1** acumula los
-cambios desde 2.0.0-10. Si alguna de ellas ya está en el catálogo, recorta la
-descripción y actualiza esta línea.
+Última publicación en el catálogo: **2.0.0-11** (publicada el 23/11/2026,
+comprobado el 26/11/2026 en LauncherHub). **2.1.0-1** se envió el 26/11/2026
+desde la web (`burner.m5stack.com/developer`) y está pendiente de revisión;
+actualiza esta línea cuando el catálogo la muestre. 2.0.0-12 no se subió; sus
+cambios van incluidos en la descripción de 2.1.0-1.
 La subida es manual: confirma el catálogo y actualiza esta línea solo después
 de publicar.
 
@@ -13,18 +13,14 @@ de publicar.
 ## CrossPoint for PaperDIY 2.1.0-1
 
 Based on CrossPoint 2.1.0 (`a2b0d48b`) and FreeInk SDK `de19f154`. Update from
-2.0.0-10; it includes the changes of 2.0.0-11 and 2.0.0-12.
+2.0.0-11; it includes the changes of 2.0.0-12.
 
 ### New
 
 - **Embedded EPUB fonts** (`@font-face`): reader menu → Text settings → Style
   → **Publisher Fonts** (`Off`, `Ignore Body Font` by default, `All Text`).
   Needs Embedded Style on and an EPUB with compatible embedded fonts.
-- **Sync On Sleep** (optional, off by default), and bookmark and
-  reading-session sync with CrossPoint Sync servers.
 - Custom UI font setting; vector font styles picked by file name.
-- Indic script support, reading progress on the Lyra theme and plugin
-  navigation in the web UI.
 
 ### Improvements and fixes
 

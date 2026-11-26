@@ -65,6 +65,13 @@ Known limitations: BLE page-turner pairing is not validated with a real remote; 
 
 Use your own M5Stack account. There are two supported routes:
 
+0. **Web (used for 2.1.0-1)**: <https://burner.m5stack.com/developer> → the
+   existing *CrossPoint for PaperDIY (community port)* entry → *Upload new
+   version*: version, version description (the short description below the
+   App description), project link, the `.bin` and the cover. Name, device
+   (PaperDIY) and the general description come from the entry. New versions
+   stay *Pending* until M5Stack reviews them; they can be edited or withdrawn
+   meanwhile. `m5burner.m5stack.com` returns 404.
 1. **M5Burner desktop app**: `USER CUSTOM` → `Publish`, fill name, version,
    description, device type, GitHub URL, the `.bin` firmware and cover. Use
    `m5burner/CHANGELOG.md` for the cumulative description since the last
