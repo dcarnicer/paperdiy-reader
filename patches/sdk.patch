@@ -1,5 +1,5 @@
 diff --git a/freeink-sdk/docs/testing.md b/freeink-sdk/docs/testing.md
-index 5764315c..a0346a92 100644
+index 36c36c08..2d0afe13 100644
 --- a/freeink-sdk/docs/testing.md
 +++ b/freeink-sdk/docs/testing.md
 @@ -35,12 +35,14 @@ sh libs/book/ContentProtection/test/host/run.sh
@@ -18,18 +18,6 @@ index 5764315c..a0346a92 100644
  
  The book suite also needs `zip`. It uses `sips` or ImageMagick's `convert` for
  JPEG fixtures and optionally Pillow for progressive JPEG fixtures; the related
-@@ -223,7 +225,8 @@ sh libs/network/Opds/test/host/run.sh
- ```
- 
- Requires host Expat headers and library. Runs the production OPDS client and
--parsers with a scripted transport under ASan/UBSan. Covers public Atom browsing
--with protected acquisitions, Basic challenge headers and OPDS documents, rejected
--credentials, OAuth login/refresh, and cross-origin challenge rejection. Device
-+parsers with a scripted transport under ASan/UBSan. Covers guest-view catalogs
-+that need the login sent first, protected acquisitions, Basic challenge headers
-+and OPDS documents, rejected credentials, OAuth login/refresh (including after
-+a rejected first Basic), and cross-origin challenge rejection. Device
- tests must still verify the consumer's download retry, cancellation, and heap.
 diff --git a/freeink-sdk/docs/waveshare-epaper-397-support.md b/freeink-sdk/docs/waveshare-epaper-397-support.md
 index 3b7ef9c1..7668f969 100644
 --- a/freeink-sdk/docs/waveshare-epaper-397-support.md
@@ -208,10 +196,10 @@ index 0646a9f5..c80e9f83 100644
    // 16-gray path: the facade streams LSB/MSB 1-bpp planes (whole or in strips);
    // displayGray combines them with the B/W base into the panel's 8-bit gray canvas.
 diff --git a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.cpp b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.cpp
-index 6d5e6ce2..278bfb63 100644
+index ea10f144..ed8d906a 100644
 --- a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.cpp
 +++ b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.cpp
-@@ -130,6 +130,26 @@ static const Ssd1677Config& ssd1677StickyTextConfig() {
+@@ -144,6 +144,26 @@ static const Ssd1677Config& ssd1677StickyTextConfig() {
    return cfg;
  }
  
@@ -238,7 +226,7 @@ index 6d5e6ce2..278bfb63 100644
  #if FREEINK_DEVICE_METALIO_EINK4
  // GDEM0397T81 settings from metalio-hw-test. B/W refreshes use its OTP waveforms
  // via the vendor 0x22 sequence values; the vendor's separately supplied partial
-@@ -1211,7 +1231,8 @@ void Ssd1677Driver::displayGray(EpdBus& bus, const uint8_t* fb, bool turnOff, co
+@@ -1231,7 +1251,8 @@ void Ssd1677Driver::displayGray(EpdBus& bus, const uint8_t* fb, bool turnOff, co
      // sequence (its enable bits are a no-op on already-up rails).
      if (_cfg.grayPowerUpFirst) powerOn(bus);
      // Sticky AA follows the caller's power policy on either board.
@@ -248,7 +236,7 @@ index 6d5e6ce2..278bfb63 100644
    }
  
    setCustomLut(bus, false, nullptr);
-@@ -1345,11 +1366,14 @@ static const Ssd1677Config& ssd1677ActiveConfig() {
+@@ -1368,11 +1389,14 @@ static const Ssd1677Config& ssd1677ActiveConfig() {
      case BoardConfig::Board::MetalioEInk4: return ssd1677MetalioConfig();
  #endif
      case BoardConfig::Board::Sticky: return ssd1677StickyTextConfig();
@@ -267,10 +255,10 @@ index 6d5e6ce2..278bfb63 100644
      // Onyx Picco / BOOX Tiles: per-panel config picked from the panel's user ID
      // (see ssd1677PiccoConfig).
 diff --git a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.h b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.h
-index 9d8e5f58..776502b0 100644
+index acc44bd8..c6232748 100644
 --- a/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.h
 +++ b/freeink-sdk/libs/display/FreeInkDisplay/src/driver/Ssd1677Driver.h
-@@ -80,6 +80,11 @@ struct Ssd1677Config {
+@@ -82,6 +82,11 @@ struct Ssd1677Config {
    const unsigned char* textAaLut = nullptr;
    bool piccoStockGrayscale = false;  // YRD/OPM: 105-byte gray tables and OTP reader waveform.
    bool piccoWaveforms = false;  // BOOX panel-specific power sequences.
@@ -760,7 +748,7 @@ index 9781c2d5..9dfcfac0 100644
    }
    return 0;
 diff --git a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
-index 0692fb67..8ebdf602 100644
+index a587f676..09d7b234 100644
 --- a/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
 +++ b/freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h
 @@ -18,6 +18,7 @@
@@ -840,7 +828,7 @@ index 0692fb67..8ebdf602 100644
  };
  
  // 4-bit SDMMC/SDIO wiring (e.g. Silkscreen). SdFat can't drive SDIO, so a board with
-@@ -1567,6 +1577,61 @@ constexpr BoardProfile M5PAPER_S3 = {
+@@ -1568,6 +1578,61 @@ constexpr BoardProfile M5PAPER_S3 = {
      0,      // wifiMaxTxPower: radio default
      false};  // usbDetectActiveHigh: GPIO5 is driven LOW while a cable is attached
  
@@ -902,7 +890,7 @@ index 0692fb67..8ebdf602 100644
  // --- EEGO Reader A4 — ESP32-S3 N16R8, UC8279C (768x552) + GSLX680 touch -------
  // CrossPoint fork device; pins/resolution/calibration from stock-firmware RE,
  // none hardware-confirmed. See docs/eego-a4-support.md.
-@@ -2193,7 +2258,7 @@ constexpr uint32_t cmax(uint32_t a, uint32_t b) { return a > b ? a : b; }
+@@ -2203,7 +2268,7 @@ constexpr uint32_t cmax(uint32_t a, uint32_t b) { return a > b ? a : b; }
  constexpr uint32_t panelBytes(const BoardProfile& p) {
    return static_cast<uint32_t>(p.displayWidth / 8) * p.displayHeight;
  }
@@ -911,7 +899,7 @@ index 0692fb67..8ebdf602 100644
      cmax(cmax(FREEINK_DEVICE_X4 ? panelBytes(XTEINK_X4) : 0u, FREEINK_DEVICE_X3 ? panelBytes(XTEINK_X3) : 0u),
           cmax(FREEINK_DEVICE_M5 ? panelBytes(M5STACK_PAPER_COLOR) : 0u,
                FREEINK_DEVICE_MURPHY ? panelBytes(MURPHY_M3) : 0u)),
-@@ -2212,6 +2277,8 @@ constexpr uint32_t MAX_FRAMEBUFFER_BYTES = cmax(
+@@ -2222,6 +2287,8 @@ constexpr uint32_t MAX_FRAMEBUFFER_BYTES = cmax(
                               cmax(FREEINK_DEVICE_METALIO_EINK4 ? panelBytes(METALIO_EINK4) : 0u,
                                    cmax(FREEINK_DEVICE_PICCO ? panelBytes(PICCO) : 0u,
                                         FREEINK_DEVICE_E1001 ? panelBytes(SEEED_E1001) : 0u))))))));
@@ -920,7 +908,7 @@ index 0692fb67..8ebdf602 100644
  
  // Compile-time default device — the profile ACTIVE starts as. With a single
  // device in the build this is the only device; with several same-MCU devices it
-@@ -2244,6 +2311,8 @@ constexpr BoardProfile DEFAULT_DEVICE = LILYGO_T5S3;
+@@ -2254,6 +2321,8 @@ constexpr BoardProfile DEFAULT_DEVICE = LILYGO_T5S3;
  constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_V11;
  #elif FREEINK_DEVICE_PAPERS3
  constexpr BoardProfile DEFAULT_DEVICE = M5PAPER_S3;
@@ -929,7 +917,7 @@ index 0692fb67..8ebdf602 100644
  #elif FREEINK_DEVICE_STICKY
  constexpr BoardProfile DEFAULT_DEVICE = STICKY;
  #elif FREEINK_DEVICE_X4PRO
-@@ -2392,6 +2461,11 @@ inline bool selectDevice(Board which) {
+@@ -2402,6 +2471,11 @@ inline bool selectDevice(Board which) {
        ACTIVE = M5PAPER_S3;
        break;
  #endif
@@ -941,7 +929,7 @@ index 0692fb67..8ebdf602 100644
  #if FREEINK_DEVICE_EEGO_A4
      case Board::EegoA4:
        ACTIVE = EEGO_A4;
-@@ -2439,6 +2513,7 @@ inline bool isSilkscreen() { return ACTIVE.board == Board::Silkscreen; }
+@@ -2449,6 +2523,7 @@ inline bool isSilkscreen() { return ACTIVE.board == Board::Silkscreen; }
  [[deprecated("renamed to isSilkscreen()")]] inline bool isDeLink() { return isSilkscreen(); }
  inline bool isM5PaperV11() { return ACTIVE.board == Board::M5PaperV11; }
  inline bool isM5PaperS3() { return ACTIVE.board == Board::M5PaperS3; }
@@ -949,7 +937,7 @@ index 0692fb67..8ebdf602 100644
  inline bool isSticky() { return ACTIVE.board == Board::Sticky; }
  inline bool isX4Pro() { return ACTIVE.board == Board::XteinkX4Pro; }
  inline bool isX4Classic() { return ACTIVE.board == Board::XteinkX4Classic; }
-@@ -2451,6 +2526,12 @@ inline bool isPicco() { return ACTIVE.board == Board::Picco; }
+@@ -2461,6 +2536,12 @@ inline bool isPicco() { return ACTIVE.board == Board::Picco; }
  inline bool isSeeedE1001() { return ACTIVE.board == Board::SeeedE1001; }
  inline bool hasTouch() { return ACTIVE.touch.controller != TouchController::None; }
  inline bool hasHomeKey() { return ACTIVE.touch.hasHomeKey; }
@@ -1440,10 +1428,10 @@ index 00000000..de106962
 +
 +}  // namespace freeink
 diff --git a/freeink-sdk/libs/hardware/InputManager/include/InputManager.h b/freeink-sdk/libs/hardware/InputManager/include/InputManager.h
-index 0a85b93a..0283ef6f 100644
+index 5bd8743b..1cbc37bf 100644
 --- a/freeink-sdk/libs/hardware/InputManager/include/InputManager.h
 +++ b/freeink-sdk/libs/hardware/InputManager/include/InputManager.h
-@@ -467,7 +467,7 @@ class InputManager {
+@@ -470,7 +470,7 @@ class InputManager {
    unsigned long twoButtonPressStart;
    bool twoButtonLongPressActive;
    bool twoButtonChordSeen = false;  // both buttons were down during this press
@@ -1453,7 +1441,7 @@ index 0a85b93a..0283ef6f 100644
  #endif
  
 diff --git a/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp b/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
-index 9db87411..40fdbeda 100644
+index e3c7bbdb..32fc2299 100644
 --- a/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
 +++ b/freeink-sdk/libs/hardware/InputManager/src/InputManager.cpp
 @@ -1,5 +1,9 @@
@@ -1466,7 +1454,7 @@ index 9db87411..40fdbeda 100644
  #include <algorithm>
  
  #include "MultiTouchGestureMath.h"
-@@ -113,6 +117,9 @@ void InputManager::begin() {
+@@ -125,6 +129,9 @@ void InputManager::begin() {
      detachInterrupt(BoardConfig::ACTIVE.input.power);
    }
  #endif
@@ -1476,7 +1464,7 @@ index 9db87411..40fdbeda 100644
  #if FREEINK_DEVICE_METALIO_EINK4
    if (BoardConfig::isMetalioEInk4()) freeink::metalio::ensureBooted(METALIO_BOOT_WAIT_MS);
  #endif
-@@ -564,16 +571,29 @@ void InputManager::updateDigitalTwoButton(const unsigned long currentTime) {
+@@ -585,16 +592,29 @@ void InputManager::updateDigitalTwoButton(const unsigned long currentTime) {
    const uint8_t physical = static_cast<uint8_t>((up ? 1u : 0u) | (down ? 2u : 0u));
    uint8_t auxiliaryState = serviceTouch();
    if (s_buttonHook) auxiliaryState |= s_buttonHook();
@@ -1507,7 +1495,7 @@ index 9db87411..40fdbeda 100644
    if ((auxiliaryState & (1u << BTN_POWER)) && !isPressed(BTN_POWER)) powerButtonClick = pmicClicked;
  #endif
  
-@@ -612,7 +632,7 @@ void InputManager::updateDigitalTwoButton(const unsigned long currentTime) {
+@@ -633,7 +653,7 @@ void InputManager::updateDigitalTwoButton(const unsigned long currentTime) {
    applyStateChange(nextState, currentTime);
    if (physical == 3 && twoButtonLongPressActive) {
      powerButtonPressStart = twoButtonPressStart;
@@ -1516,7 +1504,7 @@ index 9db87411..40fdbeda 100644
      // A chord can take over a PMIC pulse without a new logical press edge.
      powerButtonClick = false;
  #endif
-@@ -703,7 +723,7 @@ unsigned long InputManager::getHeldTime() const {
+@@ -724,7 +744,7 @@ unsigned long InputManager::getHeldTime() const {
  }
  
  unsigned long InputManager::getPowerButtonHeldTime() const {
@@ -1525,38 +1513,6 @@ index 9db87411..40fdbeda 100644
    if (powerButtonClick) return 0;
  #endif
    if (isPressed(BTN_POWER)) {
-@@ -2351,6 +2371,31 @@ void InputManager::beginTma525c() {
-   }
-   touchDataEnabled = (mode == PICCO_MODE_APP);
-   if (touchDataEnabled) {
-+    // Explicitly leave HID sleep mode even when the controller already runs its app.
-+    // Reuse the report buffer: touch/command reports may precede the power reply.
-+    static constexpr uint8_t wakeCommand[] = {0x05, 0x00, 0x00, 0x08};
-+    Wire.beginTransmission(t.i2cAddress);
-+    Wire.write(wakeCommand, sizeof(wakeCommand));
-+    const auto wakeStatus = Wire.endTransmission();
-+    bool wakeAcknowledged = false;
-+    const unsigned long wakeStartedAt = millis();
-+    while (wakeStatus == 0 && millis() - wakeStartedAt < 500) {
-+      const unsigned long elapsed = millis() - wakeStartedAt;
-+      if (elapsed >= 500 || !piccoWaitInt(t.irq, 500 - elapsed)) break;
-+      const uint16_t len = piccoReadReport(t.i2cAddress, buf, sizeof(buf));
-+      if (len >= 5 && buf[2] == 0xF0 && (buf[3] & 0x03) == 0 && (buf[4] & 0x0F) == 0x08) {
-+        wakeAcknowledged = true;
-+        break;
-+      }
-+      delay(1);  // A stuck-low IRQ must not spin while waiting for the reply.
-+    }
-+    if (wakeStatus != 0)
-+      LOG_ERR("INPUT", "Picco touch power-on write failed: %u", wakeStatus);
-+    else if (!wakeAcknowledged)
-+      LOG_ERR("INPUT", "Picco touch power-on acknowledgment missing; continuing touch probe");
-+    else
-+      LOG_INF("INPUT", "Picco touch power-on acknowledged");
-+
-     // PIP GET_SYSINFO (as documented by Linux cyttsp5): sensing data starts at
-     // byte 33; byte 50 is max_num_of_tch_per_refresh_cycle. Query the panel's
-     // configuration rather than assuming the controller family's finger limit.
 diff --git a/freeink-sdk/libs/hardware/InputManager/test/host/paperdiy_stubs/BoardPaperDiy.h b/freeink-sdk/libs/hardware/InputManager/test/host/paperdiy_stubs/BoardPaperDiy.h
 new file mode 100644
 index 00000000..07d58a39
@@ -1582,51 +1538,6 @@ index 00000000..07d58a39
 +}
 +
 +}  // namespace BoardPaperDiy
-diff --git a/freeink-sdk/libs/hardware/InputManager/test/host/picco_stubs/Wire.h b/freeink-sdk/libs/hardware/InputManager/test/host/picco_stubs/Wire.h
-index 513482be..b6a80963 100644
---- a/freeink-sdk/libs/hardware/InputManager/test/host/picco_stubs/Wire.h
-+++ b/freeink-sdk/libs/hardware/InputManager/test/host/picco_stubs/Wire.h
-@@ -15,6 +15,12 @@ struct WireStub {
-   bool replySysinfo = true;
-   uint8_t sysinfoLength = 51;
-   uint8_t sysinfoCommand = 2;
-+  bool touchAwake = false;
-+  bool wakeWriteFails = false;
-+  bool forceIrqLow = false;
-+  unsigned wakeCommands = 0;
-+  std::vector<uint8_t> wakeReply = {5, 0, 0xF0, 0, 8};
-+  std::vector<std::vector<uint8_t>> beforeWakeReply;
-   bool begin(int, int, uint32_t) { return true; }
-   void setTimeOut(int) {}
-   void beginTransmission(uint8_t a) {
-@@ -23,15 +29,25 @@ struct WireStub {
-   }
-   void write(uint8_t v) { tx.push_back(v); }
-   void write(const uint8_t* v, size_t n) { tx.insert(tx.end(), v, v + n); }
--  void sync() { gpioLevels[11] = reports.empty() ? 1 : 0; }
-+  void sync() { gpioLevels[11] = reports.empty() && !forceIrqLow ? 1 : 0; }
-   void push(std::vector<uint8_t> r) {
-+    if (r.size() >= 3 && r[2] == 1 && !touchAwake) return;
-     reports.push_back(r);
-     sync();
-   }
-   int endTransmission(bool = true) {
-     if (address != 0x24) return 2;
-     writes.push_back(tx);
--    if (tx == std::vector<uint8_t>{0x01, 0x00})
-+    if (tx == std::vector<uint8_t>{5, 0, 0, 8}) {
-+      ++wakeCommands;
-+      if (wakeWriteFails) return 2;
-+      touchAwake = true;
-+      for (const auto& report : beforeWakeReply) push(report);
-+      if (!wakeReply.empty()) push(wakeReply);
-+    } else if (tx == std::vector<uint8_t>{5, 0, 1, 8}) {
-+      touchAwake = false;
-+      push({5, 0, 0xF0, 1, 8});
-+    } else if (tx == std::vector<uint8_t>{0x01, 0x00})
-       push({0x20, 0x00, mode, 0x00});  // HID descriptor reply
-     else if (tx.size() == 13 && tx[7] == 0x3B) {
-       mode = 0xF7;
 diff --git a/freeink-sdk/libs/hardware/InputManager/test/host/run_paperdiy.sh b/freeink-sdk/libs/hardware/InputManager/test/host/run_paperdiy.sh
 new file mode 100755
 index 00000000..3cafa345
@@ -1756,94 +1667,6 @@ index 00000000..382e98fd
 +
 +  std::puts("PaperDIY PMIC click duration and two-button Power chords passed");
 +}
-diff --git a/freeink-sdk/libs/hardware/InputManager/test/host/test_picco_touch.cpp b/freeink-sdk/libs/hardware/InputManager/test/host/test_picco_touch.cpp
-index f581ee25..cfa325f7 100644
---- a/freeink-sdk/libs/hardware/InputManager/test/host/test_picco_touch.cpp
-+++ b/freeink-sdk/libs/hardware/InputManager/test/host/test_picco_touch.cpp
-@@ -1,5 +1,6 @@
- // Picco TMA525C (Parade PIP): mode check, bootloader launch, touch decode, lift-off.
- #include <InputManager.h>
-+#include <Logging.h>
- #include <Wire.h>
- 
- #include <cassert>
-@@ -70,6 +71,7 @@ int main() {
-   assert(!powerInterruptEnabled);
-   gpioLevels[2] = 1;
-   assert(in.hasTouch() && in.supportsMultiTouch());
-+  assert(Wire.touchAwake && Wire.wakeCommands == 1);
-   bool launched = false;
-   for (const auto& w : Wire.writes)
-     if (w.size() == 13 && w[7] == 0x3B) {
-@@ -188,5 +190,67 @@ int main() {
-     send(single, contacts({}));
-     assert(single.wasTouchTap(cx, cy));
-   }
--  std::puts("Picco TMA525C touch passed");
-+  // Ordinary touch reports and unrelated replies must not hide the power ACK.
-+  Wire = WireStub{};
-+  Wire.beforeWakeReply = {touchReport(100, 200, 0), {5, 0, 0xF0, 1, 8}, {5, 0, 0xF0, 0, 9}};
-+  Wire.sync();
-+  InputManager interleaved;
-+  const auto errorsBeforeWake = loggedErrors;
-+  interleaved.begin();
-+  assert(Wire.touchAwake && Wire.wakeCommands == 1);
-+  assert(loggedErrors == errorsBeforeWake && interleaved.supportsMultiTouch());
-+  assert(!interleaved.wasTouchPressed());  // Startup reports never become UI input.
-+  send(interleaved, touchReport(100, 200, 0));
-+  assert(interleaved.wasTouchPressed());
-+
-+  // A missing/bad ACK is bounded and logged, but an already-awake panel stays usable.
-+  for (unsigned fault = 0; fault < 8; ++fault) {
-+    Wire = WireStub{};
-+    Wire.touchAwake = true;
-+    if (fault == 0) Wire.wakeWriteFails = true;
-+    if (fault == 1 || fault == 7) Wire.wakeReply.clear();
-+    if (fault == 2) Wire.wakeReply = {4, 0, 0xF0, 0};
-+    if (fault == 3) Wire.wakeReply = {5, 0, 0x1F, 0, 8};
-+    if (fault == 4) Wire.wakeReply = {5, 0, 0xF0, 1, 8};
-+    if (fault == 5) Wire.wakeReply = {5, 0, 0xF0, 0, 9};
-+    if (fault == 6) {
-+      Wire.wakeReply.assign(129, 0);  // An oversized pending report cannot spin forever.
-+      Wire.wakeReply[0] = 129;
-+    }
-+    Wire.forceIrqLow = fault == 7;
-+    Wire.sync();
-+    InputManager fallback;
-+    const auto start = fakeNow;
-+    const auto errors = loggedErrors;
-+    fallback.begin();
-+    assert(fakeNow - start < 1200 && loggedErrors > errors);
-+    assert(Wire.wakeCommands == 1 && fallback.hasTouch());
-+    // Drop the intentionally malformed oversized report before normal input.
-+    Wire.reports.clear();
-+    Wire.sync();
-+    send(fallback, touchReport(100, 200, 0));
-+    assert(fallback.wasTouchPressed());
-+  }
-+
-+  // Every initialization, including wake after sleep, explicitly powers touch on.
-+  Wire = WireStub{};
-+  Wire.sync();
-+  InputManager resumed;
-+  resumed.begin();
-+  assert(Wire.touchAwake && Wire.wakeCommands == 1);
-+  assert(resumed.prepareForDeepSleep() && !resumed.hasTouch() && !Wire.touchAwake);
-+  resumed.begin();
-+  assert(resumed.hasTouch() && Wire.touchAwake && Wire.wakeCommands == 2);
-+  send(resumed, touchReport(100, 200, 0));
-+  assert(resumed.wasTouchPressed());
-+
-+  // Do not send an application-mode power command to an unrecognized controller mode.
-+  Wire = WireStub{};
-+  Wire.mode = 0x12;
-+  Wire.sync();
-+  InputManager unknown;
-+  unknown.begin();
-+  assert(!unknown.hasTouch() && Wire.wakeCommands == 0);
-+
-+  std::puts("Picco TMA525C touch and power-on initialization passed");
- }
 diff --git a/freeink-sdk/libs/hardware/PowerManager/src/PowerManager.cpp b/freeink-sdk/libs/hardware/PowerManager/src/PowerManager.cpp
 index 890a1650..d53fa219 100644
 --- a/freeink-sdk/libs/hardware/PowerManager/src/PowerManager.cpp
@@ -1906,12 +1729,12 @@ index 890a1650..d53fa219 100644
    if (BoardConfig::isMetalioEInk4()) {
      metalio::setAmplifier(false);
 diff --git a/freeink-sdk/libs/hardware/SDCardManager/include/SDCardManager.h b/freeink-sdk/libs/hardware/SDCardManager/include/SDCardManager.h
-index 65de6f25..2058a105 100644
+index f154f264..85b770a8 100644
 --- a/freeink-sdk/libs/hardware/SDCardManager/include/SDCardManager.h
 +++ b/freeink-sdk/libs/hardware/SDCardManager/include/SDCardManager.h
-@@ -33,6 +33,14 @@ class SDCardManager {
-   SDCardManager();
+@@ -47,6 +47,14 @@ class SDCardManager {
    bool begin();
+   StartupError startupError() const { return startupError_; }
    bool ready() const;
 +  // Card-detect switch (active LOW). True on boards without one, so callers
 +  // that only need a hint keep working on every profile.
@@ -1925,14 +1748,15 @@ index 65de6f25..2058a105 100644
    uint64_t sdTotalBytes() const;
    // Returns used space in bytes, cached with a 20-second TTL (freeClusterCount
 diff --git a/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp b/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp
-index e0deaaaf..9c02be13 100644
+index 771dbd61..0672929a 100644
 --- a/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp
 +++ b/freeink-sdk/libs/hardware/SDCardManager/src/SDCardManager.cpp
-@@ -23,6 +23,13 @@ SDCardManager::SDCardManager() {}
- 
- bool SDCardManager::begin() {
-   if (initialized) return true;
+@@ -28,6 +28,14 @@ bool SDCardManager::begin() {
+     return true;
+   }
+   startupError_ = StartupError::Unknown;
 +  if (!isCardPresent()) {
++    startupError_ = StartupError::CardNotDetected;
 +    if (Serial) Serial.printf("[%lu] [SD] SD card absent (detect=%d)\n", millis(), BoardConfig::ACTIVE.sd.detect);
 +    initialized = false;
 +    cachedTotalBytes = 0;
@@ -1942,11 +1766,12 @@ index e0deaaaf..9c02be13 100644
  #if FREEINK_DEVICE_METALIO_EINK4
    if (BoardConfig::isMetalioEInk4() && !freeink::metalio::ensureBooted()) return false;
  #endif
-@@ -126,6 +133,13 @@ bool SDCardManager::shutdown() {
- SDCardManager::SDCardManager() : sd() {}
+@@ -148,6 +156,14 @@ SDCardManager::SDCardManager() : sd() {}
  
  bool SDCardManager::begin() {
+   startupError_ = StartupError::Unknown;
 +  if (!isCardPresent()) {
++    startupError_ = StartupError::CardNotDetected;
 +    if (Serial) Serial.printf("[%lu] [SD] SD card absent (detect=%d)\n", millis(), BoardConfig::ACTIVE.sd.detect);
 +    initialized = false;
 +    cachedTotalBytes = 0;
@@ -1956,7 +1781,7 @@ index e0deaaaf..9c02be13 100644
    // Profiles whose SD CS is not yet known leave it unassigned so the card stays
    // dormant — bail out before any pin is touched, or SdFat drives "pin 255" and
    // floods the log. (Native-SDMMC boards like the X4 Pro take the #if branch above.)
-@@ -306,6 +320,36 @@ bool SDCardManager::syncFilesystem() {
+@@ -370,6 +386,38 @@ bool SDCardManager::syncFilesystem() {
  
  bool SDCardManager::ready() const { return initialized; }
  
@@ -1979,11 +1804,13 @@ index e0deaaaf..9c02be13 100644
 +  cachedTotalBytes = 0;
 +  cachedUsedBytes = 0;
 +  cachedUsedBytesValid = false;
++  startupError_ = StartupError::Unknown;
 +}
 +
 +bool SDCardManager::remount() {
 +  if (!isCardPresent()) {
 +    unmount();
++    startupError_ = StartupError::CardNotDetected;
 +    return false;
 +  }
 +  unmount();
@@ -2024,22 +1851,22 @@ index af35a31b..a83bb0d7 100644
    struct {
      int cs = -1, sclk = -1, mosi = -1;
 diff --git a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/SdFat.h b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/SdFat.h
-index 10468759..8e50534a 100644
+index 8325fbad..8b7d46a9 100644
 --- a/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/SdFat.h
 +++ b/freeink-sdk/libs/hardware/SDCardManager/test/host/stubs/SdFat.h
-@@ -106,6 +106,7 @@ class SdFat : public FsVolume {
-  public:
-   FsBlockDeviceInterface* card() { return &card_; }
-   bool begin(uint8_t, uint32_t) { return true; }
-+  void end() {}
-   int sdErrorCode() const { return 0; }
+@@ -200,6 +200,7 @@ class SdFat : public FsVolume {
+   bool cardBegin(SdSpiConfig) { return !fakeSd::cardBeginFails; }
+   bool volumeBegin() { return !fakeSd::volumeBeginFails; }
+   int sdErrorCode() const { return fakeSd::cardErrorCode; }
++  void end() { FsVolume::end(); }
    int sdErrorData() const { return 0; }
  
+  private:
 diff --git a/freeink-sdk/libs/hardware/SDCardManager/test/host/test_stream.cpp b/freeink-sdk/libs/hardware/SDCardManager/test/host/test_stream.cpp
-index 5a471143..746084fe 100644
+index 5a471143..ef0fc59e 100644
 --- a/freeink-sdk/libs/hardware/SDCardManager/test/host/test_stream.cpp
 +++ b/freeink-sdk/libs/hardware/SDCardManager/test/host/test_stream.cpp
-@@ -67,11 +67,26 @@ int main() {
+@@ -67,11 +67,32 @@ int main() {
    }
  
    SDCardManager manager;
@@ -2050,6 +1877,8 @@ index 5a471143..746084fe 100644
 +  assert(manager.isCardPresent());
 +  digitalReadLevel = HIGH;
 +  assert(!manager.isCardPresent());
++  assert(!manager.begin());
++  assert(manager.startupError() == SDCardManager::StartupError::CardNotDetected);
 +  BoardConfig::ACTIVE.sd.detect = -1;
 +  assert(manager.isCardPresent());
 +
@@ -2062,335 +1891,11 @@ index 5a471143..746084fe 100644
 +  digitalReadLevel = LOW;
 +  assert(manager.remount());
 +  assert(manager.ready());
++  digitalReadLevel = HIGH;
++  assert(!manager.remount());
++  assert(manager.startupError() == SDCardManager::StartupError::CardNotDetected);
 +  BoardConfig::ACTIVE.sd.detect = -1;
++  assert(manager.begin());
  
    fakeSd::openFails = true;
    assert(!manager.readFileToStream("/test", unopened));
-diff --git a/freeink-sdk/libs/network/Opds/include/OpdsClient.h b/freeink-sdk/libs/network/Opds/include/OpdsClient.h
-index edb462d5..b3e1ce45 100644
---- a/freeink-sdk/libs/network/Opds/include/OpdsClient.h
-+++ b/freeink-sdk/libs/network/Opds/include/OpdsClient.h
-@@ -80,9 +80,10 @@ class OpdsClient {
-   // True when fetchFeed() or authenticateDownload() changed or cleared token
-   // state during a 401 handshake; persist it before the next operation.
-   bool tokensDirty() const { return authDirty; }
--  // Auth block for an app-side request (e.g. the file download) that must carry
--  // the same credentials the client negotiated.
--  HttpAuth downloadAuth() const;
-+  // Auth block for an app-side request to `url` (e.g. the file download) that
-+  // must carry the same credentials the client negotiated. Basic is only given
-+  // for the configured server's origin.
-+  HttpAuth downloadAuth(const std::string& url) const;
-   // After a same-origin download 401, renew/login once. The caller must check
-   // the URL belongs to its configured server and bound retries to one.
-   bool authenticateDownload(const std::string& url);
-@@ -97,15 +98,16 @@ class OpdsClient {
-   std::string bearerToken;
-   std::string refreshTokenValue;
-   std::string tokenRefreshUrl;
--  // Latched only after a 401 whose auth document offers Basic (or a bare Basic
--  // challenge): sending Basic preemptively breaks OAuth-only servers.
-+  // Latched by a Basic challenge, or by fetchFeed() for the configured server
-+  // when no token exists. Any 401 clears it before the handshake, so OAuth-only
-+  // servers still reach their auth document.
-   bool basicAuthLatched = false;
-   bool credentialsMissingFlag = false;
-   bool authDirty = false;
-   ClientStatusFn statusFn = nullptr;
-   void* statusCtx = nullptr;
- 
--  HttpAuth currentAuth() const;
-+  HttpAuth currentAuth(const std::string& url) const;
-   bool handleUnauthorized(const std::string& url, int attempt);
-   void notify(ClientPhase phase) const {
-     if (statusFn) statusFn(statusCtx, phase);
-diff --git a/freeink-sdk/libs/network/Opds/src/OpdsClient.cpp b/freeink-sdk/libs/network/Opds/src/OpdsClient.cpp
-index d99e50e6..0370b7a7 100644
---- a/freeink-sdk/libs/network/Opds/src/OpdsClient.cpp
-+++ b/freeink-sdk/libs/network/Opds/src/OpdsClient.cpp
-@@ -3,6 +3,7 @@
- #include <string_view>
- #include <utility>
- 
-+#include "FetchOrigin.h"
- #include "OpdsAuthDoc.h"
- #include "OpdsImplicitAuth.h"
- #include "OpdsLog.h"
-@@ -78,8 +79,10 @@ void OpdsClient::resetAuthState() {
-   credentialsMissingFlag = false;
- }
- 
--HttpAuth OpdsClient::currentAuth() const {
-+HttpAuth OpdsClient::currentAuth(const std::string& url) const {
-   HttpAuth a;
-+  // Login, token and custom headers belong to the configured server only.
-+  if (freeink::fetchOrigin(url) != freeink::fetchOrigin(serverUrl)) return a;
-   if (basicAuthLatched) {
-     a.username = username;
-     a.password = password;
-@@ -89,7 +92,7 @@ HttpAuth OpdsClient::currentAuth() const {
-   return a;
- }
- 
--HttpAuth OpdsClient::downloadAuth() const { return currentAuth(); }
-+HttpAuth OpdsClient::downloadAuth(const std::string& url) const { return currentAuth(url); }
- 
- bool OpdsClient::authenticateDownload(const std::string& url) {
-   authDirty = false;
-@@ -98,6 +101,9 @@ bool OpdsClient::authenticateDownload(const std::string& url) {
- 
- bool OpdsClient::handleUnauthorized(const std::string& url, const int attempt) {
-   credentialsMissingFlag = false;
-+  // Only the configured server may ask for the login: a 401 from another
-+  // origin must not start a handshake that sends it the credentials.
-+  if (freeink::fetchOrigin(url) != freeink::fetchOrigin(serverUrl)) return false;
-   authDirty = true;  // token state may change or be cleared this attempt
-   notify(ClientPhase::SigningIn);
-   bool advanced = false;
-@@ -122,8 +128,14 @@ OpdsClient::FetchStatus OpdsClient::fetchFeed(const std::string& url, OpdsFeedPa
-   // Resolve localized (language-map) titles to the UI language.
-   parser.setPreferredLanguage(primarySubtag(acceptLang).c_str());
-   authDirty = false;
-+  // A catalog with a guest view answers 200 without credentials, so no 401
-+  // would ever ask for the login. Offer the configured login to the server's
-+  // own origin first; a 401 still runs the handshake, which drops Basic.
-+  if (!basicAuthLatched && bearerToken.empty() && !username.empty() && !password.empty() &&
-+      freeink::fetchOrigin(url) == freeink::fetchOrigin(serverUrl))
-+    basicAuthLatched = true;
-   for (int authAttempt = 0;; ++authAttempt) {
--    const HttpResult res = http.get(url, currentAuth(), FEED_ACCEPT, orNull(acceptLang), false,
-+    const HttpResult res = http.get(url, currentAuth(url), FEED_ACCEPT, orNull(acceptLang), false,
-                                     [&parser](const uint8_t* data, const size_t len) {
-                                       parser.write(data, len);
-                                       return !parser.error();  // abort the transfer on a parse error
-@@ -147,7 +159,7 @@ OpdsClient::FetchStatus OpdsClient::fetchFeed(const std::string& url, OpdsFeedPa
- bool OpdsClient::fetchPublication(const std::string& docUrl, OpdsPublication& out) {
-   std::string doc;
-   doc.reserve(4096);
--  http.get(docUrl, currentAuth(), PUB_ACCEPT, orNull(acceptLang), false,
-+  http.get(docUrl, currentAuth(docUrl), PUB_ACCEPT, orNull(acceptLang), false,
-            [&doc](const uint8_t* data, const size_t len) {
-              const size_t room = doc.size() < MAX_PUB_DOC_BYTES ? MAX_PUB_DOC_BYTES - doc.size() : 0;
-              doc.append(reinterpret_cast<const char*>(data), len < room ? len : room);
-@@ -160,7 +172,7 @@ bool OpdsClient::fetchPublication(const std::string& docUrl, OpdsPublication& ou
- bool OpdsClient::resolveIndirect(const std::string& docUrl, std::string& outDownloadUrl, bool& outIsEpub) {
-   std::string doc;
-   doc.reserve(4096);
--  const bool fetched = http.get(docUrl, currentAuth(), nullptr, nullptr, false,
-+  const bool fetched = http.get(docUrl, currentAuth(docUrl), nullptr, nullptr, false,
-                                 [&doc](const uint8_t* data, const size_t len) {
-                                   const size_t room = doc.size() < MAX_PUB_DOC_BYTES ? MAX_PUB_DOC_BYTES - doc.size() : 0;
-                                   doc.append(reinterpret_cast<const char*>(data), len < room ? len : room);
-@@ -180,7 +192,7 @@ bool OpdsClient::resolveIndirect(const std::string& docUrl, std::string& outDown
- bool OpdsClient::fetchSearchTemplate(const std::string& descUrl, std::string& outTemplate) {
-   LOG_DBG("OPDS", "Fetching OpenSearch description: %s", descUrl.c_str());
-   OpenSearchDescParser parser;
--  const bool fetched = http.get(descUrl, currentAuth(), nullptr, nullptr, false,
-+  const bool fetched = http.get(descUrl, currentAuth(descUrl), nullptr, nullptr, false,
-                                 [&parser](const uint8_t* data, const size_t len) {
-                                   parser.write(data, len);
-                                   return !parser.error();
-diff --git a/freeink-sdk/libs/network/Opds/test/host/run.sh b/freeink-sdk/libs/network/Opds/test/host/run.sh
-index 731a7025..419dee1f 100644
---- a/freeink-sdk/libs/network/Opds/test/host/run.sh
-+++ b/freeink-sdk/libs/network/Opds/test/host/run.sh
-@@ -4,7 +4,7 @@ cd "$(dirname "$0")"
- BUILD_DIR="${TMPDIR:-/tmp}/freeink-opds-host-tests"
- mkdir -p "$BUILD_DIR"
- c++ -std=c++17 -Wall -Wextra ${CXXFLAGS:-} -fsanitize=address,undefined \
--  -Istubs -I../../include -I../../../JsonSax/include \
-+  -Istubs -I../../include -I../../../JsonSax/include -I../../../SecureNet/include \
-   ../../src/*.cpp ../../../JsonSax/src/StreamingJsonParser.cpp \
-   test_client.cpp -lexpat -o "$BUILD_DIR/test_client"
- "$BUILD_DIR/test_client"
-diff --git a/freeink-sdk/libs/network/Opds/test/host/test_client.cpp b/freeink-sdk/libs/network/Opds/test/host/test_client.cpp
-index 55fb60a2..0d202546 100644
---- a/freeink-sdk/libs/network/Opds/test/host/test_client.cpp
-+++ b/freeink-sdk/libs/network/Opds/test/host/test_client.cpp
-@@ -51,19 +51,86 @@ struct Transport : OpdsTransport {
- void configure(OpdsClient& client) { client.setServer(ROOT, "reader", "secret", {{"X-Proxy", "value"}}); }
- 
- int main() {
--  // Public Atom catalog, followed by an acquisition-only Basic challenge.
-+  // A guest-view catalog answers 200 without credentials (#4566): send the
-+  // configured login on the first feed request.
-   {
-     Transport http;
-     OpdsClient client(http);
-     configure(client);
-     http.replies.push_back({200, FEED, ""});
-     OpdsFeedParser parser;
-+    assert(client.fetchFeed(ROOT + "/opds", parser) == OpdsClient::FetchStatus::Ok);
-+    assert(http.requests.back().username == "reader" && http.requests.back().password == "secret");
-+    assert(client.downloadAuth(ROOT + "/book.epub").username == "reader");
-+    assert(!client.tokensDirty());
-+    // Once latched, Basic still stays with the server's origin.
-+    assert(client.downloadAuth("http://cdn.test/cover.jpg").username.empty());
-+    http.replies.push_back({200, FEED, ""});
-+    OpdsFeedParser other;
-+    assert(client.fetchFeed("https://other.test/opds", other) == OpdsClient::FetchStatus::Ok);
-+    assert(http.requests.back().username.empty() && http.requests.back().password.empty());
-+  }
-+  // The login is never offered to another origin or over a stored token.
-+  {
-+    Transport http;
-+    OpdsClient client(http);
-+    configure(client);
-+    http.replies.push_back({200, FEED, ""});
-+    OpdsFeedParser parser;
-+    assert(client.fetchFeed("https://other.test/opds", parser) == OpdsClient::FetchStatus::Ok);
-+    assert(http.requests.back().username.empty());
-+  }
-+  {
-+    Transport http;
-+    OpdsClient client(http);
-+    configure(client);
-+    client.setTokens("token", "", "");
-+    http.replies.push_back({200, FEED, ""});
-+    OpdsFeedParser parser;
-     assert(client.fetchFeed(ROOT, parser) == OpdsClient::FetchStatus::Ok);
--    assert(client.downloadAuth().username.empty());
-+    assert(http.requests.back().username.empty() && http.requests.back().bearer == "token");
-+    // The token and custom headers stay with the server's origin too.
-+    const auto foreign = client.downloadAuth("https://other.test/book.epub");
-+    assert(foreign.bearer.empty() && foreign.headers.empty());
-+    assert(client.downloadAuth(ROOT + "/book.epub").headers.size() == 1);
-+  }
-+  // A 401 from another origin never starts a login handshake.
-+  {
-+    Transport http;
-+    OpdsClient client(http);
-+    configure(client);
-+    client.setTokens("token", "refresh", ROOT + "/refresh");
-+    http.replies = {{401, OAUTH_DOC, ""}};
-+    OpdsFeedParser parser;
-+    assert(client.fetchFeed("https://other.test/opds", parser) == OpdsClient::FetchStatus::AuthFailed);
-+    assert(http.requests.size() == 1 && http.forms.empty());
-+    assert(!client.tokensDirty() && client.accessToken() == "token");
-+    assert(!client.authenticateDownload("https://other.test/book.epub"));
-+    assert(http.requests.size() == 1 && http.forms.empty());
-+  }
-+  {
-+    Transport http;
-+    OpdsClient client(http);
-+    configure(client);
-+    http.replies = {{401, "", ""}, {401, OAUTH_DOC, ""}, {200, FEED, ""}};
-+    http.posts = {{200, R"({"access_token":"access"})", ""}};
-+    OpdsFeedParser parser;
-+    assert(client.fetchFeed(ROOT, parser) == OpdsClient::FetchStatus::Ok);
-+    assert(http.requests[0].username == "reader");
-+    assert(http.requests[1].username.empty());
-+    assert(http.requests[2].bearer == "access" && http.requests[2].username.empty());
-+    assert(!client.useBasicAuth());
-+  }
-+  // Acquisition-only Basic challenge on a download.
-+  {
-+    Transport http;
-+    OpdsClient client(http);
-+    configure(client);
-     http.replies.push_back({401, "<html>Login required</html>", "Basic realm=books"});
-     assert(client.authenticateDownload(ROOT + "/book.epub"));
--    const auto auth = client.downloadAuth();
-+    const auto auth = client.downloadAuth(ROOT + "/book.epub");
-     assert(auth.username == "reader" && auth.password == "secret" && auth.bearer.empty());
-+    assert(client.downloadAuth("https://other.test/book.epub").username.empty());
-     assert(auth.headers.size() == 1);
-     assert(http.requests.back().username.empty());
-   }
-@@ -108,6 +175,7 @@ int main() {
-   {
-     Transport http;
-     OpdsClient client(http);
-+    client.setServer(ROOT, "", "", {});
-     http.replies = {{401, "", "Basic realm=books"}};
-     assert(!client.authenticateDownload(ROOT));
-     assert(client.credentialsMissing());
-@@ -129,8 +197,8 @@ int main() {
-     http.replies = {{401, OAUTH_DOC, "Basic realm=books"}};
-     http.posts = {{200, R"({"access_token":"access","refresh_token":"refresh"})", ""}};
-     assert(client.authenticateDownload(ROOT));
--    assert(client.downloadAuth().bearer == "access");
--    assert(client.downloadAuth().username.empty());
-+    assert(client.downloadAuth(ROOT).bearer == "access");
-+    assert(client.downloadAuth(ROOT).username.empty());
-     assert(client.tokensDirty());
-     assert(http.forms.front().find("grant_type=password") == 0);
-     http.posts = {{200, R"({"access_token":"renewed"})", ""}};
-diff --git a/freeink-sdk/libs/network/SecureNet/include/FetchOrigin.h b/freeink-sdk/libs/network/SecureNet/include/FetchOrigin.h
-new file mode 100644
-index 00000000..022017f6
---- /dev/null
-+++ b/freeink-sdk/libs/network/SecureNet/include/FetchOrigin.h
-@@ -0,0 +1,32 @@
-+#pragma once
-+
-+// FreeInk SDK — the origin credentials are scoped to. Dependency-free so
-+// network clients that never open a connection themselves can share it.
-+
-+#include <cctype>
-+#include <string>
-+
-+namespace freeink {
-+
-+// scheme://host:port, lowercased, with the scheme's default port made explicit
-+// and any userinfo dropped: the unit credentials are scoped to.
-+inline std::string fetchOrigin(const std::string& url) {
-+  const size_t schemeEnd = url.find("://");
-+  if (schemeEnd == std::string::npos) return {};
-+  std::string scheme = url.substr(0, schemeEnd);
-+  const size_t hostStart = schemeEnd + 3;
-+  const size_t hostEnd = url.find_first_of("/?#", hostStart);
-+  std::string authority = url.substr(hostStart, hostEnd == std::string::npos ? std::string::npos : hostEnd - hostStart);
-+  const size_t at = authority.rfind('@');
-+  if (at != std::string::npos) authority.erase(0, at + 1);
-+  for (auto* part : {&scheme, &authority}) {
-+    for (char& c : *part) c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
-+  }
-+  const size_t bracket = authority.rfind(']');  // IPv6 literal: its colons are not a port
-+  if (authority.find(':', bracket == std::string::npos ? 0 : bracket) == std::string::npos) {
-+    authority += scheme == "https" ? ":443" : ":80";
-+  }
-+  return scheme + "://" + authority;
-+}
-+
-+}  // namespace freeink
-diff --git a/freeink-sdk/libs/network/SecureNet/include/ResumableFetch.h b/freeink-sdk/libs/network/SecureNet/include/ResumableFetch.h
-index 76bc6b85..5af06f11 100644
---- a/freeink-sdk/libs/network/SecureNet/include/ResumableFetch.h
-+++ b/freeink-sdk/libs/network/SecureNet/include/ResumableFetch.h
-@@ -17,6 +17,7 @@
- #include <string>
- #include <string_view>
- 
-+#include "FetchOrigin.h"
- #include "SecureHttpClient.h"
- 
- namespace freeink {
-@@ -50,27 +51,6 @@ struct FetchResult {
-   bool aborted = false;   // shouldAbort fired
- };
- 
--// scheme://host:port, lowercased, with the scheme's default port made explicit
--// and any userinfo dropped: the unit credentials are scoped to.
--inline std::string fetchOrigin(const std::string& url) {
--  const size_t schemeEnd = url.find("://");
--  if (schemeEnd == std::string::npos) return {};
--  std::string scheme = url.substr(0, schemeEnd);
--  const size_t hostStart = schemeEnd + 3;
--  const size_t hostEnd = url.find_first_of("/?#", hostStart);
--  std::string authority = url.substr(hostStart, hostEnd == std::string::npos ? std::string::npos : hostEnd - hostStart);
--  const size_t at = authority.rfind('@');
--  if (at != std::string::npos) authority.erase(0, at + 1);
--  for (auto* part : {&scheme, &authority}) {
--    for (char& c : *part) c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
--  }
--  const size_t bracket = authority.rfind(']');  // IPv6 literal: its colons are not a port
--  if (authority.find(':', bracket == std::string::npos ? 0 : bracket) == std::string::npos) {
--    authority += scheme == "https" ? ":443" : ":80";
--  }
--  return scheme + "://" + authority;
--}
--
- // A resumable response must identify both its byte interval and resource size.
- inline bool parseFetchContentRange(std::string_view value, size_t& first, size_t& last, size_t& total) {
-   while (!value.empty() && (value.back() == ' ' || value.back() == '\t')) value.remove_suffix(1);
