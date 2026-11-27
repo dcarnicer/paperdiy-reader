@@ -14,6 +14,7 @@ import argparse
 import re
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -37,7 +38,41 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def build_license(output: Path, repository: str) -> None:
+def packages_dir() -> Path:
+    """Packages of the core `make build ENV=paperdiy` uses by default.
+
+    That is PLATFORMIO_CORE_DIR when exported, else the core
+    scripts/pio_core_dir.py picks. Without --packages-dir,
+    build_release_license.py falls back to ~/.platformio when the variable is
+    unset. After `make build CORE_DIR=/path`, export PLATFORMIO_CORE_DIR=/path;
+    check_linked_core() refuses a mismatch.
+    """
+    core = os.environ.get("PLATFORMIO_CORE_DIR")
+    if not core:
+        result = subprocess.run(
+            [sys.executable, str(PROJECT_DIR / "scripts" / "pio_core_dir.py"), "paperdiy"],
+            cwd=PROJECT_DIR, capture_output=True, text=True,
+        )
+        if result.returncode != 0 or not result.stdout.strip():
+            raise SystemExit(result.stderr.strip() or "cannot choose the PlatformIO core for paperdiy")
+        core = result.stdout.strip()
+    return Path(core).expanduser() / "packages"
+
+
+def check_linked_core(build_dir: Path, packages: Path) -> None:
+    """Stop when the firmware was not linked against `packages`."""
+    linker_map = build_dir / "firmware.map"
+    if not linker_map.is_file():
+        raise SystemExit(f"missing {linker_map}; run `make build ENV=paperdiy` first")
+    # abspath, not resolve: PlatformIO keeps symlinked core paths unresolved.
+    libs = os.path.join(os.path.abspath(packages), "framework-arduinoespressif32-libs")
+    if libs not in linker_map.read_text(encoding="utf-8", errors="replace"):
+        raise SystemExit(
+            f"{linker_map} was not linked against {libs}; export the "
+            "PLATFORMIO_CORE_DIR the firmware was built with")
+
+
+def build_license(output: Path, repository: str, packages: Path) -> None:
     subprocess.run(
         [
             sys.executable,
@@ -48,6 +83,8 @@ def build_license(output: Path, repository: str) -> None:
             str(output),
             "--repository",
             repository,
+            "--packages-dir",
+            str(packages),
         ],
         cwd=PROJECT_DIR,
         check=True,
@@ -81,6 +118,9 @@ def main() -> int:
         raise SystemExit(f"missing {TEMPLATE}")
     if not args.cover.is_file():
         raise SystemExit(f"missing cover image {args.cover}")
+    # Resolve and check the core before touching the output directory.
+    packages = packages_dir()
+    check_linked_core(args.build_dir, packages)
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     package_name = f"paperdiy-reader-{args.version}"
@@ -100,7 +140,7 @@ def main() -> int:
     shutil.copy2(factory, package_dir / "firmware" / firmware_name)
     shutil.copy2(args.cover, package_dir / "cover.png")
 
-    build_license(package_dir / "LICENSE", args.repository)
+    build_license(package_dir / "LICENSE", args.repository, packages)
     shutil.copy2(PROJECT_DIR / "m5burner" / "PACKAGE_README.md", package_dir / "README.md")
 
     archive = args.output_dir / f"{package_name}.zip"

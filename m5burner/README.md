@@ -10,6 +10,11 @@ make build ENV=paperdiy
 python3 scripts/make_m5burner_package.py   # version from platformio.ini
 ```
 
+The LICENSE lists the packages of the same PlatformIO core: `PLATFORMIO_CORE_DIR`,
+or the one `make -s core-dir` prints. If you built with `CORE_DIR=/path`, run the
+script with `PLATFORMIO_CORE_DIR=/path`; it refuses a firmware linked against
+another core.
+
 The script produces:
 
 ```
