@@ -95,7 +95,7 @@ jobs:
         run: python3 scripts/build_release_license.py --env paperdiy --output dist/LICENSE --repository "${GITHUB_REPOSITORY}"
 
       - name: Publish release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             dist/*.bin
