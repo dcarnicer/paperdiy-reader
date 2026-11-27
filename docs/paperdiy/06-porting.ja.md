@@ -97,7 +97,7 @@
 ```bash
 make build
 # または：
-core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" python3 scripts/pio_lock.py pio run -e paperdiy
 ```
 
 開発マシンでの結果（macOS、PlatformIO 6.1.19、pioarduino 55.03.311、
@@ -119,7 +119,7 @@ firmware.factory.bin  5.2 MB
 **分離された PlatformIO core** を使うことです：
 
 ```bash
-core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" python3 scripts/pio_lock.py pio run -e paperdiy
 ```
 
 `Makefile` はすでにこのようにしています。`scripts/pio_core_dir.py` は、固定した

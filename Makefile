@@ -18,7 +18,8 @@ CORE_DIR  ?= $(or $(PLATFORMIO_CORE_DIR),$(shell python3 "$(CURDIR)/scripts/pio_
 PIO_CORE   = $(or $(strip $(CORE_DIR)),$(error Cannot choose the PlatformIO core for ENV=$(ENV) (see the message above); set CORE_DIR=/path))
 PORT      ?=
 
-PIO_RUN = PLATFORMIO_CORE_DIR="$(PIO_CORE)" $(PIO) run -e $(ENV)
+# pio_lock.py makes a second build on the same core wait for the first.
+PIO_RUN = PLATFORMIO_CORE_DIR="$(PIO_CORE)" python3 "$(CURDIR)/scripts/pio_lock.py" $(PIO) run -e $(ENV)
 UPLOAD_PORT = $(if $(PORT),--upload-port "$(PORT)",)
 
 .PHONY: build flash flash-factory monitor clean size menuconfig smoke check-upstreams core-dir

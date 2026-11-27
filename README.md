@@ -157,7 +157,7 @@ Requisitos: PlatformIO Core, `python3` y conexión a internet la primera vez
 ```bash
 make build
 # equivalente a:
-core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" python3 scripts/pio_lock.py pio run -e paperdiy
 ```
 
 El binario queda en:
@@ -177,6 +177,10 @@ ruta). Lo comparten todos los clones y worktrees de esa versión, así que los
 entornos con `custom_sdkconfig` (`default`, `slim`, `sticky`…) siguen usando
 `.platformio-core/` dentro del checkout, porque pioarduino recompila el
 framework dentro del core. Para usar otra carpeta: `make build CORE_DIR=/ruta`.
+`make` (build, flash, size, clean), `scripts/build.sh` y `scripts/flash.sh`
+bloquean el core (`scripts/pio_lock.py`): si dos usan el mismo core, el segundo
+espera a que termine el primero. Un `pio run` lanzado sin `pio_lock.py` no toma
+el bloqueo.
 
 Si no compilas entornos con `custom_sdkconfig`, el `.platformio-core/` que
 dejaron builds anteriores ya no se usa y se puede borrar. Tras subir la versión de la

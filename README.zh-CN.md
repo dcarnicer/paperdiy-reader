@@ -138,7 +138,7 @@ CrossPoint 使用 `InputStyle::DigitalTwoButton`，专为两个按键设计：
 ```bash
 make build
 # 等价于：
-core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" python3 scripts/pio_lock.py pio run -e paperdiy
 ```
 
 生成的固件位于：
@@ -156,6 +156,9 @@ core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
 不同版本使用各自的 core。使用 `custom_sdkconfig` 的环境（`default`、`slim`、
 `sticky` 等）仍使用检出目录内的 `.platformio-core/`，因为 pioarduino 会在 core
 中重新编译框架。要使用其他目录：`make build CORE_DIR=/路径`。
+`make`（build、flash、size、clean）、`scripts/build.sh` 和 `scripts/flash.sh`
+会锁定 core（`scripts/pio_lock.py`）：如果两个构建使用同一个 core，后启动的会
+等待前一个完成。不经过 `pio_lock.py` 直接运行 `pio run` 不加锁。
 
 如果不编译使用 `custom_sdkconfig` 的环境，以前的构建留下的 `.platformio-core/`
 已不再使用，可以删除。升级平台版本后，在没有分支使用旧 core 时，从 `~/.platformio-cores` 删除

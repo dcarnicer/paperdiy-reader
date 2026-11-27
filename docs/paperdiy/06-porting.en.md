@@ -98,7 +98,7 @@ in `patches/sdk.patch` + `patches/firmware.patch`.
 ```bash
 make build
 # or:
-core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" python3 scripts/pio_lock.py pio run -e paperdiy
 ```
 
 Result on the development machine (macOS, PlatformIO 6.1.19, pioarduino
@@ -120,7 +120,7 @@ pointing to a non-existent `@src-...` directory. The reproducible fix is to use
 an **isolated PlatformIO core**:
 
 ```bash
-core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" python3 scripts/pio_lock.py pio run -e paperdiy
 ```
 
 The `Makefile` already does this. `scripts/pio_core_dir.py` picks one core per

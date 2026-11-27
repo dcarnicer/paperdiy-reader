@@ -158,7 +158,7 @@ CrossPoint は 2 ボタン専用の `InputStyle::DigitalTwoButton` を使用し�
 ```bash
 make build
 # 次と同等：
-core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" python3 scripts/pio_lock.py pio run -e paperdiy
 ```
 
 バイナリの出力先：
@@ -179,6 +179,10 @@ core を使います。`custom_sdkconfig` を使う環境（`default`、`slim`�
 など）は、pioarduino が core の中でフレームワークを再ビルドするため、引き続き
 チェックアウト内の `.platformio-core/` を使います。別のフォルダを使うには
 `make build CORE_DIR=/パス` とします。
+`make`（build、flash、size、clean）、`scripts/build.sh`、`scripts/flash.sh`
+は core をロックします（`scripts/pio_lock.py`）。同じ core を使うものが 2 つ
+同時に動くと、後のほうは先のほうが終わるまで待ちます。`pio_lock.py` を通さずに
+`pio run` を実行した場合はロックしません。
 
 `custom_sdkconfig` を使う環境をビルドしない場合、以前のビルドが残した
 `.platformio-core/` はもう使われないので削除できます。プラットフォームのバージョンを上げたら、

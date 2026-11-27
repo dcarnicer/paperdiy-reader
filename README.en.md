@@ -156,7 +156,7 @@ time (the isolated core downloads the platform, framework and toolchain;
 ```bash
 make build
 # equivalent to:
-core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" python3 scripts/pio_lock.py pio run -e paperdiy
 ```
 
 The binary is written to:
@@ -176,6 +176,10 @@ downloaded once per release; another release gets its own core. Environments
 with `custom_sdkconfig` (`default`, `slim`, `sticky`…) still use
 `.platformio-core/` inside the checkout, because pioarduino rebuilds the
 framework inside the core. To use another folder: `make build CORE_DIR=/path`.
+`make` (build, flash, size, clean), `scripts/build.sh` and `scripts/flash.sh`
+lock the core (`scripts/pio_lock.py`): if two of them use the same core, the
+second waits until the first finishes. A `pio run` started without
+`pio_lock.py` does not take the lock.
 
 If you don't build environments with `custom_sdkconfig`, a `.platformio-core/`
 left by older builds is no longer used and can be deleted. After a platform bump, delete the old core in
