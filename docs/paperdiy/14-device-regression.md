@@ -61,9 +61,32 @@ falla con un mensaje que pide flashear `paperdiy-test`.
 
 ## Resultado actual
 
-> **Estado:** `2.1.0-1`: PASS 25 pasos en las dos placas (PaperDIY
-> `20261126-203815`, Waveshare 3.97 `20261126-193226`). Los builds de
-> producción `ws397` y `paperdiy` `2.1.0-1` arrancan en Home.
+> **Estado:** `2.1.0-2`: PASS 25 pasos en las dos placas (PaperDIY
+> `20261127-200312`, Waveshare 3.97 `20261127-201807`). El build de
+> producción `ws397` `2.1.0-2` arranca en Home; la PaperDIY se queda con el de
+> test hasta que la OTA de la release le instale el de producción.
+
+`2026-11-27`, árbol de `2.1.0-2` (sync `dd86a5ec`, SDK `de19f154`). Los
+builds de test aún decían `2.1.0-1`; la release solo cambia la versión:
+
+- PaperDIY, `paperdiy-test` flasheado como app (`0x10000`), run
+  `20261127-200312`: **PASS, 25 pasos**. Esta vez arrancó en Home sin quedarse
+  en modo descarga.
+- Waveshare 3.97, `ws397-test`, `--board ws397 --eject`, run
+  `20261127-201807`: **PASS, 25 pasos**. Antes del tag se flasheó el build de
+  producción `ws397` `2.1.0-2`, que arranca en Home con el estado del usuario.
+  El primer intento se lanzó justo cuando la placa despertaba, el USB se cortó
+  a mitad de la escritura y la dejó sin app (`No bootable app partitions` en
+  bucle); se recuperó reflasheándola con la placa ya en marcha.
+- PaperDIY: desde el run `20261124-115531` (también `20261126-203815` y
+  este), la copia de seguridad ya trae los ajustes que pone el smoke (idioma
+  `EN`, diccionario `smoke`, auto-suspensión «Nunca»), y los recientes
+  incluyen el libro del smoke, que sigue en
+  `/read/paperdiy-smoke-20261124-100709.epub`. La última copia con los
+  ajustes del usuario es la de `20261124-100709`. Cada run guarda y restaura
+  esos mismos valores, así que hay que corregirlos a mano en el aparato. Un
+  PASS no prueba que el estado del usuario siga intacto: compara
+  `backup/.crosspoint/settings.json` con la de `20261124-100709`.
 
 `2026-11-26`, árbol de `2.1.0-1` (sync `a2b0d48b`, SDK `de19f154`):
 

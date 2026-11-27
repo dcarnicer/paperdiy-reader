@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — sync `dd86a5ec`
+## 2.1.0-2 — 2026-11-27
 
 Sincronización con CrossPoint `dd86a5ec` y FreeInk SDK `de19f154` (el pin del
 SDK no cambia). Mantiene CrossPoint `2.1.0`.
@@ -12,15 +12,25 @@ SDK no cambia). Mantiene CrossPoint `2.1.0`.
   punto, se reabren por su ruta. Diccionario (#4633): la definición en texto
   plano usa el interlineado del lector en vez de un 2,0 fijo.
 - Port: `sdk.patch` y `firmware.patch` aplican sin conflictos; ningún fichero
-  que cambia upstream está en el port, así que `patches/` no cambia y su base
-  pasa a `dd86a5ec`.
+  que cambia upstream está en el port, así que `patches/` solo cambia por la
+  versión y su base pasa a `dd86a5ec`.
 - Build `paperdiy`: `firmware.bin` 5.659.744 B, 86,3 % de flash y 34,4 % de
   RAM. Build `ws397`: `firmware.bin` 5.639.280 B, 86,0 % de flash y 34,5 % de
   RAM. `paperdiy-test` y `ws397-test` compilan. Tests de host: 1158/1158.
   Tests de Python: 52, con el fallo conocido de `test_firmware_stats`.
-- Pendiente de hardware: smoke en PaperDIY y ws397, reconstrucción del índice
-  con carpetas anidadas y definiciones de diccionario en texto plano con
-  varios interlineados.
+- Smoke en hardware: PASS 25 pasos en PaperDIY (`20261127-200312`) y
+  Waveshare 3.97 (`20261127-201807`). El build de producción `ws397` arranca
+  en Home; la PaperDIY se queda con el build de test y pasa a producción con
+  la OTA de esta release.
+- Smoke: la PaperDIY de pruebas conserva desde el 24/11 los ajustes que pone
+  el smoke (idioma, diccionario y auto-suspensión «Nunca»); no es un cambio
+  del firmware. Ver `14-device-regression.md`.
+- Pendiente de hardware: arranque del build de producción `paperdiy` e
+  instalación OTA completa (la primera prueba es la OTA de esta release en la
+  PaperDIY),
+  reconstrucción del índice con carpetas anidadas, extraer la SD durante la
+  reconstrucción y definiciones de diccionario en texto plano con varios
+  interlineados.
 
 ## 2.1.0-1 — 2026-11-26
 

@@ -257,11 +257,20 @@ de upstream de sus hunks, conserva solo los cambios propios de arriba y borra
 la fila de la tabla. Si el `[env:ws397]` de upstream entra en `platformio.ini`,
 deja uno solo.
 
-## Sync `dd86a5ec` (27/11/2026)
+## Release `2.1.0-2` (27/11/2026)
 
-CrossPoint `a2b0d48b` → `dd86a5ec` (2 commits); el pin del SDK sigue en
-`de19f154`. Los parches aplicaron sin conflictos y `patches/` no cambia: ningún
-fichero que cambia upstream está en el port. Detalle y checks en el CHANGELOG.
+Sincronización con CrossPoint `dd86a5ec` (2 commits desde `a2b0d48b`); el pin
+del SDK sigue en `de19f154` y CrossPoint sigue en `2.1.0`. Los parches
+aplicaron sin conflictos: ningún fichero que cambia upstream está en el port,
+así que `patches/` solo cambia por la versión. Detalle y checks en el
+CHANGELOG.
+
+- Smoke: PASS 25 pasos en PaperDIY (`20261127-200312`) y Waveshare 3.97
+  (`20261127-201807`).
+- El build de producción `ws397` se flasheó antes del tag y arranca en Home;
+  la PaperDIY pasa a producción con la OTA de esta release.
+- La PaperDIY de pruebas conserva desde el 24/11 ajustes del smoke; ver
+  `14-device-regression.md`.
 
 ## Release `2.1.0-1` (26/11/2026)
 

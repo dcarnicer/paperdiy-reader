@@ -1,57 +1,37 @@
 # Changelog de M5Burner
 
-Última publicación en el catálogo: **2.0.0-11** (publicada el 23/11/2026,
-comprobado el 26/11/2026 en LauncherHub). **2.1.0-1** se envió el 26/11/2026
-desde la web (`burner.m5stack.com/developer`) y está pendiente de revisión;
-actualiza esta línea cuando el catálogo la muestre. 2.0.0-12 no se subió; sus
-cambios van incluidos en la descripción de 2.1.0-1.
+Última publicación en el catálogo: **2.1.0-1** (publicada el 27/11/2026,
+comprobado el 27/11/2026 en LauncherHub). La entrada **2.1.0-2** documenta sus
+cambios y el texto preparado para la subida; actualiza esta línea cuando el
+catálogo la muestre. 2.0.0-12 no se subió; sus cambios van incluidos en la
+descripción de 2.1.0-1.
 La subida es manual: confirma el catálogo y actualiza esta línea solo después
 de publicar.
 
 ## Short description for M5Burner (EN)
 
-## CrossPoint for PaperDIY 2.1.0-1
+## CrossPoint for PaperDIY 2.1.0-2
 
-Based on CrossPoint 2.1.0 (`a2b0d48b`) and FreeInk SDK `de19f154`. Update from
-2.0.0-11; it includes the changes of 2.0.0-12.
-
-### New
-
-- **Embedded EPUB fonts** (`@font-face`): reader menu → Text settings → Style
-  → **Publisher Fonts** (`Off`, `Ignore Body Font` by default, `All Text`).
-  Needs Embedded Style on and an EPUB with compatible embedded fonts.
-- Custom UI font setting; vector font styles picked by file name.
+Based on CrossPoint 2.1.0 (`dd86a5ec`) and FreeInk SDK `de19f154`. Update from
+2.1.0-1.
 
 ### Improvements and fixes
 
-- Faster page rendering with PSRAM (one render pass less on text pages), and
-  the open EPUB is reused instead of reopened.
-- OPDS: in multi-page catalogs A/B move the selection again (B on the last
-  entry loads the next page, A on the first the previous one) and A on the
-  first entry opens search. The OPDS login is only sent to the configured
-  server. TLS record and download-range fix.
-- On-screen keyboard: A/B walk through every key in reading order.
-- SD: startup errors are classified, and saves and USB transfers are
-  protected against interruptions.
-- Library: long titles wrap; 4-bit BMPs are no longer washed out; readable
-  shaded boxes in EPUBs; compact Home header.
-- The status bar refreshes on its own on antialiased pages.
-- Smaller firmware: Adobe glyph list removed, unused FreeType features off.
-- Translations updated in twelve languages, including Spanish, Catalan and
-  Valencian.
-
-### After updating
-
-- Each book rebuilds its cache the first time you open it. This happens once
-  per book.
+- Library: the index rebuild keeps each folder open while it scans its
+  subfolders instead of reopening it (an upstream performance change).
+- Dictionary: plain-text definitions use the reader's line spacing instead of
+  a fixed double spacing.
 
 ### PaperDIY
 
-- M5GFX 0.3.0. Full hardware smoke test passed (25 steps).
+- Full hardware smoke test passed (25 steps).
 
 ### Known limitations
 
-- Embedded fonts and the new PSRAM render path are new: ghosting and the cost
+- The library and dictionary changes passed the smoke test but have not been
+  tried by hand yet (nested folders, card removal during a rebuild, extreme
+  line spacing).
+- Embedded fonts and the PSRAM render path from 2.1.0-1: ghosting and the cost
   of EPUBs with many embedded fonts are not reviewed on the device yet.
 - Sync On Sleep has not been tried against a real server yet.
 - Still pending: real BLE remote pairing, full Calibre transfer, full OTA
@@ -61,9 +41,21 @@ Based on CrossPoint 2.1.0 (`a2b0d48b`) and FreeInk SDK `de19f154`. Update from
 
 GPLv3: the combined firmware includes wolfSSL. The source code is MIT. Source
 code, license texts and third-party notices (`LICENSE`):
-https://github.com/dcarnicer/paperdiy-reader/releases/tag/v2.1.0-1
+https://github.com/dcarnicer/paperdiy-reader/releases/tag/v2.1.0-2
 
 ## Full changelog (EN)
+
+### 2.1.0-2 — 2026-11-27
+
+Synced with CrossPoint `dd86a5ec` (2 commits since `a2b0d48b`, still version
+2.1.0) and FreeInk SDK `de19f154` (unchanged).
+
+- Upstream: the library index rebuild keeps each folder open while it scans
+  its subfolders (#4603), and plain-text dictionary definitions use the
+  reader's line spacing (#4633).
+- PaperDIY port reapplied without conflicts.
+- Smoke test PASS (25 steps) on the PaperDIY (`20261127-200312`) and the
+  Waveshare 3.97 (`20261127-201807`).
 
 ### 2.1.0-1 — 2026-11-26
 
@@ -264,6 +256,18 @@ Synced with CrossPoint `8276d518` (3 commits) and FreeInk SDK `6a208c0c`.
   The visual battery-curve jump still needs a battery below ~90%.
 
 ## Changelog completo (ES)
+
+### 2.1.0-2 — 2026-11-27
+
+Sincronización con CrossPoint `dd86a5ec` (2 commits desde `a2b0d48b`, sigue en
+la versión 2.1.0) y FreeInk SDK `de19f154` (sin cambios).
+
+- Upstream: la reconstrucción del índice de la biblioteca mantiene abierta cada
+  carpeta mientras recorre sus subcarpetas (#4603), y las definiciones de
+  diccionario en texto plano usan el interlineado del lector (#4633).
+- Port PaperDIY reaplicado sin conflictos.
+- Smoke PASS (25 pasos) en PaperDIY (`20261127-200312`) y Waveshare 3.97
+  (`20261127-201807`).
 
 ### 2.1.0-1 — 2026-11-26
 

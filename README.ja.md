@@ -40,8 +40,8 @@
 > ページめくりをエラー・リークなしで確認しました。KOReader Sync は
 > 2026-11-06 にローカル KOSync サーバーで検証済みです。残りは BLE
 > リモコンのペアリング、スリープ電流、残像の実機目視確認です。`make smoke`
-> は `2.1.0-1` のツリー（sync `a2b0d48b`、2026-11-26）で両方のボードで完全実行済みです
-> （PaperDIY run `20261126-203815`、Waveshare 3.97 run `20261126-193226`）。詳細は
+> は `2.1.0-2` のツリー（sync `dd86a5ec`、2026-11-27）で両方のボードで完全実行済みです
+> （PaperDIY run `20261127-200312`、Waveshare 3.97 run `20261127-201807`）。詳細は
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md) を参照。
 >
 > **ダウンストリームフォーク：** `main` は `upstream/develop` のミラーで、

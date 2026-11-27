@@ -11,6 +11,6 @@
     ],
     "default_baud": 921600
   },
-  "version": "2.1.0-1",
+  "version": "2.1.0-2",
   "framework": "Arduino"
 }

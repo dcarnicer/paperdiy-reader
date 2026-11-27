@@ -33,8 +33,8 @@ OPDS/Calibre 以及日常使用所需一切功能的电子书阅读器。
 > 已于 2026-11-05 验证。自动休眠和封面休眠画面也于 2026-11-05 验证。
 > 长时间阅读：2026-11-06 完成 250+ 次翻页，无错误、无泄漏。KOReader Sync
 > 于 2026-11-06 通过本地 KOSync 服务器验证。待完成：配对 BLE 遥控器、
-> 休眠电流，以及残影的实机目视检查。`2.1.0-1` 树（sync `a2b0d48b`，2026-11-26）
-> 的完整 `make smoke` 已在两块板子上通过（PaperDIY run `20261126-203815`，Waveshare 3.97 run `20261126-193226`）。见
+> 休眠电流，以及残影的实机目视检查。`2.1.0-2` 树（sync `dd86a5ec`，2026-11-27）
+> 的完整 `make smoke` 已在两块板子上通过（PaperDIY run `20261127-200312`，Waveshare 3.97 run `20261127-201807`）。见
 > [`docs/paperdiy/06-porting.md`](docs/paperdiy/06-porting.md)。
 >
 > **下游分支：** `main` 镜像 `upstream/develop`；`paperdiy` 是我们的工作
