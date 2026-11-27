@@ -506,7 +506,7 @@ eso.
 - [ ] `main` actualizado y `paperdiy` rebasado.
 - [ ] `make build` limpio.
 - [ ] `make smoke` con `paperdiy-test` sin fallos.
-- [ ] `scripts/flash.sh` rechaza placas que no sean de 16 MB.
+- [ ] `scripts/flash.sh` flashea una placa de 16 MB y rechaza las demás.
 - [ ] Backup del firmware original.
 - [ ] Flash factory en una unidad real.
 - [ ] Pantalla/rotación/ghosting.
