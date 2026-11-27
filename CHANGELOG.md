@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased — sync `dd86a5ec`
+
+Sincronización con CrossPoint `dd86a5ec` y FreeInk SDK `de19f154` (el pin del
+SDK no cambia). Mantiene CrossPoint `2.1.0`.
+
+- CrossPoint `a2b0d48b` → `dd86a5ec` (2 commits). Biblioteca (#4603): el
+  índice recorre las carpetas (hasta cinco niveles bajo la raíz, como antes)
+  con el directorio padre abierto, en vez de cerrarlo y reabrirlo tras cada
+  subcarpeta. Las carpetas cuyo nombre empieza o acaba en espacio, o acaba en
+  punto, se reabren por su ruta. Diccionario (#4633): la definición en texto
+  plano usa el interlineado del lector en vez de un 2,0 fijo.
+- Port: `sdk.patch` y `firmware.patch` aplican sin conflictos; ningún fichero
+  que cambia upstream está en el port, así que `patches/` no cambia y su base
+  pasa a `dd86a5ec`.
+- Build `paperdiy`: `firmware.bin` 5.659.744 B, 86,3 % de flash y 34,4 % de
+  RAM. Build `ws397`: `firmware.bin` 5.639.280 B, 86,0 % de flash y 34,5 % de
+  RAM. `paperdiy-test` y `ws397-test` compilan. Tests de host: 1158/1158.
+  Tests de Python: 52, con el fallo conocido de `test_firmware_stats`.
+- Pendiente de hardware: smoke en PaperDIY y ws397, reconstrucción del índice
+  con carpetas anidadas y definiciones de diccionario en texto plano con
+  varios interlineados.
+
 ## 2.1.0-1 — 2026-11-26
 
 Sincronización con CrossPoint `a2b0d48b` y FreeInk SDK `de19f154`. Upstream

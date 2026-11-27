@@ -3,8 +3,8 @@
 Este repo es un fork downstream de CrossPoint. La regla es simple: **el motor
 se sigue de upstream; el hardware y la UX PaperDIY viven en nuestro fork**.
 
-Última sincronización: CrossPoint `a2b0d48b` / FreeInk SDK `de19f154`
-(26/11/2026).
+Última sincronización: CrossPoint `dd86a5ec` / FreeInk SDK `de19f154`
+(27/11/2026).
 
 ## Ramas y remotos
 
@@ -202,7 +202,7 @@ git add freeink-sdk && git commit -m "chore: vendor pristine SDK for patch basel
 | Patch | Base (destino) | Contenido |
 |---|---|---|
 | `patches/sdk.patch` | FreeInk SDK `de19f154` | perfil, BoardPaperDiy, PM1/I2C lock, InputManager, PowerManager, driver LGFX, batería; SDK #218 (ws397) |
-| `patches/firmware.patch` | CrossPoint `a2b0d48b` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main, batería; CrossPoint #3386 y envs ws397 |
+| `patches/firmware.patch` | CrossPoint `dd86a5ec` | env, settings, UI, board tag, OTA, GfxRenderer, HalGPIO, HalPowerManager, main, batería; CrossPoint #3386 y envs ws397 |
 | `patches/paperdiy-support.patch` | ambos | concatenación de los dos anteriores |
 
 Orden de aplicación: `sdk.patch` y luego `firmware.patch`. Hasta regenerarlos
@@ -256,6 +256,12 @@ Cuando upstream fusione uno de estos PRs: en el sync, quédate con la versión
 de upstream de sus hunks, conserva solo los cambios propios de arriba y borra
 la fila de la tabla. Si el `[env:ws397]` de upstream entra en `platformio.ini`,
 deja uno solo.
+
+## Sync `dd86a5ec` (27/11/2026)
+
+CrossPoint `a2b0d48b` → `dd86a5ec` (2 commits); el pin del SDK sigue en
+`de19f154`. Los parches aplicaron sin conflictos y `patches/` no cambia: ningún
+fichero que cambia upstream está en el port. Detalle y checks en el CHANGELOG.
 
 ## Release `2.1.0-1` (26/11/2026)
 
