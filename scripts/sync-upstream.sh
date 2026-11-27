@@ -125,16 +125,20 @@ PY
 fi
 
 echo "Overlaying docs, Makefile, scripts and workflows..."
-# Fork-owned files: docs/infra, agent policy, the pinned expat tree, the
-# FirmwareVersion test and the release-license test (its git mock covers the
-# vendored-SDK branch). Shared upstream files are edited by
-# scripts/apply_downstream_overlay.py instead of being replaced wholesale.
+# Fork-owned files: docs/infra, agent policy (the fork's AGENTS.md and
+# CLAUDE.md replace upstream's, which is archived under docs/upstream), the
+# pinned expat tree, the FirmwareVersion test, the release-license test (its
+# git mock covers the vendored-SDK branch) and the tests of fork scripts.
+# Shared upstream files are edited by scripts/apply_downstream_overlay.py
+# instead of being replaced wholesale.
 rm -rf .github
 git checkout paperdiy -- README.md README.en.md README.ja.md README.zh-CN.md \
   CHANGELOG.md Makefile NOTICE LICENSE .gitignore .gitattributes hardware m5burner \
   .agents/rules/release-versioning.md .agents/skills/upstream-sync \
   lib/expat test/firmware_version \
   test/test_release_license.py test/test_battery_log.py \
+  test/test_pio_core_dir.py test/test_pio_lock.py test/test_flash_script.py \
+  test/test_m5burner_packages_dir.py AGENTS.md CLAUDE.md \
   docs/paperdiy docs/README.md docs/upstream scripts patches .github
 python3 scripts/apply_downstream_overlay.py
 # NOTICE comes from paperdiy with the previous pins; the release LICENSE reads
@@ -168,7 +172,7 @@ while IFS=$'\t' read -r status file rest; do
   esac
 done < <(git diff --name-status "$OLD_MAIN"..main -- scripts)
 
-rm -f ROADMAP.md SCOPE.md GOVERNANCE.md AGENTS.md USER_GUIDE.md CLAUDE.md .gitmodules
+rm -f ROADMAP.md SCOPE.md GOVERNANCE.md USER_GUIDE.md .gitmodules
 
 echo "Refreshing the vendored upstream docs snapshot..."
 for doc in README AGENTS GOVERNANCE ROADMAP USER_GUIDE; do
