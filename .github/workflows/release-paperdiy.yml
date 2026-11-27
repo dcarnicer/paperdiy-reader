@@ -1,0 +1,107 @@
+name: release-paperdiy
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "[0-9]*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      # Boards released from this repo; each env must set
+      # CROSSPOINT_OTA_ASSET_FORMAT to crosspoint-<board>-%s-ota.bin.
+      RELEASE_BOARDS: paperdiy ws397
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Validate release version
+        run: python3 scripts/check_release_version.py "${GITHUB_REF_NAME}"
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Cache PlatformIO core + build
+        uses: actions/cache@v6
+        with:
+          path: |
+            .platformio-core
+            .pio
+          key: paperdiy-release-${{ hashFiles('platformio.ini') }}-${{ github.sha }}
+          restore-keys: |
+            paperdiy-release-${{ hashFiles('platformio.ini') }}-
+
+      - name: Build
+        env:
+          PLATFORMIO_CORE_DIR: ${{ github.workspace }}/.platformio-core
+        run: pio run $(printf -- '-e %s ' $RELEASE_BOARDS)
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p dist
+          version="${GITHUB_REF_NAME#v}"
+          # Two files per board: the full image for people (M5Burner, M5Launcher,
+          # esptool) and the app-only image the reader's own OTA looks up by
+          # version (CROSSPOINT_OTA_ASSET_FORMAT in platformio.ini).
+          for board in $RELEASE_BOARDS; do
+            cp ".pio/build/${board}/firmware.factory.bin" "dist/crosspoint-${board}-latest.bin"
+            cp ".pio/build/${board}/firmware.bin" "dist/crosspoint-${board}-${version}-ota.bin"
+            python3 scripts/check_release_assets.py --board "${board}" \
+              "dist/crosspoint-${board}-latest.bin" "dist/crosspoint-${board}-${version}-ota.bin"
+          done
+          full="crosspoint-paperdiy-latest.bin"
+          ota="crosspoint-paperdiy-${version}-ota.bin"
+          wsfull="crosspoint-ws397-latest.bin"
+          wsota="crosspoint-ws397-${version}-ota.bin"
+          (cd dist && sha256sum *.bin > SHA256SUMS.txt)
+          base="${version%%-*}"
+          revision="${version#*-}"
+          revision="${revision%%-*}"
+          cat > dist/RELEASE_NOTES.md <<NOTES
+          CrossPoint for PaperDIY ${version}: CrossPoint ${base}, port revision ${revision}. Boards: M5Stack PaperDIY and Waveshare ESP32-S3-ePaper-3.97 (experimental).
+
+          **M5Stack PaperDIY**
+
+          | File | Use |
+          |---|---|
+          | \`${full}\` | **Full image (0x0).** Install with M5Burner, esptool, or from M5Launcher (SD, WebUI, Favorites). Always-latest link: \`https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/${full}\` |
+          | \`${ota}\` | App-only image for a standalone reader: *Check for Updates* downloads it, or copy it to the SD root and use *SD Card Firmware Update*. Do not flash it with esptool, M5Burner or M5Launcher. |
+
+          **Waveshare ESP32-S3-ePaper-3.97 (experimental)**
+
+          | File | Use |
+          |---|---|
+          | \`${wsfull}\` | **Full image (0x0).** First install with \`esptool --chip esp32s3 --port <PORT> write-flash 0x0 ${wsfull}\`. See [15-waveshare-397.md](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_REF_NAME}/docs/paperdiy/15-waveshare-397.md). |
+          | \`${wsota}\` | App-only image: *Check for Updates* downloads it, or copy it to the SD root and use *SD Card Firmware Update*. Do not flash it at 0x0. |
+
+          **Under M5Launcher** (PaperDIY only) the reader does not install updates itself: *Check for Updates* only tells you a new version exists. Install it from \`M5Launcher > OTA\` (catalog: *CrossPoint for PaperDIY (community port)*) and then delete the old copy in Launcher: Launcher installs new versions next to the old one. See [13-m5launcher.en.md](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_REF_NAME}/docs/paperdiy/13-m5launcher.en.md). Upstream base and full changes: [CHANGELOG.md](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_REF_NAME}/CHANGELOG.md).
+
+          **License:** the source code is MIT; the combined firmware in these images is GPLv3 because it includes wolfSSL. The attached \`LICENSE\` covers both boards' images and holds the full license texts, third-party notices and the source revisions. Source for this release: [${GITHUB_REF_NAME}](https://github.com/${GITHUB_REPOSITORY}/tree/${GITHUB_REF_NAME}).
+          NOTES
+
+      - name: Collect release licenses
+        env:
+          PLATFORMIO_CORE_DIR: ${{ github.workspace }}/.platformio-core
+        # GPLv3 binary: ship the license texts and third-party notices with it.
+        # The script reads the vendored SDK revision from NOTICE.
+        run: python3 scripts/build_release_license.py --env paperdiy --output dist/LICENSE --repository "${GITHUB_REPOSITORY}"
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.bin
+            dist/SHA256SUMS.txt
+            dist/LICENSE
+          body_path: dist/RELEASE_NOTES.md
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-rc.') }}
+          fail_on_unmatched_files: true

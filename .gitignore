@@ -1,4 +1,11 @@
 .pio
+# In-checkout PlatformIO core: CI and environments with custom_sdkconfig
+# (see scripts/pio_core_dir.py); other local builds use ~/.platformio-cores.
+/.platformio-core
+# Local flash backups / screenshots (do not commit user data).
+/backups/
+/src/idf_component.yml
+/src/idf_component.yml.orig
 .idea
 .DS_Store
 .vscode
@@ -18,6 +25,7 @@ build
 **/__pycache__/
 /compile_commands.json
 /.cache
+/dist/
 .history/
 /.venv
 *.local*

@@ -5,6 +5,7 @@ add_executable(KOReaderXPathResolverTest
   ${REPO_ROOT}/lib/expat/xmlparse.c
   ${REPO_ROOT}/lib/expat/xmlrole.c
   ${REPO_ROOT}/lib/expat/xmltok.c
+  ${REPO_ROOT}/lib/expat/xcs.c
 )
 
 target_include_directories(KOReaderXPathResolverTest PRIVATE

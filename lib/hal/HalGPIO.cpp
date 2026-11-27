@@ -1,5 +1,6 @@
 #include <BatteryMonitor.h>
 #include <HalGPIO.h>
+#include <HalPowerManager.h>
 #include <Logging.h>
 #include <PowerManager.h>
 #include <Preferences.h>
@@ -20,6 +21,13 @@ constexpr char NVS_KEY_DEV_OVERRIDE[] = "dev_ovr";  // 0=auto, 1=x4, 2=x3
 constexpr char NVS_KEY_DEV_CACHED[] = "dev_det";    // 0=unknown, 1=x4, 2=x3
 
 enum class NvsDeviceValue : uint8_t { Unknown = 0, X4 = 1, X3 = 2 };
+
+// The M5 PM1 boards share one battery backend between the theme's USB/charge
+// badges and the main loop. Route them through the HAL's serialized status read
+// instead of opening another I2C transaction from the render task.
+bool hasPm1BatteryBackend() {
+  return BoardConfig::isM5StackPaperColor() || BoardConfig::isPaperMono() || BoardConfig::isPaperDiy();
+}
 
 NvsDeviceValue readNvsDeviceValue(const char* key, NvsDeviceValue defaultValue) {
   Preferences prefs;
@@ -257,10 +265,23 @@ bool HalGPIO::isUsbConnected() const {
   // A charger IC that reports its input rail (BQ25896, SGM41562, M5 PMIC)
   // answers directly; otherwise infer from charging state, where charge
   // termination at 100% reads as "not connected".
+  if (hasPm1BatteryBackend()) {
+    const auto status = powerManager.getBatteryStatus();
+    if (status.externalPowerKnown) return status.externalPower;
+  }
   static const BatteryMonitor battery;
   bool known = false;
   const bool present = battery.isExternalPowerPresent(&known);
   if (known) return present;
+  return battery.isCharging();
+}
+
+bool HalGPIO::isCharging() const {
+  if (hasPm1BatteryBackend()) {
+    const auto status = powerManager.getBatteryStatus();
+    if (status.chargingKnown) return status.charging;
+  }
+  static const BatteryMonitor battery;
   return battery.isCharging();
 }
 
@@ -274,7 +295,8 @@ bool HalGPIO::coldBootImpliesPowerButton() const {
   // EEGO A4 misread them the same way once the charger terminates at 100%
   // (STAT inactive reads as "no USB").
   // The Metalio sleeps powered off and only its button turns it back on.
-  return isXteinkDevice() || BoardConfig::isPaperMono() || BoardConfig::isSticky() || BoardConfig::isMetalioEInk4();
+  return isXteinkDevice() || BoardConfig::isPaperDiy() || BoardConfig::isPaperMono() || BoardConfig::isSticky() ||
+         BoardConfig::isMetalioEInk4();
 }
 
 HalGPIO::WakeupReason HalGPIO::getWakeupReason() const {
