@@ -132,13 +132,13 @@ CrossPoint 使用 `InputStyle::DigitalTwoButton`，专为两个按键设计：
 
 ## 编译
 
-要求：PlatformIO Core，首次编译需要联网（隔离的 core 会下载平台、框架和
-工具链；约 5 GB）。
+要求：PlatformIO Core、`python3`，首次编译需要联网（隔离的 core 会下载平台、
+框架和工具链；约 5 GB）。
 
 ```bash
 make build
 # 等价于：
-PLATFORMIO_CORE_DIR="$PWD/.platformio-core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
 ```
 
 生成的固件位于：
@@ -149,9 +149,18 @@ PLATFORMIO_CORE_DIR="$PWD/.platformio-core" pio run -e paperdiy
 ```
 
 如果你的全局 `~/.platformio` 正常，也可以直接运行 `pio run -e paperdiy`。
-`Makefile` 使用隔离的 core，即使系统里有旧包也能保证构建可复现。
-`.platformio-core/` 和 `.pio/` 是本地缓存（已被 git 忽略）；可以删除后重新
-运行 `make build` 生成。
+`Makefile` 使用隔离的 core，即使系统里有旧包也能保证构建可复现。core 由
+`scripts/pio_core_dir.py` 选择：每个固定的平台版本一个，位于仓库之外，例如
+`~/.platformio-cores/pioarduino-55.03.311`（`make -s core-dir` 会打印路径）。
+该版本的所有克隆和 worktree 共用它，因此约 5 GB 的内容每个版本只下载一次；
+不同版本使用各自的 core。使用 `custom_sdkconfig` 的环境（`default`、`slim`、
+`sticky` 等）仍使用检出目录内的 `.platformio-core/`，因为 pioarduino 会在 core
+中重新编译框架。要使用其他目录：`make build CORE_DIR=/路径`。
+
+如果不编译使用 `custom_sdkconfig` 的环境，以前的构建留下的 `.platformio-core/`
+已不再使用，可以删除。升级平台版本后，在没有分支使用旧 core 时，从 `~/.platformio-cores` 删除
+它；删除 core 会让该版本的所有检出目录重新下载。`.pio/` 是本地缓存（已被 git
+忽略），`make build` 会重新生成。
 
 ## 烧录
 

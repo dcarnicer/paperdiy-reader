@@ -97,7 +97,7 @@ mantiene en `patches/sdk.patch` + `patches/firmware.patch`.
 ```bash
 make build
 # o:
-PLATFORMIO_CORE_DIR="$PWD/.platformio-core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
 ```
 
 Resultado en la máquina de desarrollo (macOS, PlatformIO 6.1.19, pioarduino
@@ -119,11 +119,16 @@ apuntando a un directorio `@src-...` inexistente. La solución reproducible es
 usar un **core de PlatformIO aislado**:
 
 ```bash
-PLATFORMIO_CORE_DIR="$PWD/.platformio-core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
 ```
 
-El `Makefile` ya lo hace. `.platformio-core` está en `.gitignore`; se puede
-borrar y se reconstruye solo (descarga ~5 GB la primera vez).
+El `Makefile` ya lo hace. `scripts/pio_core_dir.py` elige un core por versión
+fijada de la plataforma en `~/.platformio-cores/` (p. ej.
+`pioarduino-55.03.311`), fuera del repo, compartido por los clones y worktrees
+de esa versión; otra versión usa su propio core, así que nunca se mezclan. Los
+entornos con `custom_sdkconfig` siguen con `.platformio-core/` en el checkout,
+porque pioarduino recompila el framework dentro del core. Cualquiera de los dos
+cores se puede borrar; el siguiente build lo reconstruye (descarga ~5 GB).
 
 ## Flash
 

@@ -137,7 +137,10 @@ diccionarios viven fuera de esa carpeta (ver guía de usuario).
   `FREEINK_CAP_BLE_HID_HOST=1`, `FREEINK_FB_PSRAM`.
 - `BoardPaperDiy` + `M5GFX` en `lib_deps`.
 - `partitions.csv` da ~6,25 MB a la app; el build actual usa 5,35 MB (81,6%).
-- El `Makefile` usa `PLATFORMIO_CORE_DIR=.platformio-core` para reproducibilidad.
+- El `Makefile` usa un core de PlatformIO aislado para reproducibilidad: uno
+  por versión fijada de la plataforma en `~/.platformio-cores/` (p. ej.
+  `pioarduino-55.03.311`), o `.platformio-core/` en el checkout para los
+  entornos con `custom_sdkconfig` (ver `scripts/pio_core_dir.py`).
 - `CROSSPOINT_OTA_RELEASES_URL` permite apuntar la OTA al fork.
 
 ## Por qué vendorizado

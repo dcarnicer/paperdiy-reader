@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Flash the PaperDIY firmware, refusing to touch a board that is not a 16 MB
-# N16R8 module (the PaperDIY). Put the device in download mode first: hold the
-# power button ~2 s until the red LED blinks.
+# N16R8 module (the PaperDIY). While the firmware exposes the USB-Serial/JTAG
+# port, esptool resets the board into download mode by itself. If the port does
+# not appear, enter download mode by hand: hold the power button ~10 s until the
+# red LED blinks.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -18,5 +20,9 @@ if [[ "$SIZE" != "16MB" ]]; then
   exit 1
 fi
 
-export PLATFORMIO_CORE_DIR="${PLATFORMIO_CORE_DIR:-$PWD/.platformio-core}"
+if [[ -z "${PLATFORMIO_CORE_DIR:-}" ]]; then
+  # Same choice as the Makefile; fails (set -e) instead of using another core.
+  PLATFORMIO_CORE_DIR="$(python3 scripts/pio_core_dir.py paperdiy)"
+fi
+export PLATFORMIO_CORE_DIR
 exec pio run -e paperdiy -t upload --upload-port "$PORT"

@@ -151,14 +151,14 @@ CrossPoint は 2 ボタン専用の `InputStyle::DigitalTwoButton` を使用し�
 
 ## ビルド
 
-必要なもの：PlatformIO Core、初回ビルド時のインターネット接続（分離された
-core がプラットフォーム、フレームワーク、ツールチェーンをダウンロード；
-約 5 GB）。
+必要なもの：PlatformIO Core、`python3`、初回ビルド時のインターネット接続
+（分離された core がプラットフォーム、フレームワーク、ツールチェーンを
+ダウンロード；約 5 GB）。
 
 ```bash
 make build
 # 次と同等：
-PLATFORMIO_CORE_DIR="$PWD/.platformio-core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
 ```
 
 バイナリの出力先：
@@ -170,8 +170,22 @@ PLATFORMIO_CORE_DIR="$PWD/.platformio-core" pio run -e paperdiy
 
 グローバルの `~/.platformio` が正常なら `pio run -e paperdiy` でもビルド
 できます。`Makefile` は分離された core を使うため、古いパッケージがあっても
-再現性のあるビルドになります。`.platformio-core/` と `.pio/` はローカル
-キャッシュ（git 管理外）で、削除しても `make build` で再生成されます。
+再現性のあるビルドになります。core は `scripts/pio_core_dir.py` が選びます。
+固定したプラットフォームのバージョンごとに 1 つ、リポジトリの外に置かれます
+（例：`~/.platformio-cores/pioarduino-55.03.311`、`make -s core-dir` でパスを
+表示）。そのバージョンのすべてのクローンと worktree で共有されるため、
+約 5 GB のダウンロードはバージョンごとに 1 回だけです。別のバージョンは別の
+core を使います。`custom_sdkconfig` を使う環境（`default`、`slim`、`sticky`
+など）は、pioarduino が core の中でフレームワークを再ビルドするため、引き続き
+チェックアウト内の `.platformio-core/` を使います。別のフォルダを使うには
+`make build CORE_DIR=/パス` とします。
+
+`custom_sdkconfig` を使う環境をビルドしない場合、以前のビルドが残した
+`.platformio-core/` はもう使われないので削除できます。プラットフォームのバージョンを上げたら、
+どのブランチも使わなくなった古い core を `~/.platformio-cores` から削除して
+ください。core を削除すると、そのバージョンのすべてのチェックアウトが再び
+ダウンロードします。`.pio/` はローカルキャッシュ（git 管理外）で、
+`make build` で再生成されます。
 
 ## 書き込み
 

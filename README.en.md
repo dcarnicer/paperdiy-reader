@@ -149,13 +149,14 @@ be turned with a remote or a phone.
 
 ## Build
 
-Requirements: PlatformIO Core and an internet connection the first time (the
-isolated core downloads the platform, framework and toolchain; ~5 GB).
+Requirements: PlatformIO Core, `python3` and an internet connection the first
+time (the isolated core downloads the platform, framework and toolchain;
+~5 GB).
 
 ```bash
 make build
 # equivalent to:
-PLATFORMIO_CORE_DIR="$PWD/.platformio-core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
 ```
 
 The binary is written to:
@@ -167,8 +168,20 @@ The binary is written to:
 
 If your global `~/.platformio` is healthy, `pio run -e paperdiy` also works.
 The `Makefile` uses an isolated core so the build is reproducible even with old
-packages. `.platformio-core/` and `.pio/` are local caches (git-ignored); you
-can delete them and `make build` will recreate them.
+packages. `scripts/pio_core_dir.py` picks it: one core per pinned platform
+release, outside the repository, for example
+`~/.platformio-cores/pioarduino-55.03.311` (`make -s core-dir` prints the
+path). Every clone and worktree on that release shares it, so the ~5 GB are
+downloaded once per release; another release gets its own core. Environments
+with `custom_sdkconfig` (`default`, `slim`, `sticky`…) still use
+`.platformio-core/` inside the checkout, because pioarduino rebuilds the
+framework inside the core. To use another folder: `make build CORE_DIR=/path`.
+
+If you don't build environments with `custom_sdkconfig`, a `.platformio-core/`
+left by older builds is no longer used and can be deleted. After a platform bump, delete the old core in
+`~/.platformio-cores` once no branch uses it; deleting a core makes every
+checkout on that release download it again. `.pio/` is a local cache
+(git-ignored) that `make build` recreates.
 
 ## Flash
 

@@ -97,7 +97,7 @@
 ```bash
 make build
 # または：
-PLATFORMIO_CORE_DIR="$PWD/.platformio-core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
 ```
 
 開発マシンでの結果（macOS、PlatformIO 6.1.19、pioarduino 55.03.311、
@@ -119,11 +119,16 @@ firmware.factory.bin  5.2 MB
 **分離された PlatformIO core** を使うことです：
 
 ```bash
-PLATFORMIO_CORE_DIR="$PWD/.platformio-core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
 ```
 
-`Makefile` はすでにこのようにしています。`.platformio-core` は `.gitignore` に
-あり、削除しても自動再構築されます（初回は約 5 GB をダウンロード）。
+`Makefile` はすでにこのようにしています。`scripts/pio_core_dir.py` は、固定した
+プラットフォームのバージョンごとに 1 つの core を、リポジトリの外の
+`~/.platformio-cores/`（例：`pioarduino-55.03.311`）に選びます。そのバージョンの
+クローンと worktree で共有され、別のバージョンは別の core を使うため混在しません。
+`custom_sdkconfig` を使う環境は、pioarduino が core の中でフレームワークを
+再ビルドするため、チェックアウト内の `.platformio-core/` を使い続けます。
+どちらの core も削除でき、次のビルドで再構築されます（約 5 GB をダウンロード）。
 
 ## 書き込み
 

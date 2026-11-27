@@ -151,13 +151,13 @@ para poder pasar página con un mando o el móvil.
 
 ## Compilar
 
-Requisitos: PlatformIO Core y conexión a internet la primera vez (el core
-aislado descarga plataforma, framework y toolchain; ~5 GB).
+Requisitos: PlatformIO Core, `python3` y conexión a internet la primera vez
+(el core aislado descarga plataforma, framework y toolchain; ~5 GB).
 
 ```bash
 make build
 # equivalente a:
-PLATFORMIO_CORE_DIR="$PWD/.platformio-core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
 ```
 
 El binario queda en:
@@ -169,8 +169,21 @@ El binario queda en:
 
 Si tu `~/.platformio` global ya está sano, `pio run -e paperdiy` también
 funciona. El `Makefile` usa un core aislado para que el build sea reproducible
-aunque haya paquetes viejos. `.platformio-core/` y `.pio/` son cachés locales
-(git-ignored); se pueden borrar y `make build` las reconstruye.
+aunque haya paquetes viejos. Lo elige `scripts/pio_core_dir.py`: un core por
+versión fijada de la plataforma, fuera del repo, por ejemplo
+`~/.platformio-cores/pioarduino-55.03.311` (`make -s core-dir` muestra la
+ruta). Lo comparten todos los clones y worktrees de esa versión, así que los
+~5 GB se descargan una vez por versión; otra versión usa su propio core. Los
+entornos con `custom_sdkconfig` (`default`, `slim`, `sticky`…) siguen usando
+`.platformio-core/` dentro del checkout, porque pioarduino recompila el
+framework dentro del core. Para usar otra carpeta: `make build CORE_DIR=/ruta`.
+
+Si no compilas entornos con `custom_sdkconfig`, el `.platformio-core/` que
+dejaron builds anteriores ya no se usa y se puede borrar. Tras subir la versión de la
+plataforma, borra el core viejo de `~/.platformio-cores` cuando ninguna rama lo
+use; borrar un core hace que todos los checkouts de esa versión lo vuelvan a
+descargar. `.pio/` es una caché local (git-ignored) que `make build`
+reconstruye.
 
 ## Flashear
 

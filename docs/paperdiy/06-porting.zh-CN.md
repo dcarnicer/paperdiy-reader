@@ -96,7 +96,7 @@
 ```bash
 make build
 # 或：
-PLATFORMIO_CORE_DIR="$PWD/.platformio-core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
 ```
 
 开发机上的结果（macOS、PlatformIO 6.1.19、pioarduino 55.03.311、
@@ -117,11 +117,14 @@ firmware.factory.bin  5.2 MB
 `@src-...` 目录。可复现的解决方法是使用**隔离的 PlatformIO core**：
 
 ```bash
-PLATFORMIO_CORE_DIR="$PWD/.platformio-core" pio run -e paperdiy
+core="$(make -s core-dir)" && PLATFORMIO_CORE_DIR="$core" pio run -e paperdiy
 ```
 
-`Makefile` 已经这样做了。`.platformio-core` 在 `.gitignore` 中；可以删除，
-它会自动重建（首次下载约 5 GB）。
+`Makefile` 已经这样做了。`scripts/pio_core_dir.py` 为每个固定的平台版本在仓库
+之外的 `~/.platformio-cores/`（例如 `pioarduino-55.03.311`）选择一个 core，由该
+版本的克隆和 worktree 共用；不同版本使用各自的 core，不会混用。使用
+`custom_sdkconfig` 的环境仍使用检出目录内的 `.platformio-core/`，因为 pioarduino
+会在 core 中重新编译框架。两个 core 都可以删除，下次构建会重新生成（下载约 5 GB）。
 
 ## 烧录
 

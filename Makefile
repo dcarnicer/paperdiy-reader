@@ -2,17 +2,26 @@
 #
 # The project pins a pioarduino platform; the isolated core directory keeps the
 # build reproducible even when the global ~/.platformio has older packages.
-# It is git-ignored and only needs to be downloaded once (~5 GB with toolchain).
+# scripts/pio_core_dir.py picks it: one core per pinned platform release under
+# ~/.platformio-cores, shared by every clone and worktree, so the ~5 GB
+# toolchain is downloaded once per release and not once per checkout.
+# Environments with custom_sdkconfig keep ./.platformio-core, because
+# pioarduino rebuilds the framework inside the core for them. Bumping the
+# platform creates a new core; delete the old one when no branch needs it.
 
 PIO       ?= pio
 ENV       ?= paperdiy
-CORE_DIR  ?= $(CURDIR)/.platformio-core
+# CORE_DIR=/path on the command line overrides the choice for one run; an
+# exported PLATFORMIO_CORE_DIR (as for scripts/ and CI) overrides it for every
+# ENV. It is resolved only by the targets that run pio.
+CORE_DIR  ?= $(or $(PLATFORMIO_CORE_DIR),$(shell python3 "$(CURDIR)/scripts/pio_core_dir.py" --pio "$(PIO)" "$(ENV)"))
+PIO_CORE   = $(or $(strip $(CORE_DIR)),$(error Cannot choose the PlatformIO core for ENV=$(ENV) (see the message above); set CORE_DIR=/path))
 PORT      ?=
 
-PIO_RUN = PLATFORMIO_CORE_DIR="$(CORE_DIR)" $(PIO) run -e $(ENV)
+PIO_RUN = PLATFORMIO_CORE_DIR="$(PIO_CORE)" $(PIO) run -e $(ENV)
 UPLOAD_PORT = $(if $(PORT),--upload-port "$(PORT)",)
 
-.PHONY: build flash flash-factory monitor clean size menuconfig smoke check-upstreams
+.PHONY: build flash flash-factory monitor clean size menuconfig smoke check-upstreams core-dir
 
 build:
 	$(PIO_RUN)
@@ -27,7 +36,7 @@ flash-factory:
 	esptool --chip esp32s3 --port "$(PORT)" write_flash 0x0 .pio/build/$(ENV)/firmware.factory.bin
 
 monitor:
-	PLATFORMIO_CORE_DIR="$(CORE_DIR)" $(PIO) device monitor -e $(ENV) $(if $(PORT),--port "$(PORT)",)
+	PLATFORMIO_CORE_DIR="$(PIO_CORE)" $(PIO) device monitor -e $(ENV) $(if $(PORT),--port "$(PORT)",)
 
 # Hardware regression. Requires a paperdiy-test build flashed and tesseract.
 # It installs fixtures over USB MSC, runs the OCR assertions, and restores the
@@ -45,6 +54,10 @@ check-upstreams:
 
 clean:
 	$(PIO_RUN) -t clean
+
+# Print the PlatformIO core for ENV (for manual pio commands, see README).
+core-dir:
+	@echo "$(PIO_CORE)"
 
 # Print the exact flash commands without touching the device.
 flash-commands:
